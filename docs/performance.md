@@ -30,6 +30,9 @@ Single/OoO 使用 M-mode binary，Linux 使用 S-mode Sv32 binary；三者的 bi
 hash、source commit、latency、完整命令和停机输出见[CoreMark 运行证据](evidence/coremark_reproduction.md)。
 由于 binary 未进入仓库，表中数字仍是 provisional；CoreMark/MHz、七 workload
 weighted CPI、频率和面积不能由这些 CPI 推导，继续保持 `—`。
+Linux 当前行是该 CoreMark image 的 cycles/commit CPI；由于公开 runtime 尚未建模
+AXI UARTLite/AXI Timer，日志没有可见 CoreMark marker，不能把它升级为 benchmark
+PASS 或 verified claim。
 
 ## 历史 CoreMark CPI 参考
 

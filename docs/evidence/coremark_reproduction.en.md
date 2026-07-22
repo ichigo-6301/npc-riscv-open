@@ -47,7 +47,7 @@ python3 sim/common/verilator_runner.py --profile rv32im_ooo_4k \
 | Profile | Binary / ELF SHA256 | Runtime latency | Cycles | Retired instructions | CPI | CoreMark stop |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | `coremark-riscv32-M-npc.bin` / `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd` (ELF); binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `4578475` | `3081067` | `1.486003063` | `CoreMark PASS`, ebreak |
-| `rv32ima_sv32_linux` | `coremark-riscv32s-M-fpga.bin` / `8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774` (ELF); binary `814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb` | `0/0/0`; public filelist uses `NPC_DCACHE_WRITE_ALLOCATE=1` | `5668250` | `3252429` | `1.742774400` | `CoreMark PASS`, ebreak |
+| `rv32ima_sv32_linux` | `coremark-riscv32s-M-fpga.bin` / `8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774` (ELF); binary `814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb` | `0/0/0`; public filelist uses `NPC_DCACHE_WRITE_ALLOCATE=1` | `5668250` | `3252429` | `1.742774400` | ebreak at `_trm_init`; CoreMark marker unavailable |
 | `rv32im_ooo_4k` | `coremark-riscv32-M-npc.bin` / ELF `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd`; binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `2718694` | `3081098` (`2040454 + 1040644`) | `0.882378295` | `CoreMark PASS`, ebreak |
 
 The corresponding `PUBLIC_SIM_PASS` lines are:
@@ -69,10 +69,14 @@ These runs did not enable difftest. Profile-matched adapter attempts produced:
 - OoO: a deterministic mismatch at commit ordinal 11 (`x8` reference `0`, DUT
   `0xb`).
 
-The three rows are therefore “runtime PASS, difftest not accepted” provisional
-data, not architecture-level verified claims. Host milliseconds and Marks in the
-DPI runtime output are only stop sanity checks; without an implemented clock they
-cannot be converted to CoreMark/MHz.
+Single/OoO are “CoreMark PASS, runtime PASS, difftest not accepted”; Linux is
+“CoreMark image reached the normal ebreak, marker unavailable, difftest not
+accepted.” All three rows are provisional data, not architecture-level verified
+claims. The missing Linux marker is because the public runtime does not model
+AXI UARTLite/AXI Timer; the private rerun of the same binary family has an explicit
+PASS marker. Host milliseconds and Marks in the DPI runtime output are only stop
+sanity checks; without an implemented clock they cannot be converted to
+CoreMark/MHz.
 
 ## Private rerun of the later Linux checkpoint
 

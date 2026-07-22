@@ -67,11 +67,12 @@ OpenSBI 启动或 Linux kernel。
 ## 外部 CoreMark runtime 结果
 
 公开 runner 会在结束时输出 `PUBLIC_SIM_PASS cycles=... commit=... commit2=...`。
-当前三个 Profile 的 CoreMark 输入均已由 headless runtime 跑到 CoreMark PASS；
-它们使用仓库外部 binary，且 profile-matched difftest 尚未全部接受，因此状态为
-`provisional_external_input`。精确 binary hash、latency、CPI 计算和 difftest
-失败边界见[CoreMark 运行证据](evidence/coremark_reproduction.md)，不把该结果
-误写成架构级 verified claim。
+当前三个 Profile 的 CoreMark image 均已由 headless runtime 到达正常 ebreak；
+Single/OoO 有 CoreMark PASS marker，Linux 因 AXI UARTLite/AXI Timer 未在公开
+runtime 建模而没有可见 marker。它们使用仓库外部 binary，且 profile-matched
+difftest 尚未全部接受，因此状态为 `provisional_external_input`。精确 binary
+hash、latency、CPI 计算和 difftest 失败边界见[CoreMark 运行证据](evidence/coremark_reproduction.md)，
+不把该结果误写成架构级 verified claim。
 
 ## 本地 strict difftest
 

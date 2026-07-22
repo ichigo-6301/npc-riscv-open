@@ -172,15 +172,15 @@
       "status": "provisional"
     },
     {
-      "conditions": "CoreMark; external S-mode Sv32 binary; 5,668,250 cycles / 3,252,429 commits / CPI 1.742774400; IF/LSU/memory=0/0/0; WRITE_ALLOCATE=1; runtime PASS; difftest not accepted",
+      "conditions": "CoreMark image; external S-mode Sv32 binary; 5,668,250 cycles / 3,252,429 commits / CPI 1.742774400; IF/LSU/memory=0/0/0; WRITE_ALLOCATE=1; normal ebreak but marker unavailable; difftest not accepted",
       "evidence_id": "coremark_public_runtime",
       "evidence_status": "public_runtime_provisional",
       "id": "linux_public_coremark_runtime_provisional",
       "profile": "rv32ima_sv32_linux",
       "public": true,
-      "reason": "The binary is external and the profile-matched difftest attempt is rejected at AXI timer MMIO under the device=false contract",
+      "reason": "The binary is external, the public runtime cannot expose the CoreMark marker through AXI UARTLite/AXI Timer, and the profile-matched difftest attempt is rejected at AXI timer MMIO",
       "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
-      "statement": "Current public headless CoreMark CPI 1.742774400 is provisional external-input data, not a verified claim",
+      "statement": "Current public headless CoreMark-image CPI 1.742774400 is provisional external-input data, not a verified claim",
       "status": "provisional"
     },
     {

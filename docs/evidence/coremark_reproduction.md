@@ -44,7 +44,7 @@ python3 sim/common/verilator_runner.py --profile rv32im_ooo_4k \
 | Profile | Binary / ELF SHA256 | Runtime latency | Cycles | Retired instructions | CPI | CoreMark stop |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | `coremark-riscv32-M-npc.bin` / `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd` (ELF)；binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `4578475` | `3081067` | `1.486003063` | `CoreMark PASS`, ebreak |
-| `rv32ima_sv32_linux` | `coremark-riscv32s-M-fpga.bin` / `8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774` (ELF)；binary `814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb` | `0/0/0`; public filelist uses `NPC_DCACHE_WRITE_ALLOCATE=1` | `5668250` | `3252429` | `1.742774400` | `CoreMark PASS`, ebreak |
+| `rv32ima_sv32_linux` | `coremark-riscv32s-M-fpga.bin` / `8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774` (ELF)；binary `814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb` | `0/0/0`; public filelist uses `NPC_DCACHE_WRITE_ALLOCATE=1` | `5668250` | `3252429` | `1.742774400` | ebreak at `_trm_init`; CoreMark marker unavailable |
 | `rv32im_ooo_4k` | `coremark-riscv32-M-npc.bin` / ELF `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd`；binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `2718694` | `3081098` (`2040454 + 1040644`) | `0.882378295` | `CoreMark PASS`, ebreak |
 
 对应的 `PUBLIC_SIM_PASS` 行为为：
@@ -64,9 +64,12 @@ OoO 使用 M-mode binary；将 Linux/Sv32 binary 放到 OoO 会在 Sv32 trap han
 - Linux：在 AXI timer `0xa0000000` 访问处被同一合同拒绝；
 - OoO：第 11 条 commit 出现 `x8` 参考值 `0`、DUT 值 `0xb` 的确定性 mismatch。
 
-因此三行是“runtime PASS、difftest 未接受”的 provisional 数据，不能标为
-架构 verified claim。DPI runtime 的 CoreMark 输出中的 host 毫秒和 Marks 只作
-停机 sanity check；没有实现时钟，不能换算 CoreMark/MHz。
+因此 Single/OoO 是“CoreMark PASS、runtime PASS、difftest 未接受”，Linux 是
+“CoreMark image 到达正常 ebreak、marker 不可见、difftest 未接受”。三行都只是
+provisional 数据，不能标为架构 verified claim。Linux 的 marker 缺失来自公开
+runtime 未实现 AXI UARTLite/AXI Timer；私有同一 binary 家族的重跑仍有明确 PASS。
+DPI runtime 的 host 毫秒和 Marks 只作停机 sanity check；没有实现时钟，不能换算
+CoreMark/MHz。
 
 ## Linux 后续优化 checkpoint 私有重跑
 

@@ -36,6 +36,9 @@ in [CoreMark runtime evidence](evidence/coremark_reproduction.en.md). Since the
 binary inputs are external, these rows remain provisional. CoreMark/MHz,
 seven-workload weighted CPI, frequency, and area cannot be derived from these CPI
 values and remain `—`.
+The current Linux row is the cycles/commit CPI of the CoreMark image. Because the
+public runtime does not yet model AXI UARTLite/AXI Timer, no CoreMark marker is
+visible in the log; it must not be upgraded to a benchmark PASS or verified claim.
 
 ## Historical CoreMark CPI references
 
