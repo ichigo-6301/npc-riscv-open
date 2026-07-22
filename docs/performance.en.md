@@ -49,9 +49,9 @@ options, and implemented clock information.
 | `rv32im_ooo_4k` | CoreMark, matrix-mul, crc32, quick-sort, load-store, Dhrystone, microbench | 5,157,299 | 5,649,752 | 0.912836351 | `ooo_public_cpi_not_yet_claimed` |
 
 This weighted CPI divides aggregate cycles by aggregate retired instructions
-for one finite workload set. CoreMark itself has CPI `0.882380204`; the two
-metrics are not interchangeable, and neither proves that every program runs
-below CPI 1.
+for one finite workload set. CoreMark itself has CPI `0.882380204`
+(`ooo_coremark_cpi_not_yet_claimed`); the two metrics are not interchangeable,
+and neither proves that every program runs below CPI 1.
 
 ## Historical synthesis reference
 
@@ -62,10 +62,11 @@ below CPI 1.
 | `rv32im_ooo_4k` | — | — | — | — | `not_claimed` |
 
 The approximately 704 MHz value is the historical arithmetic estimate
-`1 / (1.000 ns + 0.42 ns)`, not a closed maximum frequency. The area is the
-library cell-area value from that DC run. There is no public P&R, post-route
-parasitic, SRAM signoff, power, IO, OCV/MMMC, or silicon correlation, and the
-number is not comparable to another memory binding or tool setup.
+`1 / (1.000 ns + 0.42 ns)` (`single_700mhz_closure_not_claimed`), not a closed
+maximum frequency. The area is the library cell-area value from that DC run
+(`single_dc_area_not_claimed`). There is no public P&R, post-route parasitic,
+SRAM signoff, power, IO, OCV/MMMC, or silicon correlation, and the number is
+not comparable to another memory binding or tool setup.
 
 ## Requirements for filling empty cells
 
