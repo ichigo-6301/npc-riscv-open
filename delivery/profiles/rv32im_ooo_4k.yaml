@@ -1,0 +1,40 @@
+kind: profile
+schema_version: 1.0.0
+profile_id: rv32im_ooo_4k
+product_class: cpu_core
+intent: Dual-dispatch dual-commit RV32IM out-of-order performance profile with 4 KiB instruction and data structures
+source_ref: codex/s9s-rv32im-4k-release-freeze-v1
+commit_sha: 99fcc2be539eabb078c0d73b26a7ef2c00071391
+ref_resolution: resolved_remote
+source_root: .
+workbench_provenance: 8c004f4ac7d8c99fa71b8adde35a319f7472c93a
+configuration_provenance: 8a3f36f6a637c1e7d0d62600e4c95794bd57fa0c
+private_release_identity: ooo-rv32im-4k-v0.1.0-rc1
+source_set: rv32im_ooo_4k
+design_config: rv32im_ooo_4k
+target_config: verilator_headless
+default_run_config: rv32im_ooo_4k_smoke
+top_module: ooo_npc_top
+wrapper_top_module: npc_public_sim_top
+public_filelist: filelists/rv32im_ooo_4k.f
+maturity: development
+release_maturity: partial
+stages:
+  config_check: verified
+  rtl_regression: verified
+  difftest: planned
+  isa_tests: verified
+  performance_benchmark: provisional
+  synthesis_lint: verified
+  headless_verilator_migration: verified
+  public_fresh_clone: verified
+  synthesis: not_claimed
+  physical_design: not_claimed
+  signoff_sta: not_claimed
+release_constraints:
+  native_rtl_preserved: true
+  accepted_mechanism_count: 47
+  disabled_oracle_count: 17
+  default_accounting_level: 0
+  nvboard_excluded: true
+  public_performance_claims_enabled: false

@@ -1,0 +1,13 @@
+kind: coverage_plan
+schema_version: 1.0.0
+plan_id: npc_open_three_profile_coverage
+coverage_status: not_available
+items:
+  - id: functional_coverage
+    feature: Measured RTL functional coverage
+    requirement: Do not substitute test counts or regression PASS counts for coverage metrics
+    testcase: null
+    checker: null
+    coverage: null
+    evidence: []
+    status: not_claimed

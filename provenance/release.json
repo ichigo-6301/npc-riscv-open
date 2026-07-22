@@ -1,0 +1,13 @@
+{
+  "default_profile": "rv32im_ooo_4k",
+  "long_lived_branch": "main",
+  "profile_ids": [
+    "rv32im_single_perf",
+    "rv32ima_sv32_linux",
+    "rv32im_ooo_4k"
+  ],
+  "release_identity": "npc-riscv-open-v0.1.0-rc1",
+  "remote_publication": "not_performed",
+  "repository_name": "npc-riscv-open",
+  "schema": "npc-riscv-open/release-v1"
+}

@@ -1,0 +1,20 @@
+document_title: NPC RISC-V 三 Profile 公开交付
+document_title_en: NPC RISC-V Three-Profile Open Delivery
+readme_default_language: zh-CN
+readme_secondary_language: en
+public_redactions:
+  - private branch topology and experiment history
+  - host absolute paths and account names
+  - credentials, private remotes, and license-server settings
+  - PDK, Liberty, DB, LEF, GDS, macro, and implementation databases
+  - NEMU, AM, OpenSBI, Linux, KVM, Capstone, and NVBoard source or binaries
+  - raw build directories, waveforms, traces, and tool scratch
+section_notes:
+  overview: Present one main branch and three declarative profiles; explain that RTL source sets are isolated while the Verilator control plane is shared.
+  architecture: Describe each profile separately and do not imply that their native RTL trees have been unified.
+  interfaces: Document the profile-specific wrapper boundary and the shared two-slot commit packet abstraction; lane 1 is invalid for single-issue profiles.
+  verification: Separate private source evidence, public migration gates, optional external difftest, and exact fresh-clone validation.
+  performance: Show no public performance table until the public runtime reproduces the relevant binary, config, and source identity.
+  implementation: Treat the single-profile 704 MHz figure as a negative-WNS DC inference and defer all new PPA and timing work until after migration.
+  limitations: State that full Linux boot, ASIC PPA, timing closure, physical signoff, FPGA, power, and silicon performance are not RC1 claims.
+  reproduction: Require profile defconfig, showconfig/config-check, source closure, bounded smoke, and a clean post-run clone.

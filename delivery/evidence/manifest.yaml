@@ -1,0 +1,33 @@
+kind: evidence_manifest
+schema_version: 1.0.0
+evidence:
+  - id: "public_source_allowlist"
+    path: "../provenance/source_allowlist.json"
+    type: "public_generated_record"
+    profile: "all"
+    source_ref: "npc-riscv-open-v0.1.0-rc1"
+    tool: "deterministic public exporter and native-Linux fresh-clone checks"
+    sha256: "75ff4156e3a617205bd65e9ad85cd239bfa1ea4cb72647ba390831a988933f6c"
+    claims: []
+    public: true
+    status: "verified"
+  - id: "public_source_closure"
+    path: "../provenance/profile_inventory.json"
+    type: "public_generated_record"
+    profile: "all"
+    source_ref: "npc-riscv-open-v0.1.0-rc1"
+    tool: "deterministic public exporter and native-Linux fresh-clone checks"
+    sha256: "fcfaca1aaf46dad5155c93e71542bff8f3e2b398394255931fdc74a044e90061"
+    claims: []
+    public: true
+    status: "verified"
+  - id: "public_bounded_validation"
+    path: "../docs/validation.md"
+    type: "public_generated_record"
+    profile: "all"
+    source_ref: "npc-riscv-open-v0.1.0-rc1"
+    tool: "deterministic public exporter and native-Linux fresh-clone checks"
+    sha256: "fa055e5c2d7e18ea3500d51389397d3e71a0b0edfd86fafd18dfa3922a4a0010"
+    claims: []
+    public: true
+    status: "verified"

@@ -1,0 +1,1096 @@
+{
+  "excluded_components": [
+    "NVBoard",
+    "legacy board top/PS2/VGA sources",
+    "NEMU/AM/OpenSBI/Linux/KVM source and binaries",
+    "PDK, standard-cell, SRAM and implementation databases",
+    "tracked generated Verilator outputs"
+  ],
+  "generated_from_workbench_commit": "4a484e8c1929da94d6c49a8c7fbd670406dd506e",
+  "profiles": [
+    {
+      "compile": {
+        "include_dirs": [
+          "rtl/profiles/rv32im_single_perf",
+          "rtl/profiles/rv32im_single_perf/cpu_top"
+        ],
+        "verilog_defines": [
+          "NPC_USE_DPI",
+          "NPC_DPI_MEM_LATENCY=2",
+          "NPC_M_EXTENSION"
+        ]
+      },
+      "entries": [
+        {
+          "blob": "2e4b145f12fb8b72664653c277e9341c27939f10",
+          "bytes": 6768,
+          "destination": "rtl/profiles/rv32im_single_perf/ALU.v",
+          "sha256": "99e113c22ff424a1f07538e300ea1df9dd062036ad452a3827c249d5f37dc4dd",
+          "source": "vsrc_new/ALU.v"
+        },
+        {
+          "blob": "6a82aefe5c123eca411b3ea755ba13a748b9093a",
+          "bytes": 9515,
+          "destination": "rtl/profiles/rv32im_single_perf/AxiPmemBridge.v",
+          "sha256": "a85d07723f89341bcfa08b4e0343ce6749bfa26d5bf5d8677efd6dc4e276d381",
+          "source": "vsrc_new/AxiPmemBridge.v"
+        },
+        {
+          "blob": "c54bc5f78e8714f3d4633418ddce28ecd75e2cfe",
+          "bytes": 2613,
+          "destination": "rtl/profiles/rv32im_single_perf/BranchCond.v",
+          "sha256": "55ef12239f5194629434a5f59c283d612b9e5f71545af498e7ef43fa57a5f4b0",
+          "source": "vsrc_new/BranchCond.v"
+        },
+        {
+          "blob": "414f72605014f7afb8a0b3462bd7cf78b5ba551f",
+          "bytes": 27531,
+          "destination": "rtl/profiles/rv32im_single_perf/BranchStat.v",
+          "sha256": "fc47964709224cc58922625737b62cec6ceb02e725106f7a4a50302f24ccea91",
+          "source": "vsrc_new/BranchStat.v"
+        },
+        {
+          "blob": "c0b146c757e77e33fa2761d7e3c1afb536eae862",
+          "bytes": 5190,
+          "destination": "rtl/profiles/rv32im_single_perf/CacheStat.v",
+          "sha256": "8d5a2c3ef51a67c9ab3cce2b75ea63d55742b8d925c34615b18d04de28b648d4",
+          "source": "vsrc_new/CacheStat.v"
+        },
+        {
+          "blob": "b15b04a41649e389a284a18fe2b9c45a7a0e854f",
+          "bytes": 17669,
+          "destination": "rtl/profiles/rv32im_single_perf/ContrGen.v",
+          "sha256": "690de97375bc39ae1cd0792269fa440a6f1b20043b56739e12b4ff7c267ef7f1",
+          "source": "vsrc_new/ContrGen.v"
+        },
+        {
+          "blob": "d47052d699be49af2f9e0093030277633eead05f",
+          "bytes": 4511,
+          "destination": "rtl/profiles/rv32im_single_perf/CsrContrGen.v",
+          "sha256": "6a5b03e2d36f54a7cc798ece697976c243a261c4c09be7624b237cedfc85274e",
+          "source": "vsrc_new/CsrContrGen.v"
+        },
+        {
+          "blob": "307590425f72de4345b8970b933b5efd8449d392",
+          "bytes": 12415,
+          "destination": "rtl/profiles/rv32im_single_perf/CsrRegisterFile.v",
+          "sha256": "0da96098835d6a4652164e655ec992a62754cfb021134c5a9e3b89be7d5c9d8e",
+          "source": "vsrc_new/CsrRegisterFile.v"
+        },
+        {
+          "blob": "985c6fd389f29a451c74993d6ee8dc5b32e4c519",
+          "bytes": 5740,
+          "destination": "rtl/profiles/rv32im_single_perf/DataMem.v",
+          "sha256": "b4a272e1734d919fa98cb56bc57bb2d8b59e6e0c71f761257bc8e12b94a80cbe",
+          "source": "vsrc_new/DataMem.v"
+        },
+        {
+          "blob": "be764eefe1078e65bcbabf107a6a2fc08346e484",
+          "bytes": 660,
+          "destination": "rtl/profiles/rv32im_single_perf/ImmGen.v",
+          "sha256": "5431938d11bc6d613bc77078cac642b31c493efa091bfa9e0500404f710a794d",
+          "source": "vsrc_new/ImmGen.v"
+        },
+        {
+          "blob": "3c54d0f469cbf070400313d25c440dced69a6555",
+          "bytes": 413,
+          "destination": "rtl/profiles/rv32im_single_perf/InstrFetch.v",
+          "sha256": "e2eaf568fd075e6ab9d33ca7195ee6aba0cc7e056be590b920b5f1d3b06c9638",
+          "source": "vsrc_new/InstrFetch.v"
+        },
+        {
+          "blob": "ee1d73c4bfdd28a918aed9702d570d7e6026680d",
+          "bytes": 16277,
+          "destination": "rtl/profiles/rv32im_single_perf/InstrStat.v",
+          "sha256": "01b23010b28a1bc0c4c024312065ecd830b423c1f8b1611a9416f9b7d6b85a63",
+          "source": "vsrc_new/InstrStat.v"
+        },
+        {
+          "blob": "0137a0b2fece9e10b83683588f01d62132945d6d",
+          "bytes": 8722,
+          "destination": "rtl/profiles/rv32im_single_perf/Mdu.v",
+          "sha256": "0d89c7630cde4e41743fd34975bb0af8e6cfefd6ac4361e872b442609c6eb00f",
+          "source": "vsrc_new/Mdu.v"
+        },
+        {
+          "blob": "2a7dd773a73663bd7ccfad73db84a79a9fd29a2e",
+          "bytes": 317,
+          "destination": "rtl/profiles/rv32im_single_perf/MuxKey.v",
+          "sha256": "49c494dcdf8573767e4233ed9c816aa3c959e2bf95f5a4e4e5a7d20ff0a44626",
+          "source": "vsrc_new/MuxKey.v"
+        },
+        {
+          "blob": "c04c41fc1fbaf2e6c85fc1b6cae5cd41969f053a",
+          "bytes": 1108,
+          "destination": "rtl/profiles/rv32im_single_perf/MuxKeyInternal.v",
+          "sha256": "169a8c27f939bfefe74f0dad4837473075a6b8c6b4d020a402029d37665f6671",
+          "source": "vsrc_new/MuxKeyInternal.v"
+        },
+        {
+          "blob": "67bdc4132c2a0c7f31c4d1da07c2a697f859c1c0",
+          "bytes": 356,
+          "destination": "rtl/profiles/rv32im_single_perf/MuxKeyWithDefault.v",
+          "sha256": "2a69cc5218dc53af01f972e43e2e3d98e3b1166812a0f48468d053e17fcf608a",
+          "source": "vsrc_new/MuxKeyWithDefault.v"
+        },
+        {
+          "blob": "e61dc8dce89a29177f5f216b61eea847bd03c9a1",
+          "bytes": 1626,
+          "destination": "rtl/profiles/rv32im_single_perf/PCAdder.v",
+          "sha256": "4bac812a8adf22c6b34fa16887e64e8d3ed2fdcdf9dd524b69366788369c87cb",
+          "source": "vsrc_new/PCAdder.v"
+        },
+        {
+          "blob": "d70bec6603fea439ccf6bba8cdf0ffc59aa7ea30",
+          "bytes": 21910,
+          "destination": "rtl/profiles/rv32im_single_perf/PipeStat.v",
+          "sha256": "221cc3cba33ae265d1d514fcf3bb349d30efaf9c7f8b78f2d1f16e7025f19af8",
+          "source": "vsrc_new/PipeStat.v"
+        },
+        {
+          "blob": "df2ebf1859b8c5827b5201a26083c2402cedb213",
+          "bytes": 292,
+          "destination": "rtl/profiles/rv32im_single_perf/Reg.v",
+          "sha256": "1ae29724b73eaa54f85d89e7a3e01d6628ff9f6db398fd52b502364d1d0210de",
+          "source": "vsrc_new/Reg.v"
+        },
+        {
+          "blob": "06cec027d5ea6c483c43718b09a9f1599fe79478",
+          "bytes": 821,
+          "destination": "rtl/profiles/rv32im_single_perf/RegisterFile.v",
+          "sha256": "6db1ce01d66f583408ab8d1be977ce55fb27e14624afef4681c30ff1ef368ff2",
+          "source": "vsrc_new/RegisterFile.v"
+        },
+        {
+          "blob": "26dc52b1b295d49c2025a32a0d7a4c2bc3b1046a",
+          "bytes": 5311,
+          "destination": "rtl/profiles/rv32im_single_perf/SimPmemBridge.v",
+          "sha256": "590b903f652c115098446c99d9d455cdfd1aa5b707f55f5e08160a43ad819fa3",
+          "source": "vsrc_new/SimPmemBridge.v"
+        },
+        {
+          "blob": "3132b8212db81994760686c3e83786be89bc4671",
+          "bytes": 3011,
+          "destination": "rtl/profiles/rv32im_single_perf/cache/CacheDataArray1R1W.v",
+          "sha256": "36594f7055bf9f0d789f351434fe13ad263480d62ae1abb31b62444e6df6be57",
+          "source": "vsrc_new/cache/CacheDataArray1R1W.v"
+        },
+        {
+          "blob": "9a39d15a70859ce2fd2e8b2abd9d370e6969d3c2",
+          "bytes": 28227,
+          "destination": "rtl/profiles/rv32im_single_perf/cache/DCache.v",
+          "sha256": "9ca06fc33fd2855abc01b7c90684d40e9f108a89b6a36f8aa7e4e5da871fccf5",
+          "source": "vsrc_new/cache/DCache.v"
+        },
+        {
+          "blob": "718c84a60e01c100716567a5b1bcbdadcdbc1ae6",
+          "bytes": 17956,
+          "destination": "rtl/profiles/rv32im_single_perf/cache/ICache.v",
+          "sha256": "a48fe7a6cdc16d9beba56280d4b3d93c6221dbaa92a63a6c7e80dddeb8281e6b",
+          "source": "vsrc_new/cache/ICache.v"
+        },
+        {
+          "blob": "6919e5949bc2a8b22c030ad1caf6ec4ef5a201ba",
+          "bytes": 254,
+          "destination": "rtl/profiles/rv32im_single_perf/cache/npc_cache_data_array_1r1w_512x32.v",
+          "sha256": "13e35a5f0a97374ed4cb54f33388439542fee786a5c673b5fbb9ee8fe69839cf",
+          "source": "vsrc_new/cache/npc_cache_data_array_1r1w_512x32.v"
+        },
+        {
+          "blob": "b4e8636831b6f8553fa2fed324bc969a84443aeb",
+          "bytes": 62572,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top.v",
+          "sha256": "3315bfaeeb308c84f5bc6c6eb04abde21763db87b5ba21db85f1006df800af25",
+          "source": "vsrc_new/cpu_top.v"
+        },
+        {
+          "blob": "a973fd71597104567857c0a219120dd86400ee18",
+          "bytes": 17569,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/ex_stage.v",
+          "sha256": "befc7160f3f67e684ac95b65547cce9a7282590b62ee9fe70a397addf6513e5f",
+          "source": "vsrc_new/cpu_top/ex_stage.v"
+        },
+        {
+          "blob": "84fea268f7f4c280d0984a96c59f633d77c89bbe",
+          "bytes": 24982,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/id_stage.v",
+          "sha256": "0b6ccc27c96c850ec35eaf94cffe2fa63b6fe1f3cc2db4b4dfcfe823cc34b49b",
+          "source": "vsrc_new/cpu_top/id_stage.v"
+        },
+        {
+          "blob": "90ff9fe60faa265d2a068ddc1d5ff8fe194e8f41",
+          "bytes": 15152,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/if_stage.v",
+          "sha256": "2c81a3238f1ad21b26040c785483d03fe361406ddfed22d02cd3443406335e3b",
+          "source": "vsrc_new/cpu_top/if_stage.v"
+        },
+        {
+          "blob": "3f2de63bac59bc903bfb570737040aee809bea58",
+          "bytes": 4026,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/include/bbus_core_defs.svh",
+          "sha256": "46f04b34dab503f150a78d2f0b7e82a63f092daa54c3331055a82ca220a5ba6d",
+          "source": "vsrc_new/cpu_top/include/bbus_core_defs.svh"
+        },
+        {
+          "blob": "609527e40f9de8375b5bccb330d59e9273733a83",
+          "bytes": 13853,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/mem_stage.v",
+          "sha256": "6d77db4e275ea2843b91523e8672b325b3d71cdecf7f89af90194d4ef201b83a",
+          "source": "vsrc_new/cpu_top/mem_stage.v"
+        },
+        {
+          "blob": "6345ed81f86454a16de3dafcb06e53cd0a014f87",
+          "bytes": 3077,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/pairing_unit.v",
+          "sha256": "b4a79d05667fb9780de360e2735ac60bf856d74e8cd3313e7ae79d878b74f3b1",
+          "source": "vsrc_new/cpu_top/pairing_unit.v"
+        },
+        {
+          "blob": "2617b5327d0c96bad868b8c81dabfbc57c77ec31",
+          "bytes": 4621,
+          "destination": "rtl/profiles/rv32im_single_perf/cpu_top/wb_stage.v",
+          "sha256": "37ea9bb78eebd72156ff576867fc88046bbed2fc3f5fa53714fc51a561cb5ef8",
+          "source": "vsrc_new/cpu_top/wb_stage.v"
+        }
+      ],
+      "entry_count": 33,
+      "profile_id": "rv32im_single_perf",
+      "provenance_entries": [],
+      "public_root": "rtl/profiles/rv32im_single_perf",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "source_ref": "bbus-dual-ready-700mhz-v1.0",
+      "source_root": "vsrc_new",
+      "source_tree_root": "",
+      "wrapper": "rtl/wrappers/rv32im_single_perf_sim_top.sv"
+    },
+    {
+      "compile": {
+        "include_dirs": [
+          "rtl/profiles/rv32ima_sv32_linux",
+          "rtl/profiles/rv32ima_sv32_linux/cpu_top"
+        ],
+        "verilog_defines": [
+          "NPC_USE_DPI",
+          "NPC_DPI_MEM_LATENCY=0",
+          "NPC_DPI_CSR_UNDEFINE",
+          "NPC_M_EXTENSION",
+          "NPC_MISALIGNED_DATA=1",
+          "NPC_BRANCH_PRED",
+          "NPC_BTB_ENTRIES=128",
+          "NPC_BHT_ENTRIES=128",
+          "NPC_BHR_BITS=8",
+          "NPC_IF_HIT_PIPELINE",
+          "NPC_LSU_HIT_PIPELINE",
+          "NPC_LSU_LOAD_BYPASS",
+          "NPC_EX_MEM_SKID",
+          "NPC_STORE_BUFFER_ENABLE",
+          "NPC_STORE_BUFFER_ENTRIES=2",
+          "NPC_FAST_MUL",
+          "NPC_FAST_MUL_LATENCY=2",
+          "NPC_DCACHE_HIT_OPT",
+          "NPC_DCACHE_WRITE_BACK=1",
+          "NPC_DCACHE_WRITE_ALLOCATE=1",
+          "NPC_HAS_MMU=1",
+          "NPC_HAS_ITLB=1",
+          "NPC_HAS_DTLB=1",
+          "NPC_ITLB_ENTRIES=16",
+          "NPC_DTLB_ENTRIES=16"
+        ]
+      },
+      "entries": [
+        {
+          "blob": "81a778db352d3ded8c3fc6aaab1baf83c57cadbe",
+          "bytes": 6733,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/ALU.v",
+          "sha256": "945824a7610058e9c853c2c21954c54fa9285149da5741916f6d1d7aa5f9fbb1",
+          "source": "npc/vsrc_new/ALU.v"
+        },
+        {
+          "blob": "71f0261f96f8126f70925876368e7f70b12d34ce",
+          "bytes": 3883,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/AclintTimer.v",
+          "sha256": "9e6b6cad8687fb9d9a78d8e6144b0a42357aff004b41cc038570634ab24953ed",
+          "source": "npc/vsrc_new/AclintTimer.v"
+        },
+        {
+          "blob": "6a82aefe5c123eca411b3ea755ba13a748b9093a",
+          "bytes": 9515,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/AxiPmemBridge.v",
+          "sha256": "a85d07723f89341bcfa08b4e0343ce6749bfa26d5bf5d8677efd6dc4e276d381",
+          "source": "npc/vsrc_new/AxiPmemBridge.v"
+        },
+        {
+          "blob": "c54bc5f78e8714f3d4633418ddce28ecd75e2cfe",
+          "bytes": 2613,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/BranchCond.v",
+          "sha256": "55ef12239f5194629434a5f59c283d612b9e5f71545af498e7ef43fa57a5f4b0",
+          "source": "npc/vsrc_new/BranchCond.v"
+        },
+        {
+          "blob": "7825a525a791b74853550f63d62e2e6bac4e17bf",
+          "bytes": 36219,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/BranchStat.v",
+          "sha256": "37b5ecfddb5d8cfc2d9feb9f76b696968651eea5a15db4551dba304e8e1a4fa6",
+          "source": "npc/vsrc_new/BranchStat.v"
+        },
+        {
+          "blob": "1f23084cb74829de34897e0d77115ca74b90fe7c",
+          "bytes": 8422,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/CacheStat.v",
+          "sha256": "a909a51934212ed4d176cc20f0c4cc8dc5feced33c21fb86c08d8aa67f02d503",
+          "source": "npc/vsrc_new/CacheStat.v"
+        },
+        {
+          "blob": "3de84d511f31eebe558e30e870d6ec38968b5b7b",
+          "bytes": 23251,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/ContrGen.v",
+          "sha256": "371c1ac2eb3fb09916a25dc75fe6f6d98e92c6f41fbca449bfef4fe2aae3ee23",
+          "source": "npc/vsrc_new/ContrGen.v"
+        },
+        {
+          "blob": "1dea1c63a6929e9e0507dffffd28c61018af1f4b",
+          "bytes": 3141,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/CsrContrGen.v",
+          "sha256": "3917d26439b20e9afc8be0540b5d91c0d0c889bb3ed0fdc16d277723c2fffd64",
+          "source": "npc/vsrc_new/CsrContrGen.v"
+        },
+        {
+          "blob": "ee7f2b48a060f24942dde6cce2065bff3a545371",
+          "bytes": 7671,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/CsrRegisterFile.v",
+          "sha256": "9d97cef9e8242c88ddb28898676ca5a967e9d45a622c5b5fe98d5da6d25e436d",
+          "source": "npc/vsrc_new/CsrRegisterFile.v"
+        },
+        {
+          "blob": "52db4a6f5ad52e9f95bfca965ef978ba2dffa618",
+          "bytes": 2843,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/DCacheMmioMux.v",
+          "sha256": "f38f65fed9becdf809f6e3fa025b2eab08780546b394e20d3d255fc3f11d833c",
+          "source": "npc/vsrc_new/DCacheMmioMux.v"
+        },
+        {
+          "blob": "985c6fd389f29a451c74993d6ee8dc5b32e4c519",
+          "bytes": 5740,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/DataMem.v",
+          "sha256": "b4a272e1734d919fa98cb56bc57bb2d8b59e6e0c71f761257bc8e12b94a80cbe",
+          "source": "npc/vsrc_new/DataMem.v"
+        },
+        {
+          "blob": "2e7139452cbbd4ababd0568f5090dd317bfcac6e",
+          "bytes": 12989,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/HitPathStat.v",
+          "sha256": "2fe7cc3882faebb0b3c2bc14d8d030ee0e86da04655b2b52fd092ba9911f178c",
+          "source": "npc/vsrc_new/HitPathStat.v"
+        },
+        {
+          "blob": "be764eefe1078e65bcbabf107a6a2fc08346e484",
+          "bytes": 660,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/ImmGen.v",
+          "sha256": "5431938d11bc6d613bc77078cac642b31c493efa091bfa9e0500404f710a794d",
+          "source": "npc/vsrc_new/ImmGen.v"
+        },
+        {
+          "blob": "3c54d0f469cbf070400313d25c440dced69a6555",
+          "bytes": 413,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/InstrFetch.v",
+          "sha256": "e2eaf568fd075e6ab9d33ca7195ee6aba0cc7e056be590b920b5f1d3b06c9638",
+          "source": "npc/vsrc_new/InstrFetch.v"
+        },
+        {
+          "blob": "ee1d73c4bfdd28a918aed9702d570d7e6026680d",
+          "bytes": 16277,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/InstrStat.v",
+          "sha256": "01b23010b28a1bc0c4c024312065ecd830b423c1f8b1611a9416f9b7d6b85a63",
+          "source": "npc/vsrc_new/InstrStat.v"
+        },
+        {
+          "blob": "f54d3e5df8a5226d1a98dace716dde45400ee3fb",
+          "bytes": 3330,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/MMUStat.v",
+          "sha256": "6e7115d1fefbbd2d5071de3b50852ee72b70b0ec2618a264b7373e1d6546aa4b",
+          "source": "npc/vsrc_new/MMUStat.v"
+        },
+        {
+          "blob": "9c5650003c09ded4e96b2bce9774b269d2ac3d95",
+          "bytes": 6826,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Mdu.v",
+          "sha256": "baed4543aa6f09aeeffb79480738273beb3918014d32b3d9730965af6fe88ae7",
+          "source": "npc/vsrc_new/Mdu.v"
+        },
+        {
+          "blob": "2a7dd773a73663bd7ccfad73db84a79a9fd29a2e",
+          "bytes": 317,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/MuxKey.v",
+          "sha256": "49c494dcdf8573767e4233ed9c816aa3c959e2bf95f5a4e4e5a7d20ff0a44626",
+          "source": "npc/vsrc_new/MuxKey.v"
+        },
+        {
+          "blob": "c04c41fc1fbaf2e6c85fc1b6cae5cd41969f053a",
+          "bytes": 1108,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/MuxKeyInternal.v",
+          "sha256": "169a8c27f939bfefe74f0dad4837473075a6b8c6b4d020a402029d37665f6671",
+          "source": "npc/vsrc_new/MuxKeyInternal.v"
+        },
+        {
+          "blob": "67bdc4132c2a0c7f31c4d1da07c2a697f859c1c0",
+          "bytes": 356,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/MuxKeyWithDefault.v",
+          "sha256": "2a69cc5218dc53af01f972e43e2e3d98e3b1166812a0f48468d053e17fcf608a",
+          "source": "npc/vsrc_new/MuxKeyWithDefault.v"
+        },
+        {
+          "blob": "e61dc8dce89a29177f5f216b61eea847bd03c9a1",
+          "bytes": 1626,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/PCAdder.v",
+          "sha256": "4bac812a8adf22c6b34fa16887e64e8d3ed2fdcdf9dd524b69366788369c87cb",
+          "source": "npc/vsrc_new/PCAdder.v"
+        },
+        {
+          "blob": "58aabf759a23dd2707991152cffff247541a2daa",
+          "bytes": 23712,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/PipeStat.v",
+          "sha256": "2363f211341c2c417ac828ccd15f7105d99837b7811c8b3465ba086069e1a916",
+          "source": "npc/vsrc_new/PipeStat.v"
+        },
+        {
+          "blob": "e6292c3976e16a69f986f5c710e5c6613defd4f8",
+          "bytes": 179845,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/PipelineCPIStat.v",
+          "sha256": "16caa42ea72fa6f3a0e4e2b43cf5d822f1f70cfd73fcf3d22e48af707133d706",
+          "source": "npc/vsrc_new/PipelineCPIStat.v"
+        },
+        {
+          "blob": "118f88de6e7e3f9675241d1788dee837b66e3d36",
+          "bytes": 23002,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/PrivCsrRegs.v",
+          "sha256": "24cdbd4d71912bf31e1dab57707e569743ae9e9be12d267ad48cbe6335d2f88f",
+          "source": "npc/vsrc_new/PrivCsrRegs.v"
+        },
+        {
+          "blob": "df2ebf1859b8c5827b5201a26083c2402cedb213",
+          "bytes": 292,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Reg.v",
+          "sha256": "1ae29724b73eaa54f85d89e7a3e01d6628ff9f6db398fd52b502364d1d0210de",
+          "source": "npc/vsrc_new/Reg.v"
+        },
+        {
+          "blob": "06cec027d5ea6c483c43718b09a9f1599fe79478",
+          "bytes": 821,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/RegisterFile.v",
+          "sha256": "6db1ce01d66f583408ab8d1be977ce55fb27e14624afef4681c30ff1ef368ff2",
+          "source": "npc/vsrc_new/RegisterFile.v"
+        },
+        {
+          "blob": "26dc52b1b295d49c2025a32a0d7a4c2bc3b1046a",
+          "bytes": 5311,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/SimPmemBridge.v",
+          "sha256": "590b903f652c115098446c99d9d455cdfd1aa5b707f55f5e08160a43ad819fa3",
+          "source": "npc/vsrc_new/SimPmemBridge.v"
+        },
+        {
+          "blob": "9dc88f4ac5b1518bdf6430253eb7fab13cc359e8",
+          "bytes": 43353,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32DCacheBridge.v",
+          "sha256": "00839f5a7ac4af0afc07d3b4848cdc3bf5e2e50453c961628047675161e9d41c",
+          "source": "npc/vsrc_new/Sv32DCacheBridge.v"
+        },
+        {
+          "blob": "4891bd69eec18dc04a8af24ce8d119ba4fe3886e",
+          "bytes": 36914,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32FrontendPipe.v",
+          "sha256": "707a030612cc22e0d8be8c00c3ef82c93f7c549b9d774c91b89205e6081c03db",
+          "source": "npc/vsrc_new/Sv32FrontendPipe.v"
+        },
+        {
+          "blob": "5bd76eb095600b6ecf370142c816e82ac9777ee9",
+          "bytes": 16990,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32ICacheBridge.v",
+          "sha256": "797d7f8cf460dcda498033368af812da3749155321e2441665c81d2c750074d5",
+          "source": "npc/vsrc_new/Sv32ICacheBridge.v"
+        },
+        {
+          "blob": "ad69784f26a18b7f788e2d7925d4933a509f5510",
+          "bytes": 19626,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32IFetchPipe.v",
+          "sha256": "bf6c70e42b3dae4e22fcc6eb2fc496be4e948d1d72233ff9a8e8bbfa6829b517",
+          "source": "npc/vsrc_new/Sv32IFetchPipe.v"
+        },
+        {
+          "blob": "da9198de1918e331e8122d1f978239015809e23f",
+          "bytes": 29949,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32LSUPipe.v",
+          "sha256": "22c5c3dc466b2d4333bbd7286b187ddf1d04e8f95e4bf917eb879f278adb04f3",
+          "source": "npc/vsrc_new/Sv32LSUPipe.v"
+        },
+        {
+          "blob": "1d74c9b52e6f037ff79eaa17d1c92c33e7567d78",
+          "bytes": 4534,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32Tlb.v",
+          "sha256": "8d927b3685fe13d9a28d45f1aa681c304c0184baf344272e2f8cbb689e48c97c",
+          "source": "npc/vsrc_new/Sv32Tlb.v"
+        },
+        {
+          "blob": "0ef38ad9fba1dc58921853684b445fcbf82a4b2e",
+          "bytes": 12196,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/TrapCtrl.v",
+          "sha256": "b11bc4b4101ea1d076c782f5c1b206b99d63d7d01f9294cc727b00ab1ce2c10f",
+          "source": "npc/vsrc_new/TrapCtrl.v"
+        },
+        {
+          "blob": "58090292548b67296dbdbc205649289d7632db2e",
+          "bytes": 43555,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cache/DCache.v",
+          "sha256": "13192643084b675fef0b34262c4bc7855d669e1a4759b4c4c51c789cf5f6bbf7",
+          "source": "npc/vsrc_new/cache/DCache.v"
+        },
+        {
+          "blob": "1731bde373e6cdccaed2e2bd92a0c862f722e2cb",
+          "bytes": 43078,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cache/ICache.v",
+          "sha256": "59b19900e74e10d32c72762ea89678462dac9f0b5eb376f8f39594d7f59d415d",
+          "source": "npc/vsrc_new/cache/ICache.v"
+        },
+        {
+          "blob": "d3dc2f0192ae726bea214ab5ec02bf96d6adf1d0",
+          "bytes": 162716,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top.v",
+          "sha256": "a350063f5deec514056a3afa345705d9afa94e0a8bd0394c075ec88951bdaf7f",
+          "source": "npc/vsrc_new/cpu_top.v"
+        },
+        {
+          "blob": "e656b11721b681f30eca45f6aa484d145e21934b",
+          "bytes": 27226,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/ex_stage.v",
+          "sha256": "c08726e03eb8f270ccf5b637008ea85cd5605bb61f8f5cc3b14855163d7b7128",
+          "source": "npc/vsrc_new/cpu_top/ex_stage.v"
+        },
+        {
+          "blob": "2a255b0e6f2663b4178838594f8826d251cb38e0",
+          "bytes": 19249,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/id_stage.v",
+          "sha256": "23b2df33b02c5551a40d7d624832a8d95aebef27850129f85eb219a062889a18",
+          "source": "npc/vsrc_new/cpu_top/id_stage.v"
+        },
+        {
+          "blob": "1934d8368c174e6ac52f1ebaec45ac9034b72daa",
+          "bytes": 32682,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/if_stage.v",
+          "sha256": "4813925437914ce1d3e7ccca52045639d98efa4925442741d0efd7340221387a",
+          "source": "npc/vsrc_new/cpu_top/if_stage.v"
+        },
+        {
+          "blob": "db536c55a7f164a4e08140de02f2ac756eb379ee",
+          "bytes": 55286,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/mem_stage.v",
+          "sha256": "9dd4f530ac5e085049a4774db9173f05e2893b18e5217ac3797f786b1c37ad79",
+          "source": "npc/vsrc_new/cpu_top/mem_stage.v"
+        },
+        {
+          "blob": "3f576ad71945874365af4fd2ccf4dcb5a0285120",
+          "bytes": 5688,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/wb_stage.v",
+          "sha256": "b75aea674be480ead6677dc0937f7b629dd123dcb8e6e3a5534a153514cbdcc9",
+          "source": "npc/vsrc_new/cpu_top/wb_stage.v"
+        }
+      ],
+      "entry_count": 42,
+      "profile_id": "rv32ima_sv32_linux",
+      "provenance_entries": [],
+      "public_root": "rtl/profiles/rv32ima_sv32_linux",
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "source_ref": "linux-npc-opensbi-kernel-opt-v1",
+      "source_root": "npc/vsrc_new",
+      "source_tree_root": "npc",
+      "wrapper": "rtl/wrappers/rv32ima_sv32_linux_sim_top.sv"
+    },
+    {
+      "compile": {
+        "include_dirs": [
+          "rtl/profiles/rv32im_ooo_4k/include"
+        ],
+        "verilog_defines": [
+          "NPC_USE_DPI",
+          "NPC_DPI_MEM_LATENCY=2",
+          "NPC_DPI_IFETCH_LATENCY=2",
+          "NPC_DPI_LSU_LATENCY=3",
+          "NPC_OOO_IF2PAIR_TEST_STALE_REDIRECT=0",
+          "NPC_OOO_COMPLETION_ARB_FIXED=1",
+          "NPC_OOO_ALU_SCHED_ALU0_ONLY=1",
+          "NPC_OOO_DISPATCH_WIDTH=2",
+          "NPC_OOO_COMMIT_WIDTH=2",
+          "NPC_OOO_FRONTEND_IF2_PAIR=1",
+          "NPC_OOO_DUAL_WB=1",
+          "NPC_OOO_BACKEND_PIPELINE=1",
+          "NPC_OOO_DISPATCH2_TEST_LIMIT_ROB_FREE=0",
+          "NPC_OOO_DISPATCH2_TEST_LIMIT_IQ_FREE=0",
+          "NPC_OOO_DISPATCH2_TEST_LIMIT_FREELIST_FREE=0",
+          "NPC_M_EXTENSION"
+        ]
+      },
+      "entries": [
+        {
+          "blob": "0a7eba1ccb89cd2a990ba3a48d3f811bf097b0b5",
+          "bytes": 2840,
+          "destination": "rtl/profiles/rv32im_ooo_4k/common/bbus_ooo_freelist.sv",
+          "sha256": "7a5bf86a9307b5d46a87a75d982eb208a65f14fa3c03251f26260700cba4176c",
+          "source": "vsrc_ooo/common/bbus_ooo_freelist.sv"
+        },
+        {
+          "blob": "832daa75ab6f5e62c3ba7744e4d8b88d680cdb9a",
+          "bytes": 77726,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/alu_issue_queue_1w.sv",
+          "sha256": "2896e6cce2d869f206c107d6408c1673feec21597c1064597470fe7cd4205361",
+          "source": "vsrc_ooo/core/alu_issue_queue_1w.sv"
+        },
+        {
+          "blob": "ffcfe28cc432afbbc5675579bcc66dfcff90d8db",
+          "bytes": 12491,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_branch_checkpoint_state_2w.sv",
+          "sha256": "4b72be7e93e6d9a9fe4c568889023419e9a7d366882269f5f471277c59829101",
+          "source": "vsrc_ooo/core/ooo_branch_checkpoint_state_2w.sv"
+        },
+        {
+          "blob": "be511cf82e38d7a7110b88cea963533fbce9b1b3",
+          "bytes": 10404,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_branch_commit_age_recovery_1w.sv",
+          "sha256": "0d8a6d0a12c4638699ab0993cdb231a42131c68ae35a44cfd61e2b5691a4f25a",
+          "source": "vsrc_ooo/core/ooo_branch_commit_age_recovery_1w.sv"
+        },
+        {
+          "blob": "03bf1cf048f1857d939801e43a0b4abf934bdefe",
+          "bytes": 12930,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_branch_execute_age_recovery_1w.sv",
+          "sha256": "8893dfc84ea6af8d999311985f9326d948e7f6bb813a15f45d5a2f4d5dc47cf9",
+          "source": "vsrc_ooo/core/ooo_branch_execute_age_recovery_1w.sv"
+        },
+        {
+          "blob": "e40972ab043dfed2faba3c51591caaf1e50b97f9",
+          "bytes": 6464,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_decode_bundle_elastic_2w.sv",
+          "sha256": "fb4f56e0bba86d1c1e5f86837cf311feb0b8f0a17ed4566152791b924eb95b32",
+          "source": "vsrc_ooo/core/ooo_decode_bundle_elastic_2w.sv"
+        },
+        {
+          "blob": "492f625b1ea136313b87d22f69d2f74a1191671e",
+          "bytes": 9034,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_pipeline_commit_control_recovery_1w.sv",
+          "sha256": "9a5fbe6e5c966a347bf97253ae315e7c69b1fe764bf9d6301b20df661e2d63fc",
+          "source": "vsrc_ooo/core/ooo_pipeline_commit_control_recovery_1w.sv"
+        },
+        {
+          "blob": "54506546e3ea2ac02c9ece1281701baf4659c6ff",
+          "bytes": 2390,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_prf.sv",
+          "sha256": "5097628b8a45a3e1e71a40f1a7d424ec42724d7b324ceec4d3a3c57ce1c2ee57",
+          "source": "vsrc_ooo/core/ooo_prf.sv"
+        },
+        {
+          "blob": "0f5cbf0ed75c2ee84e405d9d669ac881cbfa63f1",
+          "bytes": 27193,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/ooo_rename_dispatch_recovery_2w.sv",
+          "sha256": "41eeb06ef8bb8e3d48f86c97e18a1ac0f7e8bd6f6fd2c9959bdc025440e7fbc3",
+          "source": "vsrc_ooo/core/ooo_rename_dispatch_recovery_2w.sv"
+        },
+        {
+          "blob": "fea56b139d528c53d9a098e49800318201ffcce1",
+          "bytes": 17905,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/rename_prf_core.sv",
+          "sha256": "30ac53b2314288afb5f44ea1e63882fe496398f214405efbdea9b10620b4120d",
+          "source": "vsrc_ooo/core/rename_prf_core.sv"
+        },
+        {
+          "blob": "03543befac6ea8bb81452be5c6abffc4828d1270",
+          "bytes": 78481,
+          "destination": "rtl/profiles/rv32im_ooo_4k/core/small_rob.sv",
+          "sha256": "038e5b50bef098985308887c7795b555953707da78c98a6316237c68ebb766a9",
+          "source": "vsrc_ooo/core/small_rob.sv"
+        },
+        {
+          "blob": "9809a372654ea693099ce9e466c085eb4ff9f3dd",
+          "bytes": 1670,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/alu_wb_buffer_1w.sv",
+          "sha256": "3fe2dff07a9bcf0b662d3cacd04c017830e2279709a2db2f2eb01e454f3434c9",
+          "source": "vsrc_ooo/execute/alu_wb_buffer_1w.sv"
+        },
+        {
+          "blob": "2605d8eb3f56218e5ec34bb106594bf5771cb25c",
+          "bytes": 4259,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_alu.sv",
+          "sha256": "3e06cb072fc37d33d6f09da7fb974edbe601aece065350dcd4cb696c1017dd9a",
+          "source": "vsrc_ooo/execute/ooo_alu.sv"
+        },
+        {
+          "blob": "59146a406e106abbc7ce306ac6ff0ccb021b3d43",
+          "bytes": 4570,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_alu_pipeline_1w.sv",
+          "sha256": "7cd0ae67418004180f0df0fc828ec54e18dba454a670074dfd5eac3b557f9740",
+          "source": "vsrc_ooo/execute/ooo_alu_pipeline_1w.sv"
+        },
+        {
+          "blob": "4fd49522916ec9ba89531167fafa7c2ff1cc59e2",
+          "bytes": 17326,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_atomic_pipeline_1w.sv",
+          "sha256": "87e4721ba38d8210f1c2578cde7b8e721194630849afb12c401f605712ce9761",
+          "source": "vsrc_ooo/execute/ooo_atomic_pipeline_1w.sv"
+        },
+        {
+          "blob": "bf5f349eda2950116b7574cb7a49c80f8e9b3e33",
+          "bytes": 9612,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_branch_execute.sv",
+          "sha256": "dfa568b161e9aca3c99798b13c62b93386dbfa695bbdc935af2fb03e57498879",
+          "source": "vsrc_ooo/execute/ooo_branch_execute.sv"
+        },
+        {
+          "blob": "6526535249b23b46ade57a02de7934715ed44514",
+          "bytes": 13733,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_branch_pipeline_1w.sv",
+          "sha256": "050037359e1c1870dc68bfb6af0dc3c4be008bbe334f7795da228f4293ca1494",
+          "source": "vsrc_ooo/execute/ooo_branch_pipeline_1w.sv"
+        },
+        {
+          "blob": "ed60f51c6384ef1206389779164cb06b3230314a",
+          "bytes": 23094,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_dual_wb_buffered_wrapper_2w.sv",
+          "sha256": "53a43c55f33c44faa25749bd7e9f759101f81464d4493131aa25087792b93584",
+          "source": "vsrc_ooo/execute/ooo_dual_wb_buffered_wrapper_2w.sv"
+        },
+        {
+          "blob": "55a5971751c13632e3716d130727be2e132de247",
+          "bytes": 3263,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_dual_wb_bundle_2w.sv",
+          "sha256": "44b01eb6ebc1124f41c7e0126d6715fb38f1e3cb400e39c990cf9e573a245372",
+          "source": "vsrc_ooo/execute/ooo_dual_wb_bundle_2w.sv"
+        },
+        {
+          "blob": "51e05b2d7fd6b7014951b688e4784934dde3242c",
+          "bytes": 9026,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_dual_wb_integration_wrapper_2w.sv",
+          "sha256": "0b1395b0df9ad2a1efdfb19e795b9102a2a32233a82f13191562e85ac5ae857a",
+          "source": "vsrc_ooo/execute/ooo_dual_wb_integration_wrapper_2w.sv"
+        },
+        {
+          "blob": "8142e39b4a6a36413395d12c0b1009fb71f27c33",
+          "bytes": 10678,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_dual_wb_lsu_load_adapter_3src.sv",
+          "sha256": "4573fb2d71b4972fe3383e1292b78c2751f60b8194aeebee375fb93dfb4764f5",
+          "source": "vsrc_ooo/execute/ooo_dual_wb_lsu_load_adapter_3src.sv"
+        },
+        {
+          "blob": "6290b05f6f7d23340f40c4c985cf9c7cdb88d6b0",
+          "bytes": 8406,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_issue_operand_elastic_2w.sv",
+          "sha256": "671e333a5c38e7defe3ef67c3fcdf627b40107d3c8ea7dc7431808e4df4d1d3b",
+          "source": "vsrc_ooo/execute/ooo_issue_operand_elastic_2w.sv"
+        },
+        {
+          "blob": "e26c3bc834706d0f29c44c728477491aa1a561bf",
+          "bytes": 8240,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_issue_operand_fu_router_2alu_1lsu.sv",
+          "sha256": "eb4e87495b031ead2d16763a2a1723dfd459b8058c96f9a646f0122b5a85fcd9",
+          "source": "vsrc_ooo/execute/ooo_issue_operand_fu_router_2alu_1lsu.sv"
+        },
+        {
+          "blob": "1c69ec19cc5060f0eed3dae3bc25e8b12c2ad6dd",
+          "bytes": 18394,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_load_queue_2entry.sv",
+          "sha256": "d7f525a27519432459efb507d399a82fe63bb6fb2428427e5db8953f23bb683f",
+          "source": "vsrc_ooo/execute/ooo_load_queue_2entry.sv"
+        },
+        {
+          "blob": "da5ea964c5934588a5b3dc4033eba541db430c17",
+          "bytes": 8265,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu.sv",
+          "sha256": "a538b5c27af85782a8c42eb8a3db5a980486fc5c4d9d62aabbe2b12306e1213b",
+          "source": "vsrc_ooo/execute/ooo_lsu.sv"
+        },
+        {
+          "blob": "8960e95cf61567d596308f6d0329538e16641885",
+          "bytes": 6748,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu_atomic_mem_arbiter_1w.sv",
+          "sha256": "d4f51122e4f5780801ede3eaee7e6d7bd60f9ba703e72582e84a516e7969de7a",
+          "source": "vsrc_ooo/execute/ooo_lsu_atomic_mem_arbiter_1w.sv"
+        },
+        {
+          "blob": "07504a46cd8191327c18526b587628b68c66d78e",
+          "bytes": 19500,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu_atomic_mem_arbiter_2e.sv",
+          "sha256": "4bbed0b5fd66d29fa0e247023eda3531a60880837b23771e3b74545eb05f6e67",
+          "source": "vsrc_ooo/execute/ooo_lsu_atomic_mem_arbiter_2e.sv"
+        },
+        {
+          "blob": "41b8a4cbdaf1221f34a33f66d1dd02103389306f",
+          "bytes": 45026,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu_pipeline_1w.sv",
+          "sha256": "dfef7a66070b559e95fa90df89cd08fa38acbeaa7a703a8a2f392996327a2602",
+          "source": "vsrc_ooo/execute/ooo_lsu_pipeline_1w.sv"
+        },
+        {
+          "blob": "f0dde9fc62079c3aa9079d1edbff30d466b9bb97",
+          "bytes": 11281,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_mdu_pipeline_1w.sv",
+          "sha256": "3b833aa41a825a790c5077188c685840af48dd3840834b09bad93ffbcc6f7cbb",
+          "source": "vsrc_ooo/execute/ooo_mdu_pipeline_1w.sv"
+        },
+        {
+          "blob": "f0146e3124a252f06eac4f1eddc952334df0cf93",
+          "bytes": 37933,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_completion_fabric_2w.sv",
+          "sha256": "930c4bfbd728d8002ccf864fe0021c654b700272fd28450e87c454dcd6d98fa4",
+          "source": "vsrc_ooo/execute/ooo_pipeline_completion_fabric_2w.sv"
+        },
+        {
+          "blob": "55e42620aa6215325055a42b8355897d97c80e4d",
+          "bytes": 3917,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_dpi_mem_bridge_1w.sv",
+          "sha256": "0eccdc9bc08df92f2df7ebc1f73b20f458dc4e7124effafa8dc50dbd5bb4411d",
+          "source": "vsrc_ooo/execute/ooo_pipeline_dpi_mem_bridge_1w.sv"
+        },
+        {
+          "blob": "ec847d70890e9d28aabe36b7e48c64c2ada72660",
+          "bytes": 34727,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv",
+          "sha256": "78afe36e112ce8bbf389145ddf3900d8d13fabb3504e7d321ed5bc203358e783",
+          "source": "vsrc_ooo/execute/ooo_pipeline_serial_executor_1w.sv"
+        },
+        {
+          "blob": "95cf17a1d0143d19c211b5622098f82fa6052999",
+          "bytes": 6170,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_tagged_dpi_mem_bridge_1w.sv",
+          "sha256": "4611b8b98c896794edc8b40ec96c4042b29b5a8166259adedafcd961f7458036",
+          "source": "vsrc_ooo/execute/ooo_pipeline_tagged_dpi_mem_bridge_1w.sv"
+        },
+        {
+          "blob": "5fa2b3877f42c6013a14242362ab0b4424febf2d",
+          "bytes": 17239,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_tagged_dpi_mem_bridge_2entry.sv",
+          "sha256": "5b4e521cc0895df27dc548a2a5fd1a60d191ee21fe070ccfa3300250aa20387f",
+          "source": "vsrc_ooo/execute/ooo_pipeline_tagged_dpi_mem_bridge_2entry.sv"
+        },
+        {
+          "blob": "23c9d6c487f3881c842a0fe87edccebe531f2e53",
+          "bytes": 20130,
+          "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_precise_store_buffer_4entry.sv",
+          "sha256": "5332c1ee38298370f5aca70d3e055bf150908c67ebdf2e47781b2d15b0b5ed09",
+          "source": "vsrc_ooo/execute/ooo_precise_store_buffer_4entry.sv"
+        },
+        {
+          "blob": "81ae8f47ed1e92171075429b99572b4542b97281",
+          "bytes": 5669,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_ifetch_target_line_4entry.sv",
+          "sha256": "9861efa8de919c2818f199ce972e43e0cb4d13f5c99ff7609e3e22e1e912e820",
+          "source": "vsrc_ooo/frontend/ooo_ifetch_target_line_4entry.sv"
+        },
+        {
+          "blob": "be98da65ce7d3f45f7f48fd02972d0421d8f18a5",
+          "bytes": 9945,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_jalr_btb_ras_2w.sv",
+          "sha256": "6a11da4c2d2718a9afa1558f5344b86182042ba32e889eb280b4fa4adb1fadd0",
+          "source": "vsrc_ooo/frontend/ooo_jalr_btb_ras_2w.sv"
+        },
+        {
+          "blob": "9cc7336661d5fb46502ef8f52276c2eb35b6e718",
+          "bytes": 6210,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_pipeline_dpi_ifetch_bridge_1w.sv",
+          "sha256": "128efe921de7d36569057b10fd7c8c71b38b90fa58e90527ede6c419bc24f68f",
+          "source": "vsrc_ooo/frontend/ooo_pipeline_dpi_ifetch_bridge_1w.sv"
+        },
+        {
+          "blob": "c97ce546dedef4cdffffcd6a23f437408cddabab",
+          "bytes": 131624,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_pipeline_redirect_frontend_2w.sv",
+          "sha256": "21d89129634a8c60f47cdf9a8405b67fdfea52a71641532a948e3a198b7eafc2",
+          "source": "vsrc_ooo/frontend/ooo_pipeline_redirect_frontend_2w.sv"
+        },
+        {
+          "blob": "83387b9b19cd2db2e4318ca7a026a3c6dcaa162f",
+          "bytes": 3965,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_pmem_ifetch.sv",
+          "sha256": "24d4eaf651d9f854a315500252236700f8cdde800642eb62cfe454b17714119c",
+          "source": "vsrc_ooo/frontend/ooo_pmem_ifetch.sv"
+        },
+        {
+          "blob": "33cf88ed705181ef590f2e6d956b906f39cac920",
+          "bytes": 10929,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_pmem_ifetch_pair.sv",
+          "sha256": "845b36299fbb54e8b4f4feed550ceddba4680999e063593180c7649a34e43298",
+          "source": "vsrc_ooo/frontend/ooo_pmem_ifetch_pair.sv"
+        },
+        {
+          "blob": "2f260c48664b49367ce25c9fadd7f406519ad51c",
+          "bytes": 14489,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_rv32i_alu_decode_adapter.sv",
+          "sha256": "2f05d78bbcdac26823a3954d4cdd0eb6de316853b8fd2f62aff007900dbd53b5",
+          "source": "vsrc_ooo/frontend/ooo_rv32i_alu_decode_adapter.sv"
+        },
+        {
+          "blob": "d2e47a2df1bcf48c0c025c4d1e5b00deba61a22f",
+          "bytes": 31691,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_tagged_btb_bht_2w.sv",
+          "sha256": "d1ce1447c22280c297c7480e571330705741b6c8e9b747beea6b45e7d2e8c6ad",
+          "source": "vsrc_ooo/frontend/ooo_tagged_btb_bht_2w.sv"
+        },
+        {
+          "blob": "edee5f179e08199b1bdcf88c8b02e53b38e355fc",
+          "bytes": 2821,
+          "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_tiny_instr_feeder.sv",
+          "sha256": "64abb9a033f076c8fb2457f9028620171129003fbbbe91d1e9fed687af74708b",
+          "source": "vsrc_ooo/frontend/ooo_tiny_instr_feeder.sv"
+        },
+        {
+          "blob": "ef0b54a805491187dfdc76248b148268a177d5e9",
+          "bytes": 777,
+          "destination": "rtl/profiles/rv32im_ooo_4k/include/bbus_ooo_cfg.svh",
+          "sha256": "ba7e8478fc429378ec5da74ea60f4d2f170d930648842502be86c47de5543e7f",
+          "source": "vsrc_ooo/include/bbus_ooo_cfg.svh"
+        },
+        {
+          "blob": "dff03ee833825cf1edcc69bd71c168aa9d91f37f",
+          "bytes": 18442,
+          "destination": "rtl/profiles/rv32im_ooo_4k/include/bbus_ooo_types.svh",
+          "sha256": "73ae6287639c70c0d846beb5da2416061870e75b53c70ddefc52262e70dd0990",
+          "source": "vsrc_ooo/include/bbus_ooo_types.svh"
+        },
+        {
+          "blob": "677d5396df548445f8ac99a81cd2f5d8e9531483",
+          "bytes": 47161,
+          "destination": "rtl/profiles/rv32im_ooo_4k/memory/ooo_data_line_cache.sv",
+          "sha256": "504511a65069f3301496a8373fd52e49127968934d262e3f5b60a76be3d26c87",
+          "source": "vsrc_ooo/memory/ooo_data_line_cache.sv"
+        },
+        {
+          "blob": "cb791f64195be00c77070b00dfac45241e0b2194",
+          "bytes": 9766,
+          "destination": "rtl/profiles/rv32im_ooo_4k/memory/ooo_pipeline_data_sv32_adapter_1w.sv",
+          "sha256": "2aeb3c426831876c9e1017b83ac3d98efbfc96de18c62fffb15e86ffbfb664db",
+          "source": "vsrc_ooo/memory/ooo_pipeline_data_sv32_adapter_1w.sv"
+        },
+        {
+          "blob": "774c88dac1c5df96258d0d9f44ceacf72d651d11",
+          "bytes": 23677,
+          "destination": "rtl/profiles/rv32im_ooo_4k/memory/ooo_pipeline_data_sv32_adapter_2entry.sv",
+          "sha256": "147a11eb3cbb30d5105363792cca374f8c144ad004f7c4d77a372e1c7b8f145d",
+          "source": "vsrc_ooo/memory/ooo_pipeline_data_sv32_adapter_2entry.sv"
+        },
+        {
+          "blob": "8484fef0560f8ca59f315b3f278c4462f270db9e",
+          "bytes": 6211,
+          "destination": "rtl/profiles/rv32im_ooo_4k/memory/ooo_pipeline_fetch_sv32_adapter_1w.sv",
+          "sha256": "15fc3647083805fdd6bc5b196ec9bb9378f05edd230711fe2e2aac0dfc78b87d",
+          "source": "vsrc_ooo/memory/ooo_pipeline_fetch_sv32_adapter_1w.sv"
+        },
+        {
+          "blob": "9d9301d7b29c8e8c77772aa029e2354cf562a9b8",
+          "bytes": 6258,
+          "destination": "rtl/profiles/rv32im_ooo_4k/memory/ooo_sv32_page_walker_1w.sv",
+          "sha256": "eac164d3c2f68f42bd9d8744d414e6aafdb038fa0ca69179b26a83fab17826af",
+          "source": "vsrc_ooo/memory/ooo_sv32_page_walker_1w.sv"
+        },
+        {
+          "blob": "e481cf4158a2f7e285bb99d56a6cf03fd6d26d94",
+          "bytes": 60952,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/cpu_top_ooo_shadow.sv",
+          "sha256": "60cc30504e90bc4633a5753c9077ddd69b7ce16e928089462d0cc88f36f7bfbc",
+          "source": "vsrc_ooo/top/cpu_top_ooo_shadow.sv"
+        },
+        {
+          "blob": "856fdd6f272654eda62aed41684b38f6861c17a7",
+          "bytes": 97615,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv",
+          "sha256": "b74ada0042361ef92fff5e9933f1e1bfd7b000c222cb08ea0aa4272df3230845",
+          "source": "vsrc_ooo/top/ooo_npc_top.sv"
+        },
+        {
+          "blob": "d1562e5d4b1a088d92f33eee4e72932f562d9b77",
+          "bytes": 69569,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv",
+          "sha256": "6d1551c73546db3b958413c3507984bf54ab88331d6b1b9a72cda3066ab7007e",
+          "source": "vsrc_ooo/top/ooo_pipeline_backend_standalone_top.sv"
+        },
+        {
+          "blob": "4eda76d4a4f2864bce493c1f0d9cfc386c3ddfea",
+          "bytes": 51566,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv",
+          "sha256": "41e9477b244b78cd92e30322596cde044841828c3111e8171491f79bd55a4d57",
+          "source": "vsrc_ooo/top/ooo_pipeline_branch_recovery_standalone_top.sv"
+        },
+        {
+          "blob": "1060015bb1ce9fe14e8f73fbc23aba53bfc14cb7",
+          "bytes": 27101,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv",
+          "sha256": "0958bb19f81bfc743edbe330f86dd38053ed8fed8d74dbc3bb1d6bb89582f951",
+          "source": "vsrc_ooo/top/ooo_pipeline_frontend_backend_standalone_top.sv"
+        },
+        {
+          "blob": "b15fd10902105abfea8d901bf9605e49e5fa19af",
+          "bytes": 61995,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv",
+          "sha256": "ec15105af4f4b1170cc8f33697358c1daf2ac2f3dee52aeb009b45cc35c534f7",
+          "source": "vsrc_ooo/top/ooo_pipeline_npc_core_top.sv"
+        },
+        {
+          "blob": "1f862e40c94f06bdfa6e5a2e9f9a3256998a778b",
+          "bytes": 35677,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv",
+          "sha256": "ab5592e1c5312402b90bc3c1a6fbe33079a7fbb70f6f828ad7409d0fd431d926",
+          "source": "vsrc_ooo/top/ooo_pipeline_redirect_frontend_standalone_top.sv"
+        },
+        {
+          "blob": "4dac44e52e33f7fa79a756d0c0922e72a06436e9",
+          "bytes": 136835,
+          "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_s2_alu1_standalone_top.sv",
+          "sha256": "9415929b7797394ec1be7ef9445520be5c614776f7cc17f385d252c1e6404333",
+          "source": "vsrc_ooo/top/ooo_s2_alu1_standalone_top.sv"
+        },
+        {
+          "blob": "e121b90c707374638e43e81f71c8d2d6f1288265",
+          "bytes": 9720,
+          "destination": "rtl/profiles/rv32im_ooo_4k/trace/ooo_commit_trace_adapter.sv",
+          "sha256": "06c05e94f0700c31d2e1b7d738496cacbca0fb7b072f520ff85eb0f5a9283b97",
+          "source": "vsrc_ooo/trace/ooo_commit_trace_adapter.sv"
+        },
+        {
+          "blob": "f9cbef3b1c609c54619b3955e78948697fc79a42",
+          "bytes": 5036,
+          "destination": "rtl/profiles/rv32im_ooo_4k/trace/ooo_npc_commit_trace_bridge.sv",
+          "sha256": "47ba00cbbb0ace5efe7b6a1551422592bc38ea7f5d981b47ef9625373996bbc8",
+          "source": "vsrc_ooo/trace/ooo_npc_commit_trace_bridge.sv"
+        },
+        {
+          "blob": "f18c7c372d051b4a28f78a2c7efb7ff4ed51a0e2",
+          "bytes": 1968,
+          "destination": "rtl/profiles/rv32im_ooo_4k/trace/ooo_shadow_arch_state.sv",
+          "sha256": "12c6c711dfd3398baabad19367b3b6b8c1774c6ff3aa1ad91074b92d70585830",
+          "source": "vsrc_ooo/trace/ooo_shadow_arch_state.sv"
+        }
+      ],
+      "entry_count": 62,
+      "profile_id": "rv32im_ooo_4k",
+      "provenance_entries": [
+        {
+          "blob": "b419bea65e7d75bd0403f12bc01eae55213daccb",
+          "bytes": 2619,
+          "destination": "provenance/upstream/rv32im_ooo_4k/ooo_rv32im_4k_v1.manifest",
+          "sha256": "ec741df066f2c3ccdaa7b91fbd2235b945a46773a8454bd6e904e4227bb2944f",
+          "source": "config/ooo_rv32im_4k_v1.manifest"
+        },
+        {
+          "blob": "f9d5a3981262c298aaa607bd9a7a041ab3a07db7",
+          "bytes": 8314,
+          "destination": "provenance/upstream/rv32im_ooo_4k/release_manifest.json",
+          "sha256": "03d7cc8d9f537be02b9a78e53eec2f4dbce1e672b2c72373d97ae0479c98978d",
+          "source": "docs/release/ooo_rv32im_4k_v1_release_manifest.json",
+          "transform": "public_config_only_release_manifest_v1"
+        }
+      ],
+      "public_root": "rtl/profiles/rv32im_ooo_4k",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "source_ref": "codex/s9s-rv32im-4k-release-freeze-v1",
+      "source_root": "vsrc_ooo",
+      "source_tree_root": "",
+      "wrapper": "rtl/wrappers/rv32im_ooo_4k_sim_top.sv"
+    }
+  ],
+  "release_identity": "npc-riscv-open-v0.1.0-rc1",
+  "repository": "https://github.com/ichigo-6301/npc-riscv-open.git",
+  "schema": "npc-riscv-open/source-allowlist-v1"
+}

@@ -1,0 +1,52 @@
+kind: verification_plan
+schema_version: 1.0.0
+plan_id: npc_open_three_profile_verification
+items:
+  - id: manifest_schema
+    feature: Delivery manifest integrity
+    requirement: All manifests parse, conform to schema 1, and resolve profile, source-set, config, claim, and evidence references
+    testcase: digital_ic_delivery audit
+    checker: digital-ic-delivery 0.7.0
+    coverage: all delivery manifests
+    evidence: [public_source_allowlist]
+    status: verified
+  - id: source_ref_identity
+    feature: Frozen source identity
+    requirement: Resolve each source commit and verify every allowlisted path before export
+    testcase: Exporter source-ref and Git blob verification
+    checker: git cat-file, git show, and SHA256 manifest
+    coverage: all three source sets
+    evidence: [public_source_allowlist]
+    status: verified
+  - id: source_closure
+    feature: Public dependency closure
+    requirement: Every public Make target, filelist, wrapper, runtime file, and test references only exported assets or declared external dependencies
+    testcase: make config-check and make public-hygiene
+    checker: flowctl source-closure and hygiene gates
+    coverage: all public entrypoints
+    evidence: [public_source_allowlist, public_source_closure]
+    status: verified
+  - id: profile_ci_matrix
+    feature: Three-profile CI matrix
+    requirement: Run config-check, lint, build, smoke, bounded regression, and post-run clean checks independently for each profile
+    testcase: rv32im_single_perf, rv32ima_sv32_linux, and rv32im_ooo_4k CI jobs
+    checker: CI matrix
+    coverage: three of three release profiles
+    evidence: [public_bounded_validation]
+    status: partial
+  - id: private_public_trace_identity
+    feature: Private-to-public architectural equivalence
+    requirement: Align identical binaries and configs and compare commit trace hashes; compare cycles only under identical fixed latency settings
+    testcase: Per-profile private/public A/B
+    checker: Commit ordinal, PC, instruction, architectural state, and cycle summaries
+    coverage: fixed smoke and regression workloads
+    evidence: []
+    status: planned
+  - id: fresh_clone_gate
+    feature: Exact exported commit validation
+    requirement: Clone the public candidate into a new native-Linux directory, rerun all bounded gates, and remain Git-clean after ignored outputs
+    testcase: Fresh-clone three-profile smoke and hygiene
+    checker: Git status plus CI-equivalent commands
+    coverage: exact public RC commit
+    evidence: [public_bounded_validation]
+    status: verified

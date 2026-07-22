@@ -1,0 +1,14 @@
+# Local configuration and generated simulator output.
+.config
+build/
+obj_dir/
+waves/
+*.vcd
+*.fst
+*.log
+*.trace
+flows/local/
+provenance/local/
+__pycache__/
+*.py[cod]
+.pytest_cache/

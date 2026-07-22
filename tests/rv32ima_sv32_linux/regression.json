@@ -1,0 +1,18 @@
+{
+  "schema": "npc-riscv-open/regression-v1",
+  "profile": "rv32ima_sv32_linux",
+  "cases": [
+    {
+      "id": "rv32im_core_selfcheck",
+      "image": "tests/rv32ima_sv32_linux/smoke.hex",
+      "sha256": "b525a800b45e22813c1c3c84d179e6f4e2b85de40080bbcf2549cf9a7c4c20bf",
+      "covers": ["rv32im", "upper_gpr", "raw", "waw", "branch", "load_store", "mul_div", "trap"]
+    },
+    {
+      "id": "rv32ima_machine_arch_selfcheck",
+      "image": "tests/rv32ima_sv32_linux/arch_smoke.hex",
+      "sha256": "62309a4d24422f303b445a29832b017bda6d55ee335ec5afc1fd303662fa203e",
+      "covers": ["rv32ima", "lr_sc", "machine_csr", "trap"]
+    }
+  ]
+}

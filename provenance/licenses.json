@@ -1,0 +1,22 @@
+{
+  "external_dependencies": [
+    {
+      "bundled": false,
+      "license": "MulanPSL-2.0",
+      "name": "NEMU"
+    },
+    {
+      "bundled": false,
+      "license": "BSD-2-Clause",
+      "name": "OpenSBI"
+    },
+    {
+      "bundled": false,
+      "license": "LGPL-3.0-or-later",
+      "name": "Verilator"
+    }
+  ],
+  "schema": "npc-riscv-open/licenses-v1",
+  "self_owned": "MIT",
+  "third_party_sources_in_tree": []
+}

@@ -1,0 +1,12 @@
+NPC RISC-V public release notice
+
+The MIT license in LICENSE applies only to the self-owned RTL, wrappers,
+simulation harness, scripts and documentation explicitly released in this
+repository. It does not relicense external tools, firmware, reference
+adapters, or source snapshots whose terms are recorded in delivery/ and
+provenance/.
+
+The NEMU reference-model adapter, OpenSBI and Verilator are external
+dependencies; their source and binaries are not bundled here. Users must obtain
+and comply with their respective licenses and version requirements
+independently.

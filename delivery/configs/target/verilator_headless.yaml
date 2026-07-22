@@ -1,0 +1,22 @@
+kind: target
+schema_version: 1.0.0
+target_id: verilator_headless
+target_kind: simulation
+technology: host_verilator
+academic: false
+library_manifest: not_applicable
+memory_binding: profile_selected_behavioral_dpi
+required_tools:
+  verilator: '>=5.0'
+  make: gnu_make
+  cxx: cxx17
+excluded_integrations:
+  - nvboard
+  - readline_sdb
+  - capstone_disassembly
+  - file_backed_ftrace
+  - file_backed_mtrace
+optional_external_dependencies:
+  - NPC public difftest adapter implementing the documented ABI; a raw NEMU shared object is not accepted directly
+  - workload images
+  - OpenSBI image for the Linux profile

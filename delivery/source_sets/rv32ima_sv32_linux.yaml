@@ -1,0 +1,56 @@
+kind: source_set
+schema_version: 1.0.0
+source_set_id: rv32ima_sv32_linux
+profile: rv32ima_sv32_linux
+source_ref: linux-npc-opensbi-kernel-opt-v1
+commit_sha: e3a1cc91c4c00040f7180eec5e385326d9964893
+source_root: npc
+destination_root: rtl/profiles/rv32ima_sv32_linux
+native_top_module: cpu_top
+public_wrapper: rtl/wrappers/rv32ima_sv32_linux_sim_top.sv
+public_filelist: filelists/rv32ima_sv32_linux.f
+allowlist_manifest: provenance/source_allowlist.json
+allowlist_profile_key: rv32ima_sv32_linux
+integrity_manifest: provenance/source_sets/rv32ima_sv32_linux.sha256
+blob_hash_policy: required_at_export
+groups:
+  rtl:
+    roots: [vsrc_new]
+    includes: [vsrc_new, vsrc_new/cpu_top]
+    filelists: []
+    public_include_dirs:
+      - rtl/profiles/rv32ima_sv32_linux
+      - rtl/profiles/rv32ima_sv32_linux/cpu_top
+    verilog_defines:
+      - NPC_USE_DPI
+      - NPC_DPI_MEM_LATENCY=0
+      - NPC_DPI_CSR_UNDEFINE
+      - NPC_M_EXTENSION
+      - NPC_MISALIGNED_DATA=1
+      - NPC_BRANCH_PRED
+      - NPC_BTB_ENTRIES=128
+      - NPC_BHT_ENTRIES=128
+      - NPC_BHR_BITS=8
+      - NPC_IF_HIT_PIPELINE
+      - NPC_LSU_HIT_PIPELINE
+      - NPC_LSU_LOAD_BYPASS
+      - NPC_EX_MEM_SKID
+      - NPC_STORE_BUFFER_ENABLE
+      - NPC_STORE_BUFFER_ENTRIES=2
+      - NPC_FAST_MUL
+      - NPC_FAST_MUL_LATENCY=2
+      - NPC_DCACHE_HIT_OPT
+      - NPC_DCACHE_WRITE_BACK=1
+      - NPC_DCACHE_WRITE_ALLOCATE=1
+      - NPC_HAS_MMU=1
+      - NPC_HAS_ITLB=1
+      - NPC_HAS_DTLB=1
+      - NPC_ITLB_ENTRIES=16
+      - NPC_DTLB_ENTRIES=16
+    exclude: [vsrc_new/top.v, vsrc_new/ps2_keyboard.v, vsrc_new/decode.v, vsrc, csrc, obj_dir, build, constr, abstract-machine, nemu]
+source_count:
+  rtl_files: 42
+compatibility_notes:
+  - The exact per-file source, destination, Git blob, byte count, and SHA256 records live only in the canonical JSON allowlist.
+  - OpenSBI, Linux, NEMU, AM, DTB, and KVM payloads are external dependencies and are never source-exported by this set.
+  - The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate release gates.

@@ -1,0 +1,48 @@
+kind: source_set
+schema_version: 1.0.0
+source_set_id: rv32im_ooo_4k
+profile: rv32im_ooo_4k
+source_ref: codex/s9s-rv32im-4k-release-freeze-v1
+commit_sha: 99fcc2be539eabb078c0d73b26a7ef2c00071391
+source_root: .
+workbench_provenance: 8c004f4ac7d8c99fa71b8adde35a319f7472c93a
+configuration_provenance: 8a3f36f6a637c1e7d0d62600e4c95794bd57fa0c
+destination_root: rtl/profiles/rv32im_ooo_4k
+native_top_module: ooo_npc_top
+public_wrapper: rtl/wrappers/rv32im_ooo_4k_sim_top.sv
+public_filelist: filelists/rv32im_ooo_4k.f
+allowlist_manifest: provenance/source_allowlist.json
+allowlist_profile_key: rv32im_ooo_4k
+integrity_manifest: provenance/source_sets/rv32im_ooo_4k.sha256
+blob_hash_policy: required_at_export
+groups:
+  rtl:
+    roots: [vsrc_ooo]
+    includes: [vsrc_ooo/include]
+    filelists: []
+    public_include_dirs:
+      - rtl/profiles/rv32im_ooo_4k/include
+    verilog_defines:
+      - NPC_USE_DPI
+      - NPC_DPI_MEM_LATENCY=2
+      - NPC_DPI_IFETCH_LATENCY=2
+      - NPC_DPI_LSU_LATENCY=3
+      - NPC_OOO_IF2PAIR_TEST_STALE_REDIRECT=0
+      - NPC_OOO_COMPLETION_ARB_FIXED=1
+      - NPC_OOO_ALU_SCHED_ALU0_ONLY=1
+      - NPC_OOO_DISPATCH_WIDTH=2
+      - NPC_OOO_COMMIT_WIDTH=2
+      - NPC_OOO_FRONTEND_IF2_PAIR=1
+      - NPC_OOO_DUAL_WB=1
+      - NPC_OOO_BACKEND_PIPELINE=1
+      - NPC_OOO_DISPATCH2_TEST_LIMIT_ROB_FREE=0
+      - NPC_OOO_DISPATCH2_TEST_LIMIT_IQ_FREE=0
+      - NPC_OOO_DISPATCH2_TEST_LIMIT_FREELIST_FREE=0
+      - NPC_M_EXTENSION
+    exclude: [vsrc, vsrc_new, csrc, obj_dir, build, constr, synth, tests, docs]
+source_count:
+  rtl_files: 60
+  include_files: 2
+compatibility_notes:
+  - The exact production OOO_NPC_VSRCS closure plus two includes is defined only in the canonical JSON allowlist.
+  - Accepted mechanism parameters are fixed by the rv32im_4k_v1 profile; all 17 observation Oracles remain disabled.

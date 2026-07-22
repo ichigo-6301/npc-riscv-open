@@ -1,0 +1,88 @@
+mainmenu "NPC RISC-V public profiles"
+
+menu "Design profile (immutable in a run)"
+
+choice NPC_PROFILE
+    prompt "Public CPU profile"
+    default NPC_PROFILE_RV32IM_OOO_4K
+
+config NPC_PROFILE_RV32IM_SINGLE_PERF
+    bool "RV32IM single-issue performance"
+
+config NPC_PROFILE_RV32IMA_SV32_LINUX
+    bool "RV32IMA single-issue Sv32 Linux"
+
+config NPC_PROFILE_RV32IM_OOO_4K
+    bool "RV32IM dual-issue out-of-order 4K"
+
+endchoice
+
+config NPC_PROFILE_ID
+    string
+    default "rv32im_single_perf" if NPC_PROFILE_RV32IM_SINGLE_PERF
+    default "rv32ima_sv32_linux" if NPC_PROFILE_RV32IMA_SV32_LINUX
+    default "rv32im_ooo_4k" if NPC_PROFILE_RV32IM_OOO_4K
+
+config NPC_RELEASE_IDENTITY
+    string
+    default "npc-riscv-open-v0.1.0-rc1"
+
+endmenu
+
+menu "Runtime controls"
+
+config NPC_IMAGE
+    string "Program image (optional; set at run time when possible)"
+    default ""
+
+config NPC_WATCHDOG_CYCLES
+    int "Simulation watchdog cycles"
+    range 1 2147483647
+    default 20000000
+
+config NPC_SEED
+    int "Deterministic simulation seed"
+    range 0 2147483647
+    default 1
+
+config NPC_DIFFTEST
+    bool "Enable an external reference adapter"
+    default n
+
+config NPC_REFERENCE_SO
+    string "External reference adapter shared object"
+    default ""
+
+config NPC_VCD
+    bool "Write a VCD waveform"
+    default n
+
+config NPC_VCD_PATH
+    string "VCD output path"
+    default "build/waves/sim.vcd"
+
+config NPC_ITRACE
+    bool "Write the compact instruction trace"
+    default n
+
+config NPC_ITRACE_PATH
+    string "Instruction trace output path"
+    default "build/traces/itrace.log"
+
+endmenu
+
+menu "Public verification stages"
+
+config NPC_RUN_LINT
+    bool "Run Verilator lint"
+    default y
+
+config NPC_RUN_SMOKE
+    bool "Run the bounded profile smoke"
+    default y
+
+config NPC_RUN_REGRESSION
+    bool "Run the profile regression list"
+    default y
+
+endmenu

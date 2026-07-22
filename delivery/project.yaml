@@ -1,0 +1,50 @@
+kind: project
+schema_version: 1.0.0
+project_id: npc_riscv_open
+name: NPC RISC-V Processor Family Open Delivery
+project_kind: cpu_family
+multi_profile: true
+repository:
+  remote: https://github.com/ichigo-6301/npc-riscv-open.git
+  default_branch: main
+  status: planned_not_published
+public_release:
+  repository_name: npc-riscv-open
+  release_identity: npc-riscv-open-v0.1.0-rc1
+  default_branch: main
+  default_profile: rv32im_ooo_4k
+  publication_status: planned
+top_modules:
+  - cpu_top
+  - ooo_npc_top
+capabilities:
+  - headless_verilator
+  - optional_external_difftest_adapter
+  - isa_tests
+  - performance_benchmark
+  - sv32
+  - opensbi_smoke
+  - public_ip_export
+license_status: declared
+license:
+  spdx: MIT
+  scope: Project-owned RTL, public wrappers, simulation runtime, scripts, tests, and documentation only
+  third_party_review_required: true
+ownership:
+  maintainer: ichigo-6301
+delivery_model:
+  public_repository_count: 1
+  long_lived_public_branches: [main]
+  rtl_source_sets: isolated_per_profile
+  shared_infrastructure: headless_verilator
+  private_first_development: true
+  public_sync_after_private_validation: true
+release_sources:
+  - profile: rv32im_single_perf
+    commit_sha: f76de57479b798aca7468f999c386bb4cb5fce02
+  - profile: rv32ima_sv32_linux
+    commit_sha: e3a1cc91c4c00040f7180eec5e385326d9964893
+  - profile: rv32im_ooo_4k
+    commit_sha: 99fcc2be539eabb078c0d73b26a7ef2c00071391
+    workbench_provenance: 8c004f4ac7d8c99fa71b8adde35a319f7472c93a
+    configuration_provenance: 8a3f36f6a637c1e7d0d62600e4c95794bd57fa0c

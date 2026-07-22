@@ -1,0 +1,35 @@
+kind: run_config
+schema_version: 1.0.0
+run_id: rv32im_ooo_4k_smoke
+profile: rv32im_ooo_4k
+design: rv32im_ooo_4k
+target: verilator_headless
+source_ref: codex/s9s-rv32im-4k-release-freeze-v1
+commit_sha: 99fcc2be539eabb078c0d73b26a7ef2c00071391
+dirty_worktree: false
+stages:
+  - config_check
+  - source_closure
+  - verilator_lint
+  - upper_gpr_smoke
+  - headless_smoke
+  - release_regression
+  - optional_difftest
+constraints:
+  release_profile: rv32im_4k_v1
+  reset_vector: 0x80000000
+  ifetch_latency_cycles: 2
+  lsu_latency_cycles: 3
+  dpi_memory_latency_cycles: 2
+  seed: 1
+  watchdog: true
+  accounting_level: 0
+  structural_oracles: false
+  trace_default: false
+  nvboard: false
+  mtrace: false
+  ftrace: false
+  pmemtrace: false
+  architectural_overrides_allowed: false
+tool_versions: {}
+execution_status: planned_public_migration

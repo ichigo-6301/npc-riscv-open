@@ -1,0 +1,41 @@
+kind: run_config
+schema_version: 1.0.0
+run_id: rv32ima_sv32_linux_smoke
+profile: rv32ima_sv32_linux
+design: rv32ima_sv32_linux
+target: verilator_headless
+source_ref: linux-npc-opensbi-kernel-opt-v1
+commit_sha: e3a1cc91c4c00040f7180eec5e385326d9964893
+dirty_worktree: false
+stages:
+  - config_check
+  - source_closure
+  - verilator_lint
+  - headless_smoke
+  - rtl_regression
+  - optional_difftest
+  - bounded_opensbi_smoke
+constraints:
+  reset_vector: 0x80000000
+  dpi_memory_latency_cycles: 0
+  m_extension: true
+  a_extension: true
+  sv32: true
+  if_hit_pipeline: true
+  lsu_hit_pipeline: true
+  lsu_load_bypass: true
+  store_buffer_entries: 2
+  fast_mul_latency_cycles: 2
+  watchdog: true
+  trace_default: false
+  nvboard: false
+  mtrace: false
+  ftrace: false
+  pmemtrace: false
+  architectural_overrides_allowed: false
+external_dependencies:
+  opensbi_commit: f36acaeb80a490339923a5ec01ac3707741f6b90
+  opensbi_payload: user_supplied
+  linux_image: optional_user_supplied
+tool_versions: {}
+execution_status: planned_public_migration

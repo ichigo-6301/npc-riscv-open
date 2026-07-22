@@ -1,0 +1,75 @@
+kind: nonclaims
+schema_version: 1.0.0
+nonclaims:
+  - id: single_public_cpi_not_yet_claimed
+    profile: rv32im_single_perf
+    statement: CoreMark CPI 1.48 is not yet a public release claim
+    reason: The public headless simulator has not reproduced the exact binary, configuration, commit count, and cycle count
+    status: not_claimed
+    public: true
+  - id: single_700mhz_closure_not_claimed
+    profile: rv32im_single_perf
+    statement: 700 MHz timing closure or maximum frequency is not claimed
+    reason: The historical value is inferred from a negative-WNS 1 GHz DC stress run and is not a closed implementation point
+    status: not_claimed
+    public: true
+  - id: single_physical_signoff_not_claimed
+    profile: rv32im_single_perf
+    statement: P&R, extracted STA, foundry signoff, power, and silicon performance are not claimed
+    reason: No public same-run physical handoff or signoff evidence is selected for RC1
+    status: not_claimed
+    public: true
+  - id: single_register_expanded_500mhz_not_claimed
+    profile: rv32im_single_perf
+    statement: Historical register-expanded-memory operation at 500 MHz or 600 MHz is not claimed
+    reason: No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate
+    status: not_claimed
+    public: true
+  - id: linux_public_cpi_not_yet_claimed
+    profile: rv32ima_sv32_linux
+    statement: Sv32 CoreMark CPI 1.98 is not yet a public release claim
+    reason: The value is approximate private documentation and has not been reproduced in the public headless flow
+    status: not_claimed
+    public: true
+  - id: linux_full_boot_not_claimed
+    profile: rv32ima_sv32_linux
+    statement: A complete Linux distribution boot is not claimed for RC1
+    reason: RC1 requires bounded architectural and OpenSBI-oriented smoke only; Linux images remain external and the historical profile is partial
+    status: not_claimed
+    public: true
+  - id: linux_later_cpi_not_claimed
+    profile: rv32ima_sv32_linux
+    statement: The later approximately 1.72 CoreMark result is not attributed to the frozen Linux source
+    reason: It belongs to a different later source checkpoint and may not be merged across profile identities
+    status: not_claimed
+    public: true
+  - id: linux_synthesis_not_claimed
+    profile: rv32ima_sv32_linux
+    statement: Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed
+    reason: No source-matched implementation evidence has been selected for this profile
+    status: not_claimed
+    public: true
+  - id: ooo_public_cpi_not_yet_claimed
+    profile: rv32im_ooo_4k
+    statement: Weighted CPI 0.912836351 is not yet a public release claim
+    reason: Exact public export and fresh-clone reproduction remain pending
+    status: not_claimed
+    public: true
+  - id: ooo_universal_cpi_not_claimed
+    profile: rv32im_ooo_4k
+    statement: CPI below 1 is not claimed universally
+    reason: The private result is a finite seven-workload aggregate and includes workloads above CPI 1
+    status: not_claimed
+    public: true
+  - id: ooo_ppa_timing_not_claimed
+    profile: rv32im_ooo_4k
+    statement: Frequency, timing closure, area, power, energy, FPGA, P&R, signoff, and silicon performance are not claimed
+    reason: RC1 migration precedes the profile-specific ASIC baseline phase
+    status: not_claimed
+    public: true
+  - id: ooo_dpi_synth_equivalence_not_claimed
+    profile: rv32im_ooo_4k
+    statement: Full synthesis equivalence of the internal DPI performance memory path is not claimed
+    reason: The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior
+    status: not_claimed
+    public: true

@@ -1,0 +1,39 @@
+metadata_kind: multi_profile_public_ip_umbrella
+schema_version: 1.0.0
+repository_name: npc-riscv-open
+release_identity: npc-riscv-open-v0.1.0-rc1
+source_control_commit: 6ef6fee4
+default_branch: main
+default_profile: rv32im_ooo_4k
+profiles:
+  - profile: rv32im_single_perf
+    source_commit: f76de57479b798aca7468f999c386bb4cb5fce02
+    source_set: ../source_sets/rv32im_single_perf.yaml
+  - profile: rv32ima_sv32_linux
+    source_commit: e3a1cc91c4c00040f7180eec5e385326d9964893
+    source_set: ../source_sets/rv32ima_sv32_linux.yaml
+  - profile: rv32im_ooo_4k
+    source_commit: 99fcc2be539eabb078c0d73b26a7ef2c00071391
+    source_set: ../source_sets/rv32im_ooo_4k.yaml
+license:
+  spdx: MIT
+  scope: Project-owned exported RTL, wrappers, simulation runtime, scripts, tests, and documentation
+public_asset_root: .
+canonical_source_allowlist: provenance/source_allowlist.json
+exporter: private_delivery_control_plane
+exporter_bundled: false
+source_policy:
+  allowlist_only: true
+  preserve_source_bytes: true
+  verify_git_blob: true
+  verify_sha256: true
+  reject_target_collisions: true
+  reject_cross_profile_rtl_references: true
+public_claim_ids: []
+public_evidence_ids: []
+public_nonclaim_source: ../claims/nonclaims.yaml
+publication:
+  remote_creation_and_push: requires_separate_authorization
+  tags_in_rc1: false
+  private_branch_topology_exported: false
+  fresh_clone_required: true

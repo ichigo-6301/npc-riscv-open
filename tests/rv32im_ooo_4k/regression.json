@@ -1,0 +1,12 @@
+{
+  "schema": "npc-riscv-open/regression-v1",
+  "profile": "rv32im_ooo_4k",
+  "cases": [
+    {
+      "id": "rv32im_ooo_upper_gpr_selfcheck",
+      "image": "tests/rv32im_ooo_4k/smoke.hex",
+      "sha256": "32e596d0ce1278f8765d4d9a8e4684541625bb0266e311284255ab435d521cd0",
+      "covers": ["rv32im", "upper_gpr", "raw", "waw", "branch", "load_store", "mul_div", "recovery", "trap"]
+    }
+  ]
+}

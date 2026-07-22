@@ -1,0 +1,44 @@
+kind: feature_plan
+schema_version: 1.0.0
+plan_id: npc_open_three_profile_features
+items:
+  - id: single_perf_profile
+    feature: Single-issue RV32IM performance profile
+    requirement: Preserve the fixed source RTL while replacing the board top with a headless public wrapper
+    testcase: Profile smoke, ISA regression, CoreMark identity check
+    checker: Verilator plus optional NEMU difftest
+    coverage: null
+    evidence: [single_dual_ready_tag_record]
+    status: partial
+  - id: linux_sv32_profile
+    feature: RV32IMA M/S-mode and Sv32 system profile
+    requirement: Preserve precise traps, translation, timer/MMIO, atomics, and a bounded OpenSBI execution path
+    testcase: M/S-mode, Sv32, page-fault, timer, AMO, and bounded OpenSBI tests
+    checker: Verilator plus optional NEMU difftest and expected SBI shutdown
+    coverage: null
+    evidence: []
+    status: partial
+  - id: ooo_rv32im_4k_profile
+    feature: Dual-width RV32IM out-of-order 4 KiB profile
+    requirement: Preserve the frozen 47-mechanism profile with all 17 observation Oracles disabled
+    testcase: Upper-GPR smoke, release regression, fixed-tail workloads, and seven-workload suite
+    checker: Verilator, NEMU difftest, lifecycle checks, and conservation guards
+    coverage: null
+    evidence: [ooo_private_release_manifest, ooo_private_release_performance]
+    status: verified
+  - id: shared_headless_runtime
+    feature: Shared pure-Verilator runtime
+    requirement: Provide common clock/reset, memory image, watchdog, trap, optional trace, and plugin difftest without NVBoard
+    testcase: Build and smoke each profile from its defconfig
+    checker: CI profile matrix and Git-clean post-run check
+    coverage: null
+    evidence: []
+    status: planned
+  - id: isolated_profile_source_sets
+    feature: Independent RTL source sets and wrappers
+    requirement: Compile exactly one source set per profile and reject cross-profile RTL references or duplicate-module leakage
+    testcase: Source closure and filelist isolation checks
+    checker: Deterministic exporter and public config-check
+    coverage: null
+    evidence: []
+    status: planned
