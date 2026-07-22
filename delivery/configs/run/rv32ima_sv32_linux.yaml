@@ -39,3 +39,9 @@ external_dependencies:
   linux_image: optional_user_supplied
 tool_versions: {}
 execution_status: planned_public_migration
+difftest:
+  default_enabled: false
+  adapter_path: flows/local/nemu/rv32ima_sv32_linux/npc-public-nemu-adapter.so
+  raw_reference_path: flows/local/nemu/rv32ima_sv32_linux/nemu-ref.so
+  source_manifest: delivery/difftest/nemu_profiles.json
+  scope: bounded_gpr_pc_commit_check

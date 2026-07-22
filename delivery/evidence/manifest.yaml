@@ -27,7 +27,7 @@ evidence:
     profile: "all"
     source_ref: "npc-riscv-open-v0.1.0-rc1"
     tool: "deterministic public exporter and native-Linux fresh-clone checks"
-    sha256: "fa055e5c2d7e18ea3500d51389397d3e71a0b0edfd86fafd18dfa3922a4a0010"
+    sha256: "1f93445991be244f1a6725609b13e3faf7d12ac4c0e8bcdc15ca3bffe2387697"
     claims: []
     public: true
     status: "verified"

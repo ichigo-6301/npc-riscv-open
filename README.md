@@ -24,13 +24,20 @@ Verilator 运行器和测试接口。
 | 三套 RTL source set、纯 headless wrapper | verified by source closure/lint |
 | 三 profile bounded self-check | verified in a native-Linux fresh clone (seed 1) |
 | Linux 完整启动/OpenSBI | planned/partial；外部 firmware，不是 RC1 完成声明 |
-| Difftest | planned；只接受公开 adapter ABI，不把 raw NEMU `.so` 当作通过 |
+| Difftest | 可选的 profile 匹配 NEMU adapter；默认关闭 |
 | ASIC PPA、时序、SRAM/PDK signoff | not_claimed |
 
 公开边界不包含板级用户界面、专有 EDA 数据库、PDK、生成物或私有参考模型
 源码。可选外部参考适配器只能在运行时通过
 [公开 ABI](sim/include/profile_abi.hpp) 提供路径，不随仓库发布；只 `dlopen`
 一个库不会被视为 difftest 通过。
+
+NEMU 是外部 Mulan PSL-2.0 依赖，不进入 Git 发行包。严格测试前执行
+`make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench`，脚本会
+按 profile 构建被 `.gitignore` 忽略的 raw reference 和 MIT adapter；随后执行
+`make difftest`。发行版默认配置保持 difftest 关闭，因此没有 NEMU 的 fresh
+clone 仍可正常仿真。当前 adapter 关闭 trace、mtrace/ftrace 和 device 文件
+输出；完整 Linux 中断/MMIO difftest 不属于 RC1 的 bounded 合同。
 
 性能、实现和时序结论始终按 profile 隔离。只有当 binary hash、配置、源提交
 和可复现实验证据都登记在 `delivery/` 与 `evidence/` 后，结果才可标记为公开

@@ -22,7 +22,7 @@ release_maturity: partial
 stages:
   config_check: verified
   rtl_regression: verified
-  difftest: planned
+  difftest: partial
   isa_tests: verified
   performance_benchmark: provisional
   synthesis_lint: verified
@@ -36,5 +36,7 @@ release_constraints:
   accepted_mechanism_count: 47
   disabled_oracle_count: 17
   default_accounting_level: 0
+  difftest_default: false
+  difftest_raw_nemu_bundled: false
   nvboard_excluded: true
   public_performance_claims_enabled: false

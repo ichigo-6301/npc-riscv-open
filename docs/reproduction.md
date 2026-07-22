@@ -32,13 +32,35 @@ make rv32ima_sv32_linux_defconfig
 make rv32im_ooo_4k_defconfig
 ```
 
-For an optional external reference adapter, set
-`NPC_OPEN_REFERENCE_SO=/path/to/reference.so` and run `make difftest`. The
-library must export `npc_public_difftest_init`, `npc_public_difftest_step`, and
+Differential testing is disabled by every checked-in defconfig and requires an
+explicit local preparation step.  The preparation script takes the exact NEMU
+tree recorded for the selected profile from a workbench checkout, builds a
+`SHARE=1` interpreter, and writes both the raw reference and a MIT adapter under
+the ignored `flows/local/nemu/<profile>/` directory:
+
+```sh
+make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench
+make rv32im_ooo_4k_defconfig
+make difftest
+```
+
+`make difftest` verifies the sidecar hashes and automatically selects the
+profile-matched adapter.  To use a separately built adapter, set
+`NPC_OPEN_REFERENCE_SO=/path/to/npc-public-nemu-adapter.so`.  The adapter must
+export `npc_public_difftest_init_v2`, `npc_public_difftest_step`, and
 `npc_public_difftest_fini` with the signatures in
-`sim/include/profile_abi.hpp`; a raw NEMU library fails closed. The adapter is
-intentionally outside this repository. A bounded Linux firmware
-smoke uses `NPC_OPEN_OPENSBI_IMAGE=/path/to/firmware.bin make opensbi-smoke`.
+`sim/include/profile_abi.hpp`; a raw NEMU library fails closed.  NEMU source,
+raw `.so` files, adapters, and generated configs are local ignored artifacts,
+not release files.  The bundled reference is configured with tracing,
+mtrace/ftrace, and device file output disabled; full Linux interrupt/MMIO
+difftest remains outside this bounded RC1 contract.
+
+The local preparation host also needs a C compiler, GNU Make, and the
+`readline` development library because the frozen NEMU source retains its SDB
+objects in the `SHARE=1` link.
+
+A bounded Linux firmware smoke uses
+`NPC_OPEN_OPENSBI_IMAGE=/path/to/firmware.bin make opensbi-smoke`.
 
 Build output, traces and waveforms are ignored under `build/`; after a smoke
 run a fresh clone must remain clean apart from those ignored files. Record the

@@ -19,7 +19,7 @@ FLOWCTL := $(PYTHON) "$(ROOT)/flows/scripts/flowctl.py" --root "$(ROOT)" --confi
 .DEFAULT_GOAL := help
 .PHONY: help defconfig rv32im_single_perf_defconfig rv32ima_sv32_linux_defconfig \
         rv32im_ooo_4k_defconfig menuconfig showconfig config-check source-check \
-        public-hygiene sim-dry-run verilator-lint sim smoke regression difftest \
+        public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
         opensbi-smoke runtime-tests release-checksums ci
 
 help:
@@ -32,7 +32,9 @@ help:
 	  '  make config-check source-check         Validate profile and source closure' \
 	  '  make public-hygiene                     Scan the public tree' \
 	  '  make sim-dry-run / verilator-lint       Inspect or lint the selected profile' \
-	  '  make smoke / regression / difftest      Run bounded public tests' \
+	  '  make smoke / regression                 Run bounded public tests' \
+	  '  make difftest-prepare                   Build ignored profile-matched NEMU adapters' \
+	  '  make difftest                            Run strict difftest using the local adapter' \
 	  '  make runtime-tests                       Run dependency-free control-plane tests' \
 	  '  make release-checksums                    Verify the exported SHA256 manifest' \
 	  '' \
@@ -86,6 +88,9 @@ regression:
 
 difftest:
 	@$(FLOWCTL) difftest
+
+difftest-prepare:
+	@$(FLOWCTL) difftest-prepare $(DIFFTEST_PREPARE_ARGS)
 
 opensbi-smoke:
 	@$(FLOWCTL) opensbi-smoke

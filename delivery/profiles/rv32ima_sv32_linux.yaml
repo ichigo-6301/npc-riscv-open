@@ -18,7 +18,7 @@ maturity: development
 release_maturity: partial
 stages:
   rtl_regression: verified
-  difftest: planned
+  difftest: partial
   isa_tests: verified
   opensbi_smoke: partial
   linux_boot: partial
@@ -33,3 +33,5 @@ release_constraints:
   nvboard_excluded: true
   full_linux_distribution_in_rc1: false
   public_performance_claims_enabled: false
+  difftest_default: false
+  difftest_raw_nemu_bundled: false

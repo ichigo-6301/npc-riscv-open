@@ -28,7 +28,7 @@ Verilator runner and test interfaces.
 | Three isolated RTL sets and headless wrappers | verified by source closure/lint |
 | Three-profile bounded self-check | verified in a native-Linux fresh clone (seed 1) |
 | Full Linux/OpenSBI boot | planned/partial; external firmware and not an RC1 completion claim |
-| Difftest | planned; only the documented adapter ABI is accepted, not a raw NEMU `.so` |
+| Difftest | optional local, profile-matched NEMU adapter; disabled by default |
 | ASIC PPA, timing, SRAM/PDK signoff | not_claimed |
 
 ## Public boundary
@@ -38,6 +38,12 @@ EDA databases, PDK files, generated build output or private reference-model
 source. An optional external reference adapter can be supplied by path at run
 time using [the public ABI](sim/include/profile_abi.hpp); loading a shared object
 without the required init/step/fini symbols is an explicit failure.
+
+NEMU is an external Mulan PSL-2.0 dependency and is never bundled in Git.  Run
+`make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench` to build
+the ignored, profile-specific raw reference and MIT ABI adapter locally; then
+`make difftest` enables the strict check.  The checked-in defconfigs keep
+difftest off, so a fresh clone still runs without NEMU.
 
 Performance, implementation and timing statements are profile-scoped. A value
 is not a public verified claim until its binary hash, configuration, source

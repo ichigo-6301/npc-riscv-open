@@ -18,7 +18,7 @@ maturity: development
 release_maturity: partial
 stages:
   rtl_regression: verified
-  difftest: planned
+  difftest: partial
   isa_tests: partial
   performance_benchmark: provisional
   headless_verilator_migration: verified
@@ -31,3 +31,5 @@ release_constraints:
   nvboard_excluded: true
   public_performance_claims_enabled: false
   public_timing_claims_enabled: false
+  difftest_default: false
+  difftest_raw_nemu_bundled: false

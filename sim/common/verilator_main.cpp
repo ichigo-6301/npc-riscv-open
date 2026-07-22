@@ -111,11 +111,13 @@ void capture_arch_state(Vnpc_public_sim_top *top, uint32_t *arch_pc,
 struct Difftest {
   void *handle = nullptr;
   npc_public::DifftestInit init = nullptr;
+  npc_public::DifftestInitWithImage init_with_image = nullptr;
   npc_public::DifftestStep step = nullptr;
   npc_public::DifftestFini fini = nullptr;
   bool initialized = false;
 
-  bool open(const std::string &path, const std::string &profile) {
+  bool open(const std::string &path, const std::string &profile,
+            const std::string &image) {
     handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (!handle) {
       std::fprintf(stderr, "public runtime: cannot load difftest '%s': %s\n",
@@ -124,21 +126,31 @@ struct Difftest {
     }
     init = reinterpret_cast<npc_public::DifftestInit>(
         dlsym(handle, npc_public::kDifftestInitSymbol));
+    init_with_image = reinterpret_cast<npc_public::DifftestInitWithImage>(
+        dlsym(handle, npc_public::kDifftestInitWithImageSymbol));
     step = reinterpret_cast<npc_public::DifftestStep>(
         dlsym(handle, npc_public::kDifftestStepSymbol));
     fini = reinterpret_cast<npc_public::DifftestFini>(
         dlsym(handle, npc_public::kDifftestFiniSymbol));
-    if (!init || !step || !fini) {
+    if ((!init && !init_with_image) || !step || !fini) {
       std::fprintf(stderr,
                    "public runtime: difftest '%s' lacks public ABI symbols "
-                   "(%s/%s/%s); refusing load-only execution\n",
+                   "(%s or %s/%s/%s); refusing load-only execution\n",
                    path.c_str(), npc_public::kDifftestInitSymbol,
+                   npc_public::kDifftestInitWithImageSymbol,
                    npc_public::kDifftestStepSymbol,
                    npc_public::kDifftestFiniSymbol);
       close();
       return false;
     }
-    if (init(npc_public::kProfileAbiVersion, profile.c_str()) != 0) {
+    const int init_status = init_with_image
+                                ? init_with_image(
+                                      npc_public::kProfileAbiVersionWithImage,
+                                      profile.c_str(), image.c_str(),
+                                      0x80000000u)
+                                : init(npc_public::kProfileAbiVersion,
+                                       profile.c_str());
+    if (init_status != 0) {
       std::fprintf(stderr, "public runtime: difftest init rejected profile %s\n",
                    profile.c_str());
       close();
@@ -153,6 +165,7 @@ struct Difftest {
     initialized = false;
     fini = nullptr;
     init = nullptr;
+    init_with_image = nullptr;
     step = nullptr;
     if (handle) dlclose(handle);
     handle = nullptr;
@@ -166,7 +179,7 @@ int main(int argc, char **argv) {
 
   Difftest difftest;
   if (!options.difftest.empty() &&
-      !difftest.open(options.difftest, options.profile)) {
+      !difftest.open(options.difftest, options.profile, options.image)) {
     return 2;
   }
 

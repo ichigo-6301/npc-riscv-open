@@ -18,5 +18,6 @@ excluded_integrations:
   - file_backed_mtrace
 optional_external_dependencies:
   - NPC public difftest adapter implementing the documented ABI; a raw NEMU shared object is not accepted directly
+  - Profile-matched NEMU adapters are generated locally under ignored flows/local and are disabled by default
   - workload images
   - OpenSBI image for the Linux profile

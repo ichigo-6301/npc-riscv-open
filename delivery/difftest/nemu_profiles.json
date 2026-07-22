@@ -1,0 +1,50 @@
+{
+  "schema": "npc-riscv-open/nemu-difftest-profiles-v1",
+  "raw_library": "nemu-ref.so",
+  "adapter_library": "npc-public-nemu-adapter.so",
+  "reset_vector": "0x80000000",
+  "profiles": {
+    "rv32im_single_perf": {
+      "workbench_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "nemu_tree": "0e7a3d67aacd9a670155c9ab93030f015870040c",
+      "source_ref": "linux-npc-opensbi-kernel-opt-v1",
+      "isa": "rv32im",
+      "enable_a": false,
+      "enable_s": false,
+      "enable_sv32": false
+    },
+    "rv32ima_sv32_linux": {
+      "workbench_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "nemu_tree": "0e7a3d67aacd9a670155c9ab93030f015870040c",
+      "source_ref": "linux-npc-opensbi-kernel-opt-v1",
+      "isa": "rv32ima_sv32",
+      "enable_a": true,
+      "enable_s": true,
+      "enable_sv32": true
+    },
+    "rv32im_ooo_4k": {
+      "workbench_commit": "8c004f4ac7d8c99fa71b8adde35a319f7472c93a",
+      "nemu_tree": "b7ae3f69c6388c95c09cf94eb56260143a5ecf4b",
+      "source_ref": "codex/s9s-rv32im-4k-release-freeze-v1",
+      "isa": "rv32im",
+      "enable_a": false,
+      "enable_s": false,
+      "enable_sv32": false
+    }
+  },
+  "build_contract": {
+    "engine": "interpreter",
+    "target": "share",
+    "trace": false,
+    "mtrace": false,
+    "ftrace": false,
+    "device": false,
+    "pmem_size": "0x10000000",
+    "misaligned_data": true,
+    "ebreak": "trap",
+    "illegal": "trap",
+    "unsupported_csr": "trap",
+    "memory_initialization": "static-zero",
+    "host_libraries": ["readline", "dl"]
+  }
+}

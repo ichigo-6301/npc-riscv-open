@@ -31,6 +31,7 @@ PROFILE_WRAPPERS = {
 PROFILE_FILELISTS = {
     profile: "filelists/{}.f".format(profile) for profile in PROFILE_SYMBOLS
 }
+NEMU_BUNDLE_METADATA = "delivery/difftest/nemu_profiles.json"
 WRAPPER_TOP = "npc_public_sim_top"
 ALLOWED_CONFIG_KEYS = {
     *PROFILE_SYMBOLS.values(),
@@ -498,9 +499,14 @@ def validate_config(root: Path, config: Mapping[str, str]) -> Dict[str, Any]:
         raise FlowError("release identity must be {}".format(RELEASE_IDENTITY))
     require_int(config, "CONFIG_NPC_WATCHDOG_CYCLES", minimum=1)
     require_int(config, "CONFIG_NPC_SEED", minimum=0)
-    if bool_value(config, "CONFIG_NPC_DIFFTEST") and not config.get("CONFIG_NPC_REFERENCE_SO"):
-        raise FlowError("difftest is enabled but CONFIG_NPC_REFERENCE_SO is empty")
     info = profile_info(root, profile)
+    if bool_value(config, "CONFIG_NPC_DIFFTEST") and not (
+        config.get("CONFIG_NPC_REFERENCE_SO") or default_reference_adapter(root, profile)
+    ):
+        raise FlowError(
+            "difftest is enabled but no reference adapter is configured; "
+            "run 'make difftest-prepare' or set NPC_OPEN_REFERENCE_SO"
+        )
     validate_compile_contract(info)
     validate_ooo_release_contract(root, info)
     if profile != "rv32ima_sv32_linux" and "SV32" in str(info["profile_data"].get("isa", "")).upper():
@@ -843,6 +849,39 @@ def runtime_environment(config: Mapping[str, str], reference_so: str = "") -> Di
     return environment
 
 
+def default_reference_adapter(root: Path, profile: str) -> str:
+    """Return a verified local adapter, never a raw NEMU shared object."""
+    if not (root / NEMU_BUNDLE_METADATA).is_file():
+        return ""
+    base = root / "flows/local/nemu" / profile
+    manifest_path = base / "manifest.json"
+    if not manifest_path.is_file():
+        return ""
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    if manifest.get("profile") != profile or manifest.get("adapter_abi") != 2:
+        return ""
+    adapter_name = manifest.get("adapter_library")
+    raw_name = manifest.get("raw_library")
+    if not isinstance(adapter_name, str) or not isinstance(raw_name, str):
+        return ""
+    adapter = base / adapter_name
+    raw = base / raw_name
+    if not adapter.is_file() or not raw.is_file():
+        return ""
+    expected_adapter = manifest.get("adapter_sha256")
+    expected_raw = manifest.get("raw_sha256")
+    if not isinstance(expected_adapter, str) or not isinstance(expected_raw, str):
+        return ""
+    if hashlib.sha256(adapter.read_bytes()).hexdigest() != expected_adapter:
+        raise FlowError("local difftest adapter hash drift: {}".format(adapter))
+    if hashlib.sha256(raw.read_bytes()).hexdigest() != expected_raw:
+        raise FlowError("local raw NEMU hash drift: {}".format(raw))
+    return str(adapter)
+
+
 def image_argument(config: Mapping[str, str], fallback: Optional[Path] = None, required: bool = True) -> str:
     value = os.environ.get("NPC_OPEN_IMAGE", "") or config.get("CONFIG_NPC_IMAGE", "")
     if not value and fallback is not None and fallback.is_file():
@@ -960,6 +999,20 @@ def dispatch(root: Path, config_path: Path, args: argparse.Namespace) -> None:
         print("wrote {}".format(config_path))
         return
 
+    if args.command == "difftest-prepare":
+        script = root / "flows/scripts/prepare_nemu_difftest.py"
+        if not script.is_file():
+            raise FlowError("missing NEMU difftest preparation script: {}".format(script))
+        command = [sys.executable, str(script), "--root", str(root)]
+        if args.prepare_profile != "all":
+            command.extend(["--profile", args.prepare_profile])
+        if args.prepare_force:
+            command.append("--force")
+        if args.prepare_source_repo:
+            command.extend(["--source-repo", args.prepare_source_repo])
+        run_command(command, root)
+        return
+
     config = parse_config(config_path)
     if args.command == "hygiene":
         summary = hygiene_check(root)
@@ -1004,11 +1057,20 @@ def dispatch(root: Path, config_path: Path, args: argparse.Namespace) -> None:
             run_sim(root, config, info, str(image), False)
         return
     if args.command == "difftest":
-        reference_so = os.environ.get("NPC_OPEN_REFERENCE_SO", "") or config.get("CONFIG_NPC_REFERENCE_SO", "")
+        reference_so = (
+            os.environ.get("NPC_OPEN_REFERENCE_SO", "")
+            or config.get("CONFIG_NPC_REFERENCE_SO", "")
+            or default_reference_adapter(root, str(info["profile"]))
+        )
         if not reference_so:
-            raise FlowError("difftest requires NPC_OPEN_REFERENCE_SO or CONFIG_NPC_REFERENCE_SO")
+            raise FlowError(
+                "difftest requires a profile-matched local adapter; run "
+                "'make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench' "
+                "or set NPC_OPEN_REFERENCE_SO"
+            )
         if not Path(reference_so).is_file():
             raise FlowError("external reference adapter does not exist: {}".format(reference_so))
+        print("DIFFTEST_ADAPTER={}".format(reference_so))
         fallback = root / "tests" / str(info["profile"]) / "smoke.hex"
         image = image_argument(config, fallback=fallback)
         run_sim(root, config, info, image, False, reference_so=reference_so)
@@ -1044,6 +1106,12 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("smoke")
     subparsers.add_parser("regression")
     subparsers.add_parser("difftest")
+    prepare = subparsers.add_parser("difftest-prepare")
+    prepare.add_argument("--profile", dest="prepare_profile", default="all",
+                         choices=("rv32im_single_perf", "rv32ima_sv32_linux",
+                                  "rv32im_ooo_4k", "all"))
+    prepare.add_argument("--source-repo", dest="prepare_source_repo", default="")
+    prepare.add_argument("--force", dest="prepare_force", action="store_true")
     subparsers.add_parser("opensbi-smoke")
     return parser
 

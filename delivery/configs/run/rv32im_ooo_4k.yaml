@@ -33,3 +33,9 @@ constraints:
   architectural_overrides_allowed: false
 tool_versions: {}
 execution_status: planned_public_migration
+difftest:
+  default_enabled: false
+  adapter_path: flows/local/nemu/rv32im_ooo_4k/npc-public-nemu-adapter.so
+  raw_reference_path: flows/local/nemu/rv32im_ooo_4k/nemu-ref.so
+  source_manifest: delivery/difftest/nemu_profiles.json
+  scope: bounded_gpr_pc_commit_check_with_ooo_sentinel_compatibility
