@@ -1,56 +1,92 @@
-# NPC RISC-V 多 Profile 公开发行版
+# NPC RISC-V 多 Profile 处理器
 
-本仓库是 `npc-riscv-open-v0.1.0-rc1` 的三个 RISC-V CPU profile 纯
-Verilator、无板级界面发行版。仓库只保留一个 `main` 分支；三个 profile 使用
-各自独立的 RTL source set，并由声明式 manifest 选择，单次构建不会把三套 RTL
-混在一起。
+[English](README.en.md)
 
-默认 profile 为 `rv32im_ooo_4k`。构建前先选择并检查生效配置：
+NPC RISC-V Open 提供三套用途不同的 RISC-V 处理器 RTL，以及一套共享的纯
+Verilator 仿真基础设施。默认配置是 `rv32im_ooo_4k`。仓库不依赖 NVBoard，
+也不包含显示、键盘或其他板级界面。
 
-```text
+三套 RTL 来自独立且固定的源提交。它们共享配置入口、headless wrapper、
+仿真运行时和 commit packet ABI，但不是同一套参数化 RTL；一次构建只选择
+一个 Profile 的 filelist。
+
+## 主要特性
+
+- RV32IM 五级顺序单发射核心，面向通用裸机与性能实验。
+- RV32IMA、M/S 特权级和 Sv32 的五级顺序核心，带 TLB、store buffer 和
+  ACLINT timer。
+- RV32IM 双发射、双退休乱序核心，带 64-entry PRF、ROB8、IQ8 和两项分支
+  checkpoint。
+- 三个 Profile 共用纯 Verilator 命令行运行时；difftest 可按 Profile 接入
+  本地 NEMU，默认关闭。
+- 源文件、配置、测试和历史测量均绑定 Profile 与固定 commit，禁止跨
+  Profile 混用数字。
+
+## Profile 对比
+
+| Profile | ISA / 特权级 | 微架构 | 指令与数据结构 | 主要用途 |
+| --- | --- | --- | --- | --- |
+| `rv32im_single_perf` | RV32IM / M | 5-stage，单发射、单退休 | 4 KiB 两路 I-cache + 4 KiB 两路 D-cache；128-entry BTB/PHT | 裸机、CoreMark 和顺序流水线研究 |
+| `rv32ima_sv32_linux` | RV32IMA / M+S，Sv32 | 5-stage，单发射、单退休 | 4 KiB 两路 I/D cache；16-entry ITLB/DTLB；2-entry store buffer；ACLINT | OpenSBI、Sv32 和操作系统集成研究 |
+| `rv32im_ooo_4k` | RV32IM / M | 双 dispatch/issue/complete/commit 的 OoO 核心 | 4 KiB instruction-pair storage；4 KiB physically tagged word cache | 双宽乱序吞吐与性能研究 |
+
+`rv32im_ooo_4k` 的 instruction-pair storage 是按 64-bit 指令对组织的前端
+存储，不等同于传统 set-associative I-cache。三套结构的详细差异见
+[架构说明](docs/architecture.md)。
+
+## 快速开始
+
+需要 Python 3.8+、GNU Make、PyYAML 和 Verilator 5.x：
+
+```sh
+python3 -m pip install --user PyYAML
 make defconfig
 make showconfig
-make config-check source-check public-hygiene
-make sim-dry-run
+make config-check source-check docs-check public-hygiene
 make verilator-lint
+make smoke
 ```
 
-三个 profile 分别是单发射性能、单发射 Sv32 Linux 和双发射乱序性能。它们
-分别绑定 wrapper、filelist、源提交和证据；共享的部分仅包括公开流程控制、
-Verilator 运行器和测试接口。
+切换 Profile 时重新生成 `.config`：
 
-| 维度 | RC1 状态 |
-| --- | --- |
-| 三套 RTL source set、纯 headless wrapper | verified by source closure/lint |
-| 三 profile bounded self-check | verified in a native-Linux fresh clone (seed 1) |
-| Linux 完整启动/OpenSBI | planned/partial；外部 firmware，不是 RC1 完成声明 |
-| Difftest | 可选的 profile 匹配 NEMU adapter；默认关闭 |
-| ASIC PPA、时序、SRAM/PDK signoff | not_claimed |
+```sh
+make rv32im_single_perf_defconfig
+make rv32ima_sv32_linux_defconfig
+make rv32im_ooo_4k_defconfig
+```
 
-公开边界不包含板级用户界面、专有 EDA 数据库、PDK、生成物或私有参考模型
-源码。可选外部参考适配器只能在运行时通过
-[公开 ABI](sim/include/profile_abi.hpp) 提供路径，不随仓库发布；只 `dlopen`
-一个库不会被视为 difftest 通过。
+运行自备程序镜像：
 
-NEMU 是外部 Mulan PSL-2.0 依赖，不进入 Git 发行包。严格测试前执行
-`make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench`，脚本会
-按 profile 构建被 `.gitignore` 忽略的 raw reference 和 MIT adapter；随后执行
-`make difftest`。发行版默认配置保持 difftest 关闭，因此没有 NEMU 的 fresh
-clone 仍可正常仿真。当前 adapter 关闭 trace、mtrace/ftrace 和 device 文件
-输出；完整 Linux 中断/MMIO difftest 不属于 RC1 的 bounded 合同。
+```sh
+NPC_OPEN_IMAGE=/path/to/program.bin make sim
+```
 
-性能、实现和时序结论始终按 profile 隔离。只有当 binary hash、配置、源提交
-和可复现实验证据都登记在 `delivery/` 与 `evidence/` 后，结果才可标记为公开
-verified claim。
+默认配置无需 NEMU。严格测试可在本地准备与 Profile 匹配的参考模型：
 
-本 RC1 的 fresh-clone 证据只覆盖仓库内 bounded images：单发射 smoke 为
-269 cycles/27 commits，Linux profile 的两个 bounded images 为 162/27 和
-80/15，乱序 smoke 为 107 cycles/21 commits/5 second-lane commits。CoreMark、
-OoO fixed-tail workloads、完整 OpenSBI/Linux boot、外部 difftest 和私有
-commit-trace equivalence 仍依赖未随仓库发布的外部 fixture，因此不构成公开
-性能 claim。
+```sh
+make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench
+make difftest
+```
 
-详见 [docs/README.md](docs/README.md)、[docs/README.en.md](docs/README.en.md)、
-[docs/reproduction.md](docs/reproduction.md) 和 [docs/limitations.md](docs/limitations.md)。
+生成的参考 `.so`、日志、波形和构建目录均被 Git 忽略。完整流程见
+[仿真指南](docs/simulation.md)和[验证说明](docs/verification.md)。
 
-英文平行文档见 [README.en.md](README.en.md)。
+## 架构、性能与 SoC 集成
+
+- [架构说明](docs/architecture.md)：三套流水线、预测器、存储结构和接口。
+- [性能与实现数据](docs/performance.md)：公开复现表和严格标注的历史参考值。
+- [SoC 集成](docs/soc-integration.md)：DPI runtime、Linux RTL timer 与
+  NEMU/AM 参考外设的边界。
+
+当前公开流程已覆盖 source closure、Verilator lint、bounded smoke 和回归。
+CoreMark、频率与面积表中尚未由本仓库独立复现的数字均标为
+`provisional`，不能解释为最大频率、物理实现或硅后结果。
+
+## 项目边界
+
+本仓库不携带 NEMU、AM、OpenSBI、Linux、PDK、Liberty、SRAM macro、EDA
+数据库或板级工程。MIT 许可证仅覆盖仓库中明确列出的自有 RTL、wrapper、
+脚本和文档。第三方组件由使用者按各自许可证另行取得。
+
+更多信息见[文档索引](docs/README.md)、[限制说明](docs/limitations.md)、
+[证据规则](evidence/README.md)和 [NOTICE](NOTICE)。

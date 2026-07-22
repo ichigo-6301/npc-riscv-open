@@ -1,24 +1,46 @@
-kind: design_config
-schema_version: 1.0.0
-design_id: rv32im_single_perf
-parameters:
-  isa: RV32IM
-  abi: ilp32
-  privilege_modes: [M]
-  architectural_registers: 32
-  execution: in_order
-  pipeline_stages: 5
-  issue_width: 1
-  commit_width: 1
-  branch_prediction: enabled
-  m_extension: true
-  a_extension: false
-  sv32: false
-  native_top_module: cpu_top
-  simulation_memory_binding: dpi_behavioral
-  performance_counters: compile_time_optional
-  source_rtl_count: 33
-compatibility:
-  dual_issue_scaffolding_present: true
-  released_execution_width: 1
-  board_io_removed_by_public_wrapper: true
+{
+  "compatibility": {
+    "board_io_removed_by_public_wrapper": true,
+    "configured_execution_width": 1,
+    "dual_issue_scaffolding_present": true
+  },
+  "design_id": "rv32im_single_perf",
+  "kind": "design_config",
+  "parameters": {
+    "a_extension": false,
+    "abi": "ilp32",
+    "architectural_registers": 32,
+    "branch_prediction": "enabled",
+    "branch_predictor": {
+      "btb_entries": 128,
+      "conditional_counter": "2-bit"
+    },
+    "commit_width": 1,
+    "data_cache": {
+      "line_bytes": 64,
+      "payload_bytes": 4096,
+      "ways": 2
+    },
+    "execution": "in_order",
+    "instruction_cache": {
+      "line_bytes": 64,
+      "payload_bytes": 4096,
+      "ways": 2
+    },
+    "isa": "RV32IM",
+    "issue_width": 1,
+    "m_extension": true,
+    "native_top_module": "cpu_top",
+    "performance_counters": "compile_time_optional",
+    "pipeline_stages": 5,
+    "privilege_modes": [
+      "M"
+    ],
+    "simulation_memory_binding": "dpi_behavioral",
+    "source_rtl_count": 33,
+    "sv32": false
+  },
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

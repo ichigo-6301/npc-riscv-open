@@ -116,12 +116,10 @@
     "posted_store_response_pipeline": "1",
     "pre_arbiter_load_hit_oracle": "0",
     "precise_store_buffer": "1",
-    "profile": "rv32im_4k_v1",
     "ras_self_forward_exclusion": "1",
     "raw_completion_wakeup": "1",
     "registered_branch_issue_final_fallthrough": "1",
     "registered_bru_dispatch_ordinary_issue2": "1",
-    "release_identity": "ooo-rv32im-4k-v0.1.0-rc1",
     "rob_entries": "8",
     "s_extension": "0",
     "same_cycle_branch_dispatch_issue": "1",
@@ -144,6 +142,7 @@
     "target_line_hit": "1",
     "target_line_payload_bytes": "4096",
     "target_line_ways": "1",
+    "upstream_config_profile": "rv32im_4k_v1",
     "weak_bimodal_reachability_oracle": "0",
     "younger_slot1_control_dual_retire": "1"
   },
@@ -166,14 +165,15 @@
     "singleton_coalesce_oracle",
     "partial_pair_oracle"
   ],
+  "project_id": "npc-riscv-open",
   "public_boundary": {
     "performance_claims": "not_claimed",
     "private_verification_and_evidence": "excluded",
     "source_manifest_sha256": "03d7cc8d9f537be02b9a78e53eec2f4dbce1e672b2c72373d97ae0479c98978d",
-    "transformation": "public_config_only_release_manifest_v1"
+    "transformation": "public_config_snapshot_v1"
   },
-  "release_identity": "ooo-rv32im-4k-v0.1.0-rc1",
   "schema": "npc-riscv-open/upstream-config-v1",
+  "snapshot_id": "v0.1.0",
   "source": {
     "baseline_npc_subtree_commit": "b9274ebe",
     "baseline_workbench_commit": "2c74fb9ce1b8270045b847c19a3be5bb178e9124",

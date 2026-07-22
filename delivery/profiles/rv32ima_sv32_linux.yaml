@@ -1,37 +1,39 @@
-kind: profile
-schema_version: 1.0.0
-profile_id: rv32ima_sv32_linux
-product_class: cpu_system
-intent: Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation
-source_ref: linux-npc-opensbi-kernel-opt-v1
-commit_sha: e3a1cc91c4c00040f7180eec5e385326d9964893
-ref_resolution: resolved_local
-source_root: npc
-source_set: rv32ima_sv32_linux
-design_config: rv32ima_sv32_linux
-target_config: verilator_headless
-default_run_config: rv32ima_sv32_linux_smoke
-top_module: cpu_top
-wrapper_top_module: npc_public_sim_top
-public_filelist: filelists/rv32ima_sv32_linux.f
-maturity: development
-release_maturity: partial
-stages:
-  rtl_regression: verified
-  difftest: partial
-  isa_tests: verified
-  opensbi_smoke: partial
-  linux_boot: partial
-  performance_benchmark: provisional
-  headless_verilator_migration: verified
-  public_fresh_clone: verified
-  synthesis: not_claimed
-  physical_design: not_claimed
-  signoff_sta: not_claimed
-release_constraints:
-  native_rtl_preserved: true
-  nvboard_excluded: true
-  full_linux_distribution_in_rc1: false
-  public_performance_claims_enabled: false
-  difftest_default: false
-  difftest_raw_nemu_bundled: false
+{
+  "commit_sha": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+  "default_run_config": "rv32ima_sv32_linux_smoke",
+  "design_config": "rv32ima_sv32_linux",
+  "intent": "Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation",
+  "kind": "public_profile",
+  "maturity": "development",
+  "product_class": "cpu_system",
+  "profile_id": "rv32ima_sv32_linux",
+  "project_id": "npc-riscv-open",
+  "public_contract": {
+    "difftest_default": false,
+    "headless_verilator": true,
+    "native_rtl_preserved": true,
+    "nvboard_excluded": true,
+    "verified_performance_claims": false
+  },
+  "public_filelist": "filelists/rv32ima_sv32_linux.f",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0",
+  "source_root": "npc",
+  "source_set": "rv32ima_sv32_linux",
+  "stages": {
+    "difftest": "partial",
+    "headless_verilator_migration": "verified",
+    "isa_tests": "verified",
+    "linux_boot": "partial",
+    "opensbi_smoke": "partial",
+    "performance_benchmark": "provisional",
+    "physical_design": "not_claimed",
+    "public_fresh_clone": "verified",
+    "rtl_regression": "verified",
+    "signoff_sta": "not_claimed",
+    "synthesis": "not_claimed"
+  },
+  "target_config": "verilator_headless",
+  "top_module": "cpu_top",
+  "wrapper_top_module": "npc_public_sim_top"
+}

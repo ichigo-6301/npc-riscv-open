@@ -23,9 +23,13 @@ config NPC_PROFILE_ID
     default "rv32ima_sv32_linux" if NPC_PROFILE_RV32IMA_SV32_LINUX
     default "rv32im_ooo_4k" if NPC_PROFILE_RV32IM_OOO_4K
 
-config NPC_RELEASE_IDENTITY
+config NPC_PROJECT_ID
     string
-    default "npc-riscv-open-v0.1.0-rc1"
+    default "npc-riscv-open"
+
+config NPC_SNAPSHOT_ID
+    string
+    default "v0.1.0"
 
 endmenu
 

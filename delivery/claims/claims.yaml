@@ -1,3 +1,7 @@
-kind: claims
-schema_version: 1.0.0
-claims: []
+{
+  "claims": [],
+  "kind": "claims",
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

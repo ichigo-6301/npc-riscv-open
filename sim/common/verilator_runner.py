@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small, deterministic Verilator entry point for the public NPC release.
+"""Small, deterministic Verilator entry point for the public NPC project.
 
 The runner intentionally owns only build/run orchestration.  It does not know
 about NEMU, NVBoard, AM, or private workbench paths.  A profile supplies a

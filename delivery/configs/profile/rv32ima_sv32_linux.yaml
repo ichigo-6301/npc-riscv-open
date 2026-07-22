@@ -1,4 +1,8 @@
-kind: profile_config
-schema_version: 1.0.0
-profile_config_id: rv32ima_sv32_linux
-profile_ref: ../../profiles/rv32ima_sv32_linux.yaml
+{
+  "kind": "profile_config",
+  "profile_config_id": "rv32ima_sv32_linux",
+  "profile_ref": "../../profiles/rv32ima_sv32_linux.yaml",
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

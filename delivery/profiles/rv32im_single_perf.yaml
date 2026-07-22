@@ -1,35 +1,37 @@
-kind: profile
-schema_version: 1.0.0
-profile_id: rv32im_single_perf
-product_class: cpu_core
-intent: Single-issue in-order RV32IM performance profile for headless Verilator delivery
-source_ref: bbus-dual-ready-700mhz-v1.0
-commit_sha: f76de57479b798aca7468f999c386bb4cb5fce02
-ref_resolution: resolved_local
-source_root: .
-source_set: rv32im_single_perf
-design_config: rv32im_single_perf
-target_config: verilator_headless
-default_run_config: rv32im_single_perf_smoke
-top_module: cpu_top
-wrapper_top_module: npc_public_sim_top
-public_filelist: filelists/rv32im_single_perf.f
-maturity: development
-release_maturity: partial
-stages:
-  rtl_regression: verified
-  difftest: partial
-  isa_tests: partial
-  performance_benchmark: provisional
-  headless_verilator_migration: verified
-  public_fresh_clone: verified
-  synthesis: partial
-  physical_design: not_claimed
-  signoff_sta: not_claimed
-release_constraints:
-  native_rtl_preserved: true
-  nvboard_excluded: true
-  public_performance_claims_enabled: false
-  public_timing_claims_enabled: false
-  difftest_default: false
-  difftest_raw_nemu_bundled: false
+{
+  "commit_sha": "f76de57479b798aca7468f999c386bb4cb5fce02",
+  "default_run_config": "rv32im_single_perf_smoke",
+  "design_config": "rv32im_single_perf",
+  "intent": "Single-issue in-order RV32IM performance profile for headless Verilator delivery",
+  "kind": "public_profile",
+  "maturity": "development",
+  "product_class": "cpu_core",
+  "profile_id": "rv32im_single_perf",
+  "project_id": "npc-riscv-open",
+  "public_contract": {
+    "difftest_default": false,
+    "headless_verilator": true,
+    "native_rtl_preserved": true,
+    "nvboard_excluded": true,
+    "verified_performance_claims": false
+  },
+  "public_filelist": "filelists/rv32im_single_perf.f",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0",
+  "source_root": ".",
+  "source_set": "rv32im_single_perf",
+  "stages": {
+    "difftest": "partial",
+    "headless_verilator_migration": "verified",
+    "isa_tests": "partial",
+    "performance_benchmark": "provisional",
+    "physical_design": "not_claimed",
+    "public_fresh_clone": "verified",
+    "rtl_regression": "verified",
+    "signoff_sta": "not_claimed",
+    "synthesis": "partial"
+  },
+  "target_config": "verilator_headless",
+  "top_module": "cpu_top",
+  "wrapper_top_module": "npc_public_sim_top"
+}

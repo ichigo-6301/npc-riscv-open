@@ -2,7 +2,7 @@
 """Dependency-free checks for the public runtime control plane.
 
 These tests do not require Verilator or a private reference model.  They catch
-the most damaging release mistakes early: a filelist escaping the repository,
+the most damaging packaging mistakes early: a filelist escaping the repository,
 an image parser regression, and a runner that cannot produce a deterministic
 dry-run command.
 """

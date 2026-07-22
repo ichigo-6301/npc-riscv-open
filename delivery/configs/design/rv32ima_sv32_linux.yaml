@@ -1,29 +1,60 @@
-kind: design_config
-schema_version: 1.0.0
-design_id: rv32ima_sv32_linux
-parameters:
-  isa: RV32IMA
-  abi: ilp32
-  privilege_modes: [M, S]
-  architectural_registers: 32
-  execution: in_order
-  pipeline_stages: 5
-  issue_width: 1
-  commit_width: 1
-  branch_prediction: enabled
-  m_extension: true
-  a_extension: true
-  sv32: true
-  itlb_entries: 16
-  dtlb_entries: 16
-  store_buffer_entries: 2
-  fast_mul_latency_cycles: 2
-  native_top_module: cpu_top
-  simulation_memory_binding: dpi_behavioral
-  performance_counters: compile_time_optional
-  source_rtl_count: 42
-compatibility:
-  opensbi_dependency: external
-  linux_image_dependency: external
-  full_linux_boot_release_gate: false
-  board_io_removed_by_public_wrapper: true
+{
+  "compatibility": {
+    "board_io_removed_by_public_wrapper": true,
+    "full_linux_boot_validation_gate": false,
+    "linux_image_dependency": "external",
+    "opensbi_dependency": "external"
+  },
+  "design_id": "rv32ima_sv32_linux",
+  "kind": "design_config",
+  "parameters": {
+    "a_extension": true,
+    "abi": "ilp32",
+    "aclint_mtimer": {
+      "default_clk_hz": 100000000,
+      "default_timebase_hz": 1000000,
+      "mtime_base": 2684485632,
+      "mtimecmp_base": 2684551168
+    },
+    "architectural_registers": 32,
+    "branch_prediction": "enabled",
+    "branch_predictor": {
+      "bht_entries": 128,
+      "btb_entries": 128,
+      "gshare": false,
+      "history_bits": 8
+    },
+    "commit_width": 1,
+    "data_cache": {
+      "line_bytes": 64,
+      "payload_bytes": 4096,
+      "ways": 2
+    },
+    "dtlb_entries": 16,
+    "execution": "in_order",
+    "fast_mul_latency_cycles": 2,
+    "instruction_cache": {
+      "line_bytes": 64,
+      "payload_bytes": 4096,
+      "ways": 2
+    },
+    "isa": "RV32IMA",
+    "issue_width": 1,
+    "itlb_entries": 16,
+    "m_extension": true,
+    "native_top_module": "cpu_top",
+    "performance_counters": "compile_time_optional",
+    "pipeline_stages": 5,
+    "privilege_modes": [
+      "M",
+      "S"
+    ],
+    "simulation_memory_binding": "dpi_behavioral",
+    "source_rtl_count": 42,
+    "store_buffer_entries": 2,
+    "sv32": true
+  },
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

@@ -1,34 +1,38 @@
-kind: run_config
-schema_version: 1.0.0
-run_id: rv32im_single_perf_smoke
-profile: rv32im_single_perf
-design: rv32im_single_perf
-target: verilator_headless
-source_ref: bbus-dual-ready-700mhz-v1.0
-commit_sha: f76de57479b798aca7468f999c386bb4cb5fce02
-dirty_worktree: false
-stages:
-  - config_check
-  - source_closure
-  - verilator_lint
-  - headless_smoke
-  - rtl_regression
-  - optional_difftest
-constraints:
-  reset_vector: 0x80000000
-  dpi_memory_latency_cycles: 2
-  watchdog: true
-  trace_default: false
-  nvboard: false
-  mtrace: false
-  ftrace: false
-  pmemtrace: false
-  architectural_overrides_allowed: false
-tool_versions: {}
-execution_status: planned_public_migration
-difftest:
-  default_enabled: false
-  adapter_path: flows/local/nemu/rv32im_single_perf/npc-public-nemu-adapter.so
-  raw_reference_path: flows/local/nemu/rv32im_single_perf/nemu-ref.so
-  source_manifest: delivery/difftest/nemu_profiles.json
-  scope: bounded_gpr_pc_commit_check
+{
+  "commit_sha": "f76de57479b798aca7468f999c386bb4cb5fce02",
+  "constraints": {
+    "architectural_overrides_allowed": false,
+    "dpi_memory_latency_cycles": 2,
+    "ftrace": false,
+    "mtrace": false,
+    "nvboard": false,
+    "pmemtrace": false,
+    "reset_vector": "0x80000000",
+    "trace_default": false,
+    "watchdog": true
+  },
+  "design": "rv32im_single_perf",
+  "difftest": {
+    "adapter_path": "flows/local/nemu/rv32im_single_perf/npc-public-nemu-adapter.so",
+    "default_enabled": false,
+    "raw_reference_path": "flows/local/nemu/rv32im_single_perf/nemu-ref.so",
+    "scope": "bounded_gpr_pc_commit_check",
+    "source_manifest": "delivery/difftest/nemu_profiles.json"
+  },
+  "execution_status": "available_for_local_validation",
+  "kind": "run_config",
+  "profile": "rv32im_single_perf",
+  "project_id": "npc-riscv-open",
+  "run_id": "rv32im_single_perf_smoke",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0",
+  "stages": [
+    "config_check",
+    "source_closure",
+    "verilator_lint",
+    "headless_smoke",
+    "rtl_regression",
+    "optional_difftest"
+  ],
+  "target": "verilator_headless"
+}

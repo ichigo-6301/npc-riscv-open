@@ -1,42 +1,52 @@
-kind: design_config
-schema_version: 1.0.0
-design_id: rv32im_ooo_4k
-parameters:
-  isa: RV32IM
-  abi: ilp32
-  privilege_modes: [M]
-  architectural_registers: 32
-  physical_registers: 64
-  execution: out_of_order
-  dispatch_width: 2
-  issue_width: 2
-  completion_width: 2
-  commit_width: 2
-  rob_entries: 8
-  iq_entries: 8
-  branch_checkpoint_entries: 2
-  conditional_predictor_entries: 256
-  instruction_pair_storage:
-    entries: 512
-    payload_bits_per_entry: 64
-    ways: 1
-    payload_bytes: 4096
-  data_word_cache:
-    entries: 1024
-    payload_bits_per_entry: 32
-    ways: 1
-    payload_bytes: 4096
-  m_extension: true
-  a_extension: false
-  sv32: false
-  native_top_module: ooo_npc_top
-  simulation_memory_binding: tagged_dpi_behavioral
-  accepted_mechanisms: 47
-  observation_oracles_enabled: 0
-  source_rtl_count: 60
-  source_include_count: 2
-compatibility:
-  release_profile: rv32im_4k_v1
-  accounting_level_default: 0
-  external_memory_synthesis_mode_differs_from_dpi_performance_path: true
-  board_io_present: false
+{
+  "compatibility": {
+    "accounting_level_default": 0,
+    "board_io_present": false,
+    "external_memory_synthesis_mode_differs_from_dpi_performance_path": true,
+    "upstream_config_profile": "rv32im_4k_v1"
+  },
+  "design_id": "rv32im_ooo_4k",
+  "kind": "design_config",
+  "parameters": {
+    "a_extension": false,
+    "abi": "ilp32",
+    "accepted_mechanisms": 47,
+    "architectural_registers": 32,
+    "branch_checkpoint_entries": 2,
+    "commit_width": 2,
+    "completion_width": 2,
+    "conditional_predictor_entries": 256,
+    "data_word_cache": {
+      "entries": 1024,
+      "payload_bits_per_entry": 32,
+      "payload_bytes": 4096,
+      "ways": 1
+    },
+    "dispatch_width": 2,
+    "execution": "out_of_order",
+    "instruction_pair_storage": {
+      "entries": 512,
+      "payload_bits_per_entry": 64,
+      "payload_bytes": 4096,
+      "ways": 1
+    },
+    "iq_entries": 8,
+    "isa": "RV32IM",
+    "issue_width": 2,
+    "m_extension": true,
+    "native_top_module": "ooo_npc_top",
+    "observation_oracles_enabled": 0,
+    "physical_registers": 64,
+    "privilege_modes": [
+      "M"
+    ],
+    "rob_entries": 8,
+    "simulation_memory_binding": "tagged_dpi_behavioral",
+    "source_include_count": 2,
+    "source_rtl_count": 60,
+    "sv32": false
+  },
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

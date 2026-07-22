@@ -1,52 +1,76 @@
-# Release limitations and nonclaims
+# 限制与不作结论事项
 
-This document is deliberately conservative. An item listed here may become a
-claim only after a profile-specific source reference, configuration, raw log,
-hash and fresh-clone reproduction are recorded.
+[English](limitations.en.md)
 
-The Linux profile's RC1 public wrapper is a CPU-only headless boundary. It does
-not bundle OpenSBI, a Linux kernel, a DTB, NEMU, or a board/MMIO integration.
-`opensbi-smoke` therefore requires an external firmware image and remains an
-optional bounded gate. The checked-in Linux regression image covers RV32IMA
-machine-mode LR/SC and CSR behavior; it must not be read as proof of full Sv32
-translation or Linux boot.
+本页采用保守边界。只有 Profile、source commit、配置、输入 hash、原始结果和
+fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not_claimed`
+升级为 `verified`。
 
-The public DPI service models deterministic sparse PMEM, RTC/UART hooks,
-tohost, pair fetch, and tagged responses with profile-selected IF/LSU/memory
-latencies. It is a release runtime contract, not a silicon memory model.
+## RTL 与 Profile
 
-- The three profiles are not promised to be RTL-compatible internally. Their
-  native top modules and source sets are selected independently.
-- No ASIC synthesis, place-and-route, extracted timing, silicon frequency,
-  PPA, SRAM macro signoff or foundry result is established by the public flow.
-- Historical register-expanded and macro experiments remain provenance only;
-  they do not automatically establish a release Fmax or a closed timing point.
-- The Linux profile provides a bounded Sv32/firmware integration entrypoint.
-  Full kernel distribution, boot-time services and a particular board platform
-  are outside the RC1 acceptance boundary.
-- External reference adapters, firmware, benchmark binaries and toolchains are
-  not redistributed. Their exact version and hash must be recorded by each run.
-- The upstream OoO release manifest is exported as a config-only provenance
-  view. Its mechanism list, disabled Oracles, capacities and source identity are
-  retained, while private performance, verification evidence and claims are
-  removed. Public claims are governed only by `delivery/claims`.
-- Tracing and waveform options are debug aids, not performance measurements.
-  Default release runs keep heavyweight file-producing traces disabled.
-- The public source tree is headless and does not provide board peripherals or
-  a graphical board harness. Memory and MMIO behavior must be supplied by the
-  selected profile adapter.
-- The frozen profile RTL is exported byte-for-byte from its locked Git blobs.
-  A few inherited upstream files contain trailing whitespace; the exporter
-  preserves those bytes so the recorded SHA256 source lock remains valid.
-  Formatting checks therefore apply to the public control plane separately and
-  do not silently rewrite locked RTL.
-- A generic-secret inventory scan may flag identifiers such as
-  `mem_req_token`/`mem_rsp_token` in the OoO RTL. These are typed transaction
-  protocol fields, contain no credentials, and are retained by the source lock;
-  the public hygiene gate separately confirms that no secret-like value exists.
-- A process exit code alone is not evidence of architectural correctness;
-  smoke markers, trap status, instruction counts and conservation checks must
-  be retained in the evidence record.
+- 三个 Profile 是独立冻结的 RTL source set，不保证内部 module、macro、
+  interface 或时序行为兼容。
+- 公共 wrapper 只统一 commit、halt 和 GPR/PC debug 观测，不统一内部 memory
+  protocol、exception ownership 或 pipeline signal。
+- 一次构建只能选择一个 Profile；将多个 filelist 混合编译属于无效配置。
+- 为保持 source lock，导出的原生 RTL 不作格式化或去重。同名 module 只能
+  在各自 source set 中使用。
 
-The `delivery/claims` and `delivery/nonclaims` manifests are authoritative when
-they are more restrictive than this prose.
+## 系统与软件
+
+- 工程是 CPU + headless Verilator runtime，不是完整可综合 SoC。
+- NVBoard、VGA、PS2、keyboard、GPIO、FPGA project 和板级 top 均不包含。
+- AXI UARTLite、AXI Timer 和 AXI INTC 当前仅是 NEMU/AM reference platform
+  的设备模型，不是公开 wrapper 中的 RTL 外设。
+- Linux Profile 内部包含 `AclintTimer`，但仓库不携带 OpenSBI、Linux kernel、
+  DTB、rootfs 或完整板级 memory map。
+- 当前 bounded Linux image 只覆盖 machine-mode RV32IMA/LRSC/CSR/trap，不能
+  证明完整 S-mode delegation、Sv32 page fault 或 Linux boot。
+- OpenSBI、Linux、AM、NEMU、编译器和用户程序均为外部依赖，使用者负责取得
+  正确版本和遵守各自许可证。
+
+## 仿真与 difftest
+
+- 公共 DPI sparse PMEM、legacy RTC、serial TX 和 tohost 是 simulation-only
+  服务，不是硅上 memory 或 peripheral 模型。
+- latency 参数描述时钟化仿真 transport，不是 SRAM access time、AXI QoS 或
+  cache hit timing。
+- 默认 difftest 关闭。本地 adapter 只做 bounded PC/instruction/GPR commit
+  check，不覆盖完整 device、timer、interrupt 和 MMIO side-effect 等价。
+- 不同 timer 模型不声明 cycle-exact 等价；wall-clock、simulation tick 和
+  RTL `mtime` 不能直接混作一个时间基准。
+- VCD/itrace 仅用于 debug，开启后会降低宿主吞吐；它们不应参与性能 A/B。
+- process exit code 不是单独的 PASS 证据，仍需检查 trap/stop marker、commit
+  count、watchdog 和 protocol error。
+
+## 性能、频率与面积
+
+- 公开流程尚未独立复现三个 Profile 的 CoreMark 输入与全部性能条件，当前
+  CoreMark CPI 均为历史 `provisional` 参考。
+- OoO 的 `0.912836351` 是有限七 workload 的 weighted CPI，不是通用 CPI
+  保证，也不能替代 CoreMark CPI `0.882380204`。
+- Single 的约 704 MHz 是 1 ns DC stress 出现负 WNS 后的算术推算，不是
+  700 MHz closure、最大频率、P&R 或 silicon 结果。
+- Single 的 `184926.124968` 是该历史 DC 配置下的 library area 数值，不是
+  物理 die/core area，也不能与不同 memory binding 的结果直接比较。
+- Linux 与 OoO Profile 当前没有公开频率、面积或功耗数据。
+- 三个 Profile 均未建立公开 P&R、post-route extraction/STA、CDC/RDC、DFT、
+  LEC、power、SRAM macro DRC/LVS/PEX、IO、OCV/MMMC、foundry signoff 或 silicon
+  correlation。
+- OoO 的公开性能路径使用 internal tagged DPI memory；外部 memory synthesis
+  contract 不包含所有 DPI-only precise-store/forwarding 行为，因此不声明
+  两者完整综合等价。
+
+## 证据与安全
+
+- 私有 benchmark binary、完整日志、主机绝对路径、PDK、Liberty/DB、LEF、
+  GDS、SRAM view、EDA work database 和 credential 不进入工程。
+- 历史数字即使来自私有已验证记录，在公开输入未复现前仍只能标
+  `provisional`。
+- source inventory 可能把 `mem_req_token` 等协议字段误报为 secret；这些是
+  typed transaction identifiers。真正的 credential 或 secret-like value
+  仍必须 fail closed。
+- 机器可读 claims/nonclaims 比本文更保守时，以机器可读约束为准。
+
+已知空白和后续数据要求见[性能与实现数据](performance.md)，系统边界见
+[SoC 集成](soc-integration.md)，测试范围见[验证说明](verification.md)。

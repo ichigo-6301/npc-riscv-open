@@ -1,21 +1,31 @@
-# 文档索引
+# NPC RISC-V Open 文档
+
+[English](README.en.md)
+
+本项目包含三套相互独立的处理器 RTL source set，以及共享的纯 Verilator
+运行环境。Profile manifest 是 ISA、top、wrapper、filelist、源 commit 和默认
+运行条件的唯一事实来源。
 
 ## Profile
 
-| Profile | 用途 | RC1 公开状态 |
+| Profile | 架构定位 | 当前公开验证状态 |
 | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM 单发射性能研究 | source 与 smoke 状态以 `delivery/` 为准 |
-| `rv32ima_sv32_linux` | RV32IMA 单发射 Sv32/Linux 启动 | 不声明 Linux 综合结果 |
-| `rv32im_ooo_4k` | RV32IM 双发射乱序性能 | 证据始终按 profile 隔离 |
+| `rv32im_single_perf` | RV32IM 五级顺序单发射 | source closure、lint、bounded smoke/regression 已验证；历史 CoreMark/PPA 为 provisional |
+| `rv32ima_sv32_linux` | RV32IMA M/S + Sv32 五级顺序单发射 | bounded 架构测试已验证；完整 OpenSBI/Linux 和综合未声明 |
+| `rv32im_ooo_4k` | RV32IM 双发射、双退休 OoO | source closure、lint、bounded 双宽 smoke/regression 已验证；历史性能为 provisional |
 
-Profile manifest 是 top module、源提交、filelist、wrapper、ISA、memory binding
-和成熟度的唯一来源。根目录 Makefile 只是稳定的操作入口，不应再维护第二套默认值。
+三套 RTL 不是同一套参数化实现。构建系统每次只编译一个 source set，公共
+wrapper 只统一 commit、halt 和 debug 观测接口。
 
-## 复现与限制
+## 技术文档
 
-- [复现说明](reproduction.md) 描述 fresh clone 上的纯 Verilator 流程。
-- [限制说明](limitations.md) 列出尚未声明的实现和集成边界。
-- [English documentation](README.en.md)。
+- [架构说明](architecture.md)：流水线、预测器、cache/TLB、OoO 资源和接口。
+- [性能与实现数据](performance.md)：公开复现表、历史参考值和证据状态。
+- [SoC 集成](soc-integration.md)：DPI、ACLINT、AXI 参考外设和地址空间。
+- [仿真指南](simulation.md)：Profile 选择、镜像、trace 和可选 difftest。
+- [验证说明](verification.md)：测试范围、现有结果和未覆盖边界。
+- [限制说明](limitations.md)：尚未建立的功能、PPA 和系统级结论。
 
-claims、nonclaims、source closure 和证据 hash 保存在机器可读的 `delivery/`
-与 `evidence/` 中。不同 profile、源提交或 memory model 的数字不能混合比较。
+机器可读的 source lock、Profile 配置、claims、nonclaims 与证据索引位于
+`delivery/`、`provenance/` 和 `evidence/`。不同 Profile、commit、binary 或
+memory model 的数字不得混合比较。

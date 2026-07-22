@@ -20,11 +20,11 @@ FLOWCTL := $(PYTHON) "$(ROOT)/flows/scripts/flowctl.py" --root "$(ROOT)" --confi
 .PHONY: help defconfig rv32im_single_perf_defconfig rv32ima_sv32_linux_defconfig \
         rv32im_ooo_4k_defconfig menuconfig showconfig config-check source-check \
         public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
-        opensbi-smoke runtime-tests release-checksums ci
+        opensbi-smoke runtime-tests docs-check verify-checksums ci
 
 help:
 	@printf '%s\n' \
-	  'NPC RISC-V public multi-profile release' \
+	  'NPC RISC-V public multi-profile project' \
 	  '' \
 	  '  make defconfig                         Select the dual-issue default' \
 	  '  make <profile>_defconfig               Select one declared profile' \
@@ -36,7 +36,8 @@ help:
 	  '  make difftest-prepare                   Build ignored profile-matched NEMU adapters' \
 	  '  make difftest                            Run strict difftest using the local adapter' \
 	  '  make runtime-tests                       Run dependency-free control-plane tests' \
-	  '  make release-checksums                    Verify the exported SHA256 manifest' \
+	  '  make docs-check                           Validate bilingual docs and metric references' \
+	  '  make verify-checksums                     Verify the exported SHA256 manifest' \
 	  '' \
 	  'Only profile manifests select RTL, ISA, and memory topology.'
 
@@ -98,7 +99,10 @@ opensbi-smoke:
 runtime-tests:
 	@$(PYTHON) -m unittest discover -s "$(ROOT)/tests" -p 'test_*.py'
 
-release-checksums:
+docs-check:
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_docs.py" --root "$(ROOT)"
+
+verify-checksums:
 	@cd "$(ROOT)" && sha256sum --check SHA256SUMS
 
-ci: release-checksums runtime-tests config-check source-check public-hygiene verilator-lint smoke regression
+ci: verify-checksums docs-check runtime-tests config-check source-check public-hygiene verilator-lint smoke regression

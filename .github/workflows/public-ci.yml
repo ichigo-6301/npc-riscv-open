@@ -38,6 +38,9 @@ jobs:
       - name: Verify exported file hashes
         run: sha256sum --check SHA256SUMS
 
+      - name: Validate public documentation
+        run: make docs-check
+
       - name: Select profile
         run: make "${{ matrix.profile }}_defconfig"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Public-safe dispatcher and release guard for NPC RISC-V profiles."""
+"""Public-safe dispatcher and configuration guard for NPC RISC-V profiles."""
 
 from __future__ import annotations
 
@@ -17,7 +17,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 
-RELEASE_IDENTITY = "npc-riscv-open-v0.1.0-rc1"
+PROJECT_ID = "npc-riscv-open"
+SNAPSHOT_ID = "v0.1.0"
 DEFAULT_PROFILE = "rv32im_ooo_4k"
 PROFILE_SYMBOLS = {
     "rv32im_single_perf": "CONFIG_NPC_PROFILE_RV32IM_SINGLE_PERF",
@@ -36,7 +37,8 @@ WRAPPER_TOP = "npc_public_sim_top"
 ALLOWED_CONFIG_KEYS = {
     *PROFILE_SYMBOLS.values(),
     "CONFIG_NPC_PROFILE_ID",
-    "CONFIG_NPC_RELEASE_IDENTITY",
+    "CONFIG_NPC_PROJECT_ID",
+    "CONFIG_NPC_SNAPSHOT_ID",
     "CONFIG_NPC_IMAGE",
     "CONFIG_NPC_WATCHDOG_CYCLES",
     "CONFIG_NPC_SEED",
@@ -51,7 +53,7 @@ ALLOWED_CONFIG_KEYS = {
     "CONFIG_NPC_RUN_REGRESSION",
 }
 # Profile maturity is a lifecycle label; individual stage statuses in the
-# delivery manifests use the evidence ladder (verified/partial/...).
+# Public profile manifests use the evidence ladder (verified/partial/...).
 MATURITY_VALUES = {"stable", "development", "experimental", "archived"}
 MIN_PYTHON = (3, 8)
 
@@ -165,7 +167,7 @@ def selected_profile(config: Mapping[str, str]) -> str:
 
 def load_yaml(path: Path) -> Dict[str, Any]:
     if not path.is_file():
-        raise FlowError("missing delivery manifest: {}".format(path))
+        raise FlowError("missing project manifest: {}".format(path))
     try:
         import yaml  # type: ignore
     except ImportError:
@@ -267,7 +269,7 @@ def require_wrapper_parameter(wrapper_text: str, name: str, enabled: bool) -> No
         raise FlowError("OoO wrapper must lock {} to {}".format(name, value))
 
 
-def validate_ooo_release_contract(root: Path, info: Mapping[str, Any]) -> None:
+def validate_ooo_profile_contract(root: Path, info: Mapping[str, Any]) -> None:
     if info["profile"] != "rv32im_ooo_4k":
         return
     design = info["design_data"].get("parameters", {})
@@ -289,11 +291,11 @@ def validate_ooo_release_contract(root: Path, info: Mapping[str, Any]) -> None:
     }
     for key, expected in required_design.items():
         if design.get(key) != expected:
-            raise FlowError("OoO release design drift: {} must be {}".format(key, expected))
+            raise FlowError("OoO profile design drift: {} must be {}".format(key, expected))
     pair = design.get("instruction_pair_storage", {})
     data = design.get("data_word_cache", {})
     if not isinstance(pair, Mapping) or not isinstance(data, Mapping):
-        raise FlowError("OoO release cache/storage declarations are missing")
+        raise FlowError("OoO profile cache/storage declarations are missing")
     for label, mapping, entries, bits, payload in (
         ("instruction_pair_storage", pair, 512, 64, 4096),
         ("data_word_cache", data, 1024, 32, 4096),
@@ -312,26 +314,26 @@ def validate_ooo_release_contract(root: Path, info: Mapping[str, Any]) -> None:
         ("structural_oracles", False),
     ):
         if constraints.get(key) != expected:
-            raise FlowError("OoO release run drift: {} must be {}".format(key, expected))
+            raise FlowError("OoO profile run drift: {} must be {}".format(key, expected))
 
-    upstream = root / "provenance/upstream/rv32im_ooo_4k/release_manifest.json"
+    upstream = root / "provenance/upstream/rv32im_ooo_4k/config_snapshot.json"
     if not upstream.is_file():
         return
     try:
-        release = json.loads(upstream.read_text(encoding="utf-8"))
+        snapshot = json.loads(upstream.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
-        raise FlowError("invalid OoO upstream release manifest: {}".format(error))
-    accepted = release.get("accepted_mechanisms")
-    disabled = release.get("disabled_oracles")
-    config = release.get("config")
+        raise FlowError("invalid OoO upstream configuration snapshot: {}".format(error))
+    accepted = snapshot.get("accepted_mechanisms")
+    disabled = snapshot.get("disabled_oracles")
+    config = snapshot.get("config")
     if not isinstance(accepted, list) or len(accepted) != 47:
-        raise FlowError("OoO upstream release must contain 47 accepted mechanisms")
+        raise FlowError("OoO upstream configuration must contain 47 accepted mechanisms")
     if not isinstance(disabled, list) or len(disabled) != 17:
-        raise FlowError("OoO upstream release must contain 17 disabled Oracles")
+        raise FlowError("OoO upstream configuration must contain 17 disabled Oracles")
     if set(accepted) != set(OOO_ACCEPTED_WRAPPER_PARAMETERS) | OOO_DERIVED_ACCEPTED:
         raise FlowError("OoO wrapper contract does not match the upstream accepted mechanism list")
     if not isinstance(config, Mapping) or config.get("target_line_entries") != "512" or config.get("data_line_entries") != "1024":
-        raise FlowError("OoO upstream release capacity manifest drift")
+        raise FlowError("OoO upstream configuration capacity drift")
 
     wrapper = root / str(info["wrapper_file"])
     wrapper_text = wrapper.read_text(encoding="utf-8")
@@ -383,7 +385,7 @@ def validate_compile_contract(info: Mapping[str, Any]) -> None:
     forbidden_tokens = ("ORACLE", "NVBOARD", "XPM")
     forbidden = sorted(value for value in defines if any(token in value for token in forbidden_tokens))
     if forbidden:
-        raise FlowError("{} compile contract enables forbidden release define(s): {}".format(profile, forbidden))
+        raise FlowError("{} compile contract enables forbidden project define(s): {}".format(profile, forbidden))
 
 
 def profile_info(root: Path, profile: str) -> Dict[str, Any]:
@@ -428,14 +430,16 @@ def profile_info(root: Path, profile: str) -> Dict[str, Any]:
     source_root = profile_data.get("source_root")
     if not isinstance(commit_sha, str) or not re.fullmatch(r"[0-9a-f]{40}", commit_sha):
         raise FlowError("{} commit_sha must be a full lowercase Git SHA".format(profile))
-    if not isinstance(source_ref, str) or not source_ref.strip():
-        raise FlowError("{} source_ref is missing".format(profile))
     if not isinstance(source_root, str):
         raise FlowError("{} source_root is missing".format(profile))
+    if source_ref is not None and (not isinstance(source_ref, str) or not source_ref.strip()):
+        raise FlowError("{} source_ref must be a non-empty string when present".format(profile))
     relative_public_path(source_root or ".", "source_root")
-    for key in ("source_ref", "commit_sha", "source_root"):
+    for key in ("commit_sha", "source_root"):
         if source_data.get(key) != profile_data.get(key):
             raise FlowError("{} differs between profile and source-set manifests".format(key))
+    if source_ref is not None and source_data.get("source_ref") != source_ref:
+        raise FlowError("source_ref differs between profile and source-set manifests")
 
     maturity = profile_data.get("maturity")
     if maturity not in MATURITY_VALUES:
@@ -459,9 +463,10 @@ def profile_info(root: Path, profile: str) -> Dict[str, Any]:
         "profile": profile,
         "design": profile_data.get("design_config"),
         "target": profile_data.get("target_config"),
-        "source_ref": source_ref,
         "commit_sha": commit_sha,
     }
+    if source_ref is not None:
+        expected_run_links["source_ref"] = source_ref
     for key, expected in expected_run_links.items():
         if run_data.get(key) != expected:
             raise FlowError("{} differs between profile and default run config".format(key))
@@ -495,11 +500,39 @@ def validate_config(root: Path, config: Mapping[str, str]) -> Dict[str, Any]:
     if unknown:
         raise FlowError("unknown or architectural config override(s): {}".format(", ".join(unknown)))
     profile = selected_profile(config)
-    if config.get("CONFIG_NPC_RELEASE_IDENTITY") != RELEASE_IDENTITY:
-        raise FlowError("release identity must be {}".format(RELEASE_IDENTITY))
+    if config.get("CONFIG_NPC_PROJECT_ID") != PROJECT_ID:
+        raise FlowError("project id must be {}".format(PROJECT_ID))
+    if config.get("CONFIG_NPC_SNAPSHOT_ID") != SNAPSHOT_ID:
+        raise FlowError("snapshot id must be {}".format(SNAPSHOT_ID))
     require_int(config, "CONFIG_NPC_WATCHDOG_CYCLES", minimum=1)
     require_int(config, "CONFIG_NPC_SEED", minimum=0)
     info = profile_info(root, profile)
+    project = load_yaml(root / "delivery/project.yaml")
+    if project.get("project_id") != PROJECT_ID or project.get("snapshot_id") != SNAPSHOT_ID:
+        raise FlowError("delivery/project.yaml identity differs from the selected project snapshot")
+    if profile not in list_value(project.get("profile_ids")):
+        raise FlowError("delivery/project.yaml does not declare profile {}".format(profile))
+    for label, data in (
+        ("profile", info["profile_data"]),
+        ("source set", info["source_data"]),
+        ("design", info["design_data"]),
+        ("target", info["target_data"]),
+        ("run", info["run_data"]),
+    ):
+        if data.get("project_id") != PROJECT_ID or data.get("snapshot_id") != SNAPSHOT_ID:
+            raise FlowError("{} metadata identity differs from the selected project snapshot".format(label))
+    for relative in ("provenance/project.json", "provenance/snapshot.json"):
+        path = root / relative
+        if not path.is_file():
+            raise FlowError("missing public provenance record {}".format(relative))
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise FlowError("invalid public provenance record {}: {}".format(relative, error))
+        if record.get("project_id") != PROJECT_ID:
+            raise FlowError("{} project id drift".format(relative))
+        if relative.endswith("snapshot.json") and record.get("snapshot_id") != SNAPSHOT_ID:
+            raise FlowError("{} snapshot id drift".format(relative))
     if bool_value(config, "CONFIG_NPC_DIFFTEST") and not (
         config.get("CONFIG_NPC_REFERENCE_SO") or default_reference_adapter(root, profile)
     ):
@@ -508,7 +541,7 @@ def validate_config(root: Path, config: Mapping[str, str]) -> Dict[str, Any]:
             "run 'make difftest-prepare' or set NPC_OPEN_REFERENCE_SO"
         )
     validate_compile_contract(info)
-    validate_ooo_release_contract(root, info)
+    validate_ooo_profile_contract(root, info)
     if profile != "rv32ima_sv32_linux" and "SV32" in str(info["profile_data"].get("isa", "")).upper():
         raise FlowError("Sv32 is only valid for the Linux profile")
     return info
@@ -518,9 +551,9 @@ def config_display(config: Mapping[str, str], info: Mapping[str, Any]) -> List[T
     design_parameters = info["design_data"]["parameters"]
     constraints = info["run_data"].get("constraints", {})
     rows = [
-        ("release_identity", RELEASE_IDENTITY),
+        ("project_id", PROJECT_ID),
+        ("snapshot_id", SNAPSHOT_ID),
         ("profile_id", str(info["profile"])),
-        ("source_ref", str(info["source_ref"])),
         ("source_commit", str(info["commit_sha"])),
         ("maturity", str(info["maturity"])),
         ("isa", str(design_parameters.get("isa", "not-declared"))),
@@ -617,6 +650,8 @@ def declared_allowlist(root: Path, profile: str, source_data: Mapping[str, Any])
     profiles = manifest.get("profiles") if isinstance(manifest, dict) else None
     if not isinstance(profiles, list):
         raise FlowError("source allowlist {} has no profiles list".format(manifest_path))
+    if manifest.get("project_id") != PROJECT_ID or manifest.get("snapshot_id") != SNAPSHOT_ID:
+        raise FlowError("source allowlist identity differs from the selected project snapshot")
     key = source_data.get("allowlist_profile_key", profile)
     for item in profiles:
         if isinstance(item, dict) and item.get("profile_id") == key:
@@ -756,6 +791,14 @@ def hygiene_check(root: Path) -> Dict[str, int]:
     ]
     forbidden_ui = ("nv" + "board").casefold()
     forbidden_tree = ("ne" + "mu").casefold()
+    # The public project may contain a small adapter and metadata describing
+    # an optional external reference model.  Only those explicitly allowlisted
+    # control-plane paths may use the dependency name; source trees, generated
+    # libraries, and arbitrary RTL references remain forbidden.
+    allowed_reference_paths = {
+        "flows/scripts/prepare_nemu_difftest.py",
+        "sim/adapters/nemu_public_adapter.cpp",
+    }
     dependency_pattern = re.compile(
         r"(?i)(?:#\s*include|\bimport\b|\brequire\b|\bsource\b|\bexec(?:ute)?\b|"
         r"\bfile(?:list)?\b|\bpath\b|\blink\b|\bload\b)[^\n]*"
@@ -780,7 +823,11 @@ def hygiene_check(root: Path) -> Dict[str, int]:
             continue
         if path.suffix.casefold() in protected_suffixes:
             errors.append("protected implementation artifact: {}".format(relative))
-        if forbidden_ui in folded or forbidden_tree in folded:
+        reference_path_allowed = (
+            relative in allowed_reference_paths
+            or relative.startswith("delivery/difftest/")
+        )
+        if forbidden_ui in folded or (forbidden_tree in folded and not reference_path_allowed):
             errors.append("excluded private/board dependency in path: {}".format(relative))
         if path.stat().st_size > 10 * 1024 * 1024:
             errors.append("oversized public file (>10 MiB): {}".format(relative))
@@ -803,7 +850,11 @@ def hygiene_check(root: Path) -> Dict[str, int]:
         )
         if forbidden_ui in dependency_lines.casefold() and not public_metadata:
             errors.append("excluded board dependency referenced by {}".format(relative))
-        if forbidden_tree in dependency_lines.casefold() and relative.startswith(("rtl/", "sim/", "tests/", "filelists/")):
+        if (
+            forbidden_tree in dependency_lines.casefold()
+            and relative.startswith(("rtl/", "sim/", "tests/", "filelists/"))
+            and relative not in allowed_reference_paths
+        ):
             errors.append("excluded reference-source dependency referenced by {}".format(relative))
         for pattern in absolute_patterns:
             if pattern.search(text):
@@ -1024,7 +1075,11 @@ def dispatch(root: Path, config_path: Path, args: argparse.Namespace) -> None:
             print("{}={}".format(key, value))
         return
     if args.command == "config-check":
-        print("CONFIG_CHECK_PASS profile={} release={}".format(info["profile"], RELEASE_IDENTITY))
+        print(
+            "CONFIG_CHECK_PASS project={} snapshot={} profile={}".format(
+                PROJECT_ID, SNAPSHOT_ID, info["profile"]
+            )
+        )
         return
     if args.command == "source-check":
         summary = check_source_closure(root, info)

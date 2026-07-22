@@ -1,75 +1,207 @@
-kind: nonclaims
-schema_version: 1.0.0
-nonclaims:
-  - id: single_public_cpi_not_yet_claimed
-    profile: rv32im_single_perf
-    statement: CoreMark CPI 1.48 is not yet a public release claim
-    reason: The public headless simulator has not reproduced the exact binary, configuration, commit count, and cycle count
-    status: not_claimed
-    public: true
-  - id: single_700mhz_closure_not_claimed
-    profile: rv32im_single_perf
-    statement: 700 MHz timing closure or maximum frequency is not claimed
-    reason: The historical value is inferred from a negative-WNS 1 GHz DC stress run and is not a closed implementation point
-    status: not_claimed
-    public: true
-  - id: single_physical_signoff_not_claimed
-    profile: rv32im_single_perf
-    statement: P&R, extracted STA, foundry signoff, power, and silicon performance are not claimed
-    reason: No public same-run physical handoff or signoff evidence is selected for RC1
-    status: not_claimed
-    public: true
-  - id: single_register_expanded_500mhz_not_claimed
-    profile: rv32im_single_perf
-    statement: Historical register-expanded-memory operation at 500 MHz or 600 MHz is not claimed
-    reason: No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate
-    status: not_claimed
-    public: true
-  - id: linux_public_cpi_not_yet_claimed
-    profile: rv32ima_sv32_linux
-    statement: Sv32 CoreMark CPI 1.98 is not yet a public release claim
-    reason: The value is approximate private documentation and has not been reproduced in the public headless flow
-    status: not_claimed
-    public: true
-  - id: linux_full_boot_not_claimed
-    profile: rv32ima_sv32_linux
-    statement: A complete Linux distribution boot is not claimed for RC1
-    reason: RC1 requires bounded architectural and OpenSBI-oriented smoke only; Linux images remain external and the historical profile is partial
-    status: not_claimed
-    public: true
-  - id: linux_later_cpi_not_claimed
-    profile: rv32ima_sv32_linux
-    statement: The later approximately 1.72 CoreMark result is not attributed to the frozen Linux source
-    reason: It belongs to a different later source checkpoint and may not be merged across profile identities
-    status: not_claimed
-    public: true
-  - id: linux_synthesis_not_claimed
-    profile: rv32ima_sv32_linux
-    statement: Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed
-    reason: No source-matched implementation evidence has been selected for this profile
-    status: not_claimed
-    public: true
-  - id: ooo_public_cpi_not_yet_claimed
-    profile: rv32im_ooo_4k
-    statement: Weighted CPI 0.912836351 is not yet a public release claim
-    reason: Exact public export and fresh-clone reproduction remain pending
-    status: not_claimed
-    public: true
-  - id: ooo_universal_cpi_not_claimed
-    profile: rv32im_ooo_4k
-    statement: CPI below 1 is not claimed universally
-    reason: The private result is a finite seven-workload aggregate and includes workloads above CPI 1
-    status: not_claimed
-    public: true
-  - id: ooo_ppa_timing_not_claimed
-    profile: rv32im_ooo_4k
-    statement: Frequency, timing closure, area, power, energy, FPGA, P&R, signoff, and silicon performance are not claimed
-    reason: RC1 migration precedes the profile-specific ASIC baseline phase
-    status: not_claimed
-    public: true
-  - id: ooo_dpi_synth_equivalence_not_claimed
-    profile: rv32im_ooo_4k
-    statement: Full synthesis equivalence of the internal DPI performance memory path is not claimed
-    reason: The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior
-    status: not_claimed
-    public: true
+{
+  "kind": "nonclaims",
+  "nonclaims": [
+    {
+      "conditions": "CoreMark; RV32IM single issue; 4,578,012 cycles and 3,081,085 commits; public binary/config reproduction pending",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "cpi": 1.48,
+        "cycles": 4578012,
+        "evidence_status": "provisional",
+        "retired_instructions": 3081085,
+        "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02"
+      },
+      "id": "single_public_cpi_not_yet_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The public headless simulator has not reproduced the exact binary, configuration, commit count, and cycle count",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "CoreMark CPI 1.48 is a historical reference, not a publicly reproduced claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "Design Compiler 1.000 ns stress target; setup WNS about -0.42 ns; inferred 704 MHz and area 184926.124968 library units; not timing closure",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "area": 184926.124968,
+        "area_unit": "dc_library_area_units",
+        "derived_fmax_mhz": 704,
+        "evidence_status": "provisional",
+        "setup_tns_ns": -4606.87,
+        "setup_wns_ns": -0.42,
+        "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+        "target_period_ns": 1.0,
+        "technology": "Nangate45 typical with corrected SRAM wrapper macro DB",
+        "tool": "Synopsys Design Compiler compile_ultra"
+      },
+      "id": "single_700mhz_closure_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The historical value is inferred from a negative-WNS 1 GHz DC stress run and is not a closed implementation point",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "700 MHz timing closure or maximum frequency is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "No public same-run physical handoff or signoff evidence is selected for this project snapshot",
+      "evidence_status": "private_reference_only",
+      "id": "single_physical_signoff_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "No public same-run physical handoff or signoff evidence is selected for this project snapshot",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "P&R, extracted STA, foundry signoff, power, and silicon performance are not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "It comes from a 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; no source-matched P&R or signoff evidence is public",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "area": 184926.124968,
+        "area_unit": "dc_library_area_units",
+        "evidence_status": "provisional",
+        "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02"
+      },
+      "id": "single_dc_area_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "It comes from a 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; no source-matched P&R or signoff evidence is public",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The historical 184926.124968 DC library-area value is not a public silicon or macro-area claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate",
+      "evidence_status": "private_reference_only",
+      "id": "single_register_expanded_500mhz_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "Historical register-expanded-memory operation at 500 MHz or 600 MHz is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "Sv32 CoreMark; approximate private project record; exact cycle, instruction and binary hashes unavailable",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "cpi_approx": 1.98,
+        "evidence_status": "provisional",
+        "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
+      },
+      "id": "linux_public_cpi_not_yet_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "The value is approximate private documentation and has not been reproduced in the public headless flow",
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "statement": "Sv32 CoreMark CPI approximately 1.98 is a historical reference, not a publicly reproduced claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
+      "evidence_status": "private_reference_only",
+      "id": "linux_full_boot_not_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "statement": "A complete Linux distribution boot is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "It belongs to a different later source checkpoint and may not be merged across profile identities",
+      "evidence_status": "private_reference_only",
+      "id": "linux_later_cpi_not_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "It belongs to a different later source checkpoint and may not be merged across profile identities",
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "statement": "The later approximately 1.72 CoreMark result is not attributed to the frozen Linux source",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "No source-matched implementation evidence has been selected for this profile",
+      "evidence_status": "private_reference_only",
+      "id": "linux_synthesis_not_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "No source-matched implementation evidence has been selected for this profile",
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "statement": "Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The public checkout does not contain the exact external benchmark binary and has not rerun the matching workload",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "cpi": 0.882380204,
+        "cycles": 2718684,
+        "evidence_status": "private_verified_public_provisional",
+        "retired_instructions": 3081080,
+        "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391"
+      },
+      "id": "ooo_coremark_cpi_not_yet_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The public checkout does not contain the exact external benchmark binary and has not rerun the matching workload",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "CoreMark CPI 0.882380204 is a private historical measurement, not a publicly reproduced claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "RV32IM; IF/LSU/memory latencies 2/3/2; seed 1; difftest; seven-workload weighted CPI 0.912836351; CoreMark CPI 0.882380204",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "cycles": 5157299,
+        "evidence_status": "private_verified_public_provisional",
+        "retired_instructions": 5649752,
+        "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+        "weighted_cpi": 0.912836351,
+        "workload_count": 7
+      },
+      "id": "ooo_public_cpi_not_yet_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The public checkout does not contain all exact external workload binaries and has not rerun the matching suite",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "Seven-workload weighted CPI 0.912836351 is a private historical measurement, not a publicly reproduced claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The private result is a finite seven-workload aggregate and includes workloads above CPI 1",
+      "evidence_status": "private_reference_only",
+      "id": "ooo_universal_cpi_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The private result is a finite seven-workload aggregate and includes workloads above CPI 1",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "CPI below 1 is not claimed universally",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The open-source migration precedes the profile-specific ASIC baseline phase",
+      "evidence_status": "private_reference_only",
+      "id": "ooo_ppa_timing_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The open-source migration precedes the profile-specific ASIC baseline phase",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "Frequency, timing closure, area, power, energy, FPGA, P&R, signoff, and silicon performance are not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
+      "evidence_status": "private_reference_only",
+      "id": "ooo_dpi_synth_equivalence_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "Full synthesis equivalence of the internal DPI performance memory path is not claimed",
+      "status": "not_claimed"
+    }
+  ],
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}

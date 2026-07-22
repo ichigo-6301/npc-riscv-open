@@ -1,4 +1,4 @@
-// Headless wrapper for the frozen dual-issue OoO release source set.
+// Headless wrapper for the fixed dual-issue OoO Profile source set.
 // The native ooo_npc_top owns its tagged DPI fetch/LSU transports, therefore
 // this adapter only exposes the stable commit/halt/debug subset to Verilator.
 
@@ -25,7 +25,7 @@ module npc_public_sim_top (
     output logic [31:0] debug_arch_gpr
 );
     logic program_ready;
-    // The 47 accepted release mechanisms are explicit here rather than being
+    // The 47 accepted Profile mechanisms are explicit here rather than being
     // inferred from a private Makefile.  All Oracle/reachability parameters
     // retain their disabled defaults.
     ooo_npc_top #(

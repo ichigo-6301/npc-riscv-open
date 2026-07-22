@@ -178,8 +178,7 @@
       "profile_id": "rv32im_single_perf",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 33,
-      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
-      "source_ref": "bbus-dual-ready-700mhz-v1.0"
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02"
     },
     {
       "abi": "ilp32",
@@ -333,8 +332,7 @@
       "profile_id": "rv32ima_sv32_linux",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 42,
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
-      "source_ref": "linux-npc-opensbi-kernel-opt-v1"
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
     },
     {
       "abi": "ilp32",
@@ -443,10 +441,10 @@
       "profile_id": "rv32im_ooo_4k",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 62,
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
-      "source_ref": "codex/s9s-rv32im-4k-release-freeze-v1"
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391"
     }
   ],
-  "release_identity": "npc-riscv-open-v0.1.0-rc1",
-  "schema": "npc-riscv-open/profile-inventory-v1"
+  "project_id": "npc-riscv-open",
+  "schema": "npc-riscv-open/profile-inventory-v1",
+  "snapshot_id": "v0.1.0"
 }

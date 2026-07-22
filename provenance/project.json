@@ -6,8 +6,7 @@
     "rv32ima_sv32_linux",
     "rv32im_ooo_4k"
   ],
-  "release_identity": "npc-riscv-open-v0.1.0-rc1",
-  "remote_publication": "not_performed",
+  "project_id": "npc-riscv-open",
   "repository_name": "npc-riscv-open",
-  "schema": "npc-riscv-open/release-v1"
+  "schema": "npc-riscv-open/project-v1"
 }

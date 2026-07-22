@@ -1,24 +1,38 @@
-# Documentation index
+# NPC RISC-V Open documentation
+
+[中文](README.md)
+
+The project contains three independent processor RTL source sets and one
+shared, headless Verilator environment. Profile manifests are the source of
+truth for ISA, top module, wrapper, filelist, source commit, and default run
+conditions.
 
 ## Profiles
 
-| Profile | Purpose | Public status at RC1 |
+| Profile | Architecture | Current public validation state |
 | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM single-issue performance study | source and smoke status are declared in `delivery/` |
-| `rv32ima_sv32_linux` | RV32IMA single-issue Sv32/Linux bring-up | Linux synthesis is not claimed |
-| `rv32im_ooo_4k` | RV32IM dual-issue out-of-order performance | release evidence remains profile-scoped |
+| `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, lint, and bounded smoke/regression verified; historical CoreMark/PPA provisional |
+| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | bounded architecture tests verified; full OpenSBI/Linux and synthesis not claimed |
+| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure, lint, and bounded dual-width smoke/regression verified; historical performance provisional |
 
-The profile manifest is the source of truth for top modules, source commits,
-filelists, wrappers, ISA, memory binding and maturity. The root Makefile is only
-a stable operator interface and must not grow a second set of defaults.
+The three RTL sets are not one parameterized implementation. One build compiles
+one source set, while the public wrappers normalize only commit, halt, and
+debug observation.
 
-## Reproduction and limitations
+## Technical documents
 
-- [Reproduction](reproduction.md) explains a fresh-clone, headless Verilator run.
-- [Limitations](limitations.md) lists unclaimed implementation and integration
-  boundaries.
-- [中文文档](README.md)。
+- [Architecture](architecture.en.md): pipelines, predictors, caches/TLBs, OoO
+  resources, and interfaces.
+- [Performance and implementation data](performance.en.md): public
+  reproduction tables, historical references, and evidence states.
+- [SoC integration](soc-integration.en.md): DPI, ACLINT, AXI reference devices,
+  and the address map.
+- [Simulation](simulation.en.md): Profile selection, images, tracing, and
+  optional difftest.
+- [Verification](verification.en.md): test scope, current results, and gaps.
+- [Limitations](limitations.en.md): unestablished feature, PPA, and system-level
+  conclusions.
 
-Claims, nonclaims, source closure and evidence hashes are kept under the
-machine-readable `delivery/` and `evidence/` trees. Do not combine numbers from
-different profiles, source commits or memory models.
+Machine-readable source locks, Profile configurations, claims, nonclaims, and
+evidence indexes live under `delivery/`, `provenance/`, and `evidence/`. Never
+combine values from different Profiles, commits, binaries, or memory models.

@@ -1,33 +1,47 @@
-kind: evidence_manifest
-schema_version: 1.0.0
-evidence:
-  - id: "public_source_allowlist"
-    path: "../provenance/source_allowlist.json"
-    type: "public_generated_record"
-    profile: "all"
-    source_ref: "npc-riscv-open-v0.1.0-rc1"
-    tool: "deterministic public exporter and native-Linux fresh-clone checks"
-    sha256: "75ff4156e3a617205bd65e9ad85cd239bfa1ea4cb72647ba390831a988933f6c"
-    claims: []
-    public: true
-    status: "verified"
-  - id: "public_source_closure"
-    path: "../provenance/profile_inventory.json"
-    type: "public_generated_record"
-    profile: "all"
-    source_ref: "npc-riscv-open-v0.1.0-rc1"
-    tool: "deterministic public exporter and native-Linux fresh-clone checks"
-    sha256: "fcfaca1aaf46dad5155c93e71542bff8f3e2b398394255931fdc74a044e90061"
-    claims: []
-    public: true
-    status: "verified"
-  - id: "public_bounded_validation"
-    path: "../docs/validation.md"
-    type: "public_generated_record"
-    profile: "all"
-    source_ref: "npc-riscv-open-v0.1.0-rc1"
-    tool: "deterministic public exporter and native-Linux fresh-clone checks"
-    sha256: "1f93445991be244f1a6725609b13e3faf7d12ac4c0e8bcdc15ca3bffe2387697"
-    claims: []
-    public: true
-    status: "verified"
+{
+  "evidence": [
+    {
+      "claims": [],
+      "id": "public_source_allowlist",
+      "path": "../provenance/source_allowlist.json",
+      "profile": "all",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "fab71f8a0b8a9566e0410a359b1f512425198c40cff5d2b37bc3bf9dbbc3ffc0",
+      "snapshot_id": "v0.1.0",
+      "status": "verified",
+      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
+      "type": "public_generated_record"
+    },
+    {
+      "claims": [],
+      "id": "public_source_closure",
+      "path": "../provenance/profile_inventory.json",
+      "profile": "all",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "da5ef0983c24164cdcec4549dd0c10ca17948fa6d7fbe3c3d089319f3cb70492",
+      "snapshot_id": "v0.1.0",
+      "status": "verified",
+      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
+      "type": "public_generated_record"
+    },
+    {
+      "claims": [],
+      "id": "public_bounded_validation",
+      "path": "../docs/verification.md",
+      "profile": "all",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "f6991e43c6595320e5c1dc83b5b4eed1c94a7c54ac4cdf491293b3cd445043ef",
+      "snapshot_id": "v0.1.0",
+      "status": "verified",
+      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
+      "type": "public_generated_record"
+    }
+  ],
+  "kind": "evidence_manifest",
+  "project_id": "npc-riscv-open",
+  "schema_version": "1.0.0",
+  "snapshot_id": "v0.1.0"
+}
