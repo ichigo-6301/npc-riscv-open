@@ -78,8 +78,9 @@ make difftest
 - [SoC 集成](docs/soc-integration.md)：DPI runtime、Linux RTL timer 与
   NEMU/AM 参考外设的边界。
 
-当前公开流程已覆盖 source closure、Verilator lint、bounded smoke 和回归。
-CoreMark、频率与面积表中尚未由本仓库独立复现的数字均标为
+当前公开流程已覆盖 source closure、Verilator lint、bounded smoke 和回归；
+外部 CoreMark binary 也可由 headless runner 得到 cycles/commit/CPI。由于
+binary 未随仓库提供且 profile-matched difftest 尚未全部接受，这些性能行仍标为
 `provisional`，不能解释为最大频率、物理实现或硅后结果。
 
 ## 项目边界

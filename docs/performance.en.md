@@ -18,15 +18,24 @@ Profiles, commits, binaries, or memory models.
 
 ## Current public reproduction
 
-| Profile | CoreMark CPI | CoreMark/MHz | Seven-workload weighted CPI | Closed frequency | Area |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `rv32im_single_perf` | — | — | — | — | — |
-| `rv32ima_sv32_linux` | — | — | — | — | — |
-| `rv32im_ooo_4k` | — | — | — | — | — |
+These are current headless-runtime results using external CoreMark binaries that
+are not bundled in the repository. Their state is
+`provisional_external_input`, not an architecture-level verified claim. The
+runner's `PUBLIC_SIM_PASS` counters are used directly: `commit` for Single/Linux
+and `commit + commit2` for OoO.
 
-Cycle counts from checked-in bounded smoke images validate wrappers and the
-runtime. They are not CoreMark or PPA measurements and do not populate this
-table.
+| Profile | CoreMark CPI | CoreMark/MHz | Seven-workload weighted CPI | Closed frequency | Area | State/evidence |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `rv32im_single_perf` | 1.486003063 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:single_public_coremark_runtime_provisional` |
+| `rv32ima_sv32_linux` | 1.742774400 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:linux_public_coremark_runtime_provisional` |
+| `rv32im_ooo_4k` | 0.882378295 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:ooo_public_coremark_runtime_provisional` |
+
+Single/OoO use an M-mode binary and Linux uses an S-mode Sv32 binary. Binary
+hashes, source commits, latency, complete commands, and stop output are recorded
+in [CoreMark runtime evidence](evidence/coremark_reproduction.en.md). Since the
+binary inputs are external, these rows remain provisional. CoreMark/MHz,
+seven-workload weighted CPI, frequency, and area cannot be derived from these CPI
+values and remain `—`.
 
 ## Historical CoreMark CPI references
 
@@ -34,8 +43,8 @@ Every value below is `provisional`, not a current public verified claim:
 
 | Profile | Cycles | Retired/committed instructions | CoreMark CPI | Conditions | Evidence / nonclaim |
 | --- | ---: | ---: | ---: | --- | --- |
-| `rv32im_single_perf` | 4,578,012 | 3,081,085 | 1.48 | RV32IM single issue, project-local Verilator/NEMU record; binary hash and full configuration not yet reproduced publicly | `single_public_cpi_not_yet_claimed` |
-| `rv32ima_sv32_linux` | — | — | ≈1.72 | Later optimized Linux/System source snapshot `abf66cad`; S-mode Sv32, ITLB/DTLB, hit pipelines, a 2-entry store buffer, fast MUL, DCache load-hit optimization, and bridge-aware LSU load bypass; approximate private record | `linux_public_cpi_not_yet_claimed` |
+| `rv32im_single_perf` | 4,578,012 | 3,081,085 | 1.48 | RV32IM single issue, project-local Verilator/NEMU record; the public runtime produced a close but different external-input row | `nonclaim:single_public_cpi_not_yet_claimed` |
+| `rv32ima_sv32_linux` | 5,613,732 | 3,252,492 | 1.725978726 (≈1.72) | Later optimized source snapshot `abf66cad`; private fixed `NPC_DCACHE_WRITE_ALLOCATE=0`, S-mode Sv32, ITLB/DTLB, hit pipelines, a 2-entry store buffer, fast MUL, and LSU load bypass | `evidence:linux_checkpoint_rerun` / `nonclaim:linux_public_cpi_not_yet_claimed` |
 | `rv32im_ooo_4k` | 2,718,684 | 3,081,080 | 0.882380204 | RV32IM, IF/LSU/memory=`2/3/2`, seed 1, Verilator + NEMU difftest | `ooo_coremark_cpi_not_yet_claimed` |
 
 CoreMark CPI is `cycles / retired instructions`. It is not CoreMark/MHz and
@@ -45,21 +54,23 @@ options, and implemented clock information.
 ### Linux Profile checkpoint comparison
 
 The public Profile now locks the later optimized checkpoint
-`abf66cad0f9ad02efc8beb641d4005adeaeeae0b`, so the main historical table uses
-approximately `1.72`. The earlier
+`abf66cad0f9ad02efc8beb641d4005adeaee0b`, so the main historical table uses
+the private rerun value `1.725978726` (approximately `1.72`). The earlier
 `e3a1cc91c4c00040f7180eec5e385326d9964893` result of approximately `1.98` is
 retained as a prior-checkpoint comparison. These are different RTL snapshots;
 the older value must not be relabeled as a result of the current source.
 
 | Checkpoint | Source commit | Sv32 CoreMark CPI | Status |
 | --- | --- | ---: | --- |
-| Later optimized checkpoint | `abf66cad0f9ad02efc8beb641d4005adeaeeae0b` | ≈1.72 | `linux_public_cpi_not_yet_claimed` |
+| Later optimized checkpoint | `abf66cad0f9ad02efc8beb641d4005adeaee0b` | 1.725978726 (≈1.72) | `evidence:linux_checkpoint_rerun` / `nonclaim:linux_public_cpi_not_yet_claimed` |
 | Earlier frozen checkpoint | `e3a1cc91c4c00040f7180eec5e385326d9964893` | ≈1.98 | `linux_prior_checkpoint_cpi_not_claimed` |
 
-Both rows are `provisional` historical simulation records: no public binary
-hash, complete fixed-run summary, or independent fresh-clone CoreMark run is
-available, so neither is a verified claim. CoreMark/MHz, implementation
-frequency, and area remain `—`/`not_claimed`.
+The later-checkpoint row now has private exact binary/config/log hashes, but its
+binary and complete build tree are not in the public repository, so it remains
+`provisional` rather than a verified claim. The current public Linux row uses
+`WRITE_ALLOCATE=1`, hence CPI `1.742774400` is not the same configuration as the
+historical `1.725978726`. CoreMark/MHz, implementation frequency, and area remain
+`—`/`not_claimed`.
 
 ## Historical multi-workload reference
 
@@ -98,6 +109,5 @@ New data must record:
    constraints, WNS/TNS, and tool version;
 5. a readable public evidence ID and fresh-clone reproduction command.
 
-Cells remain `—` until all requirements are met. See the
-[evidence policy](../evidence/README.md) and
-[limitations](limitations.en.md).
+Cells remain `—` until all requirements are met. See [CoreMark runtime evidence](evidence/coremark_reproduction.en.md),
+the [evidence policy](../evidence/README.md), and [limitations](limitations.en.md).

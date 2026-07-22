@@ -51,9 +51,16 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 
 ## Performance, frequency, and area
 
-- The public flow has not independently reproduced all CoreMark inputs and
-  conditions for any Profile. Current CoreMark CPI values are historical
-  `provisional` references.
+- The public headless runtime has now completed profile-matched CoreMark runs for
+  all three Profiles using external, unbundled binaries, with cycles/commit/CPI
+  recorded. These rows remain `provisional_external_input`, not verified claims.
+- Profile-matched CoreMark difftest is not fully accepted: Single/Linux MMIO
+  accesses exceed the `device=false` contract, and OoO has an early GPR mismatch.
+  A runtime PASS therefore does not replace an architecture-level difftest PASS.
+- The private rerun of the later Linux checkpoint is CPI `1.725978726`
+  (approximately `1.72`), while the current public filelist with
+  `WRITE_ALLOCATE=1` is `1.742774400`; these are different configurations and
+  must not be combined.
 - OoO `0.912836351` is a weighted CPI for seven finite workloads, not a
   universal CPI guarantee and not a replacement for CoreMark CPI
   `0.882380204`.

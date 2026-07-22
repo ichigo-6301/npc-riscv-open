@@ -14,7 +14,7 @@
       "id": "single_public_cpi_not_yet_claimed",
       "profile": "rv32im_single_perf",
       "public": true,
-      "reason": "The public headless simulator has not reproduced the exact binary, configuration, commit count, and cycle count",
+      "reason": "The public headless run is close but uses an external binary/configuration and has not passed profile-matched difftest",
       "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
       "statement": "CoreMark CPI 1.48 is a historical reference, not a publicly reproduced claim",
       "status": "not_claimed"
@@ -82,17 +82,22 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "Sv32 CoreMark; later optimized Linux/System checkpoint abf66cad; approximate private project record; exact cycle, instruction and binary hashes unavailable",
-      "evidence_status": "private_reference_only",
+      "conditions": "Sv32 CoreMark; later optimized checkpoint abf66cad; private rerun 5,613,732 cycles / 3,252,492 commits / CPI 1.725978726; WRITE_ALLOCATE=0; binary remains external",
+      "evidence_status": "private_fixed_checkpoint_provisional",
       "historical_reference": {
-        "cpi_approx": 1.72,
+        "binary_sha256": "814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb",
+        "config": "NPC_DCACHE_WRITE_ALLOCATE=0; DPI memory latency=0; seed=1; difftest=on",
+        "cpi": 1.7259787264657378,
+        "cycles": 5613732,
+        "elf_sha256": "8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774",
         "evidence_status": "private_fixed_checkpoint_provisional",
+        "retired_instructions": 3252492,
         "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b"
       },
       "id": "linux_public_cpi_not_yet_claimed",
       "profile": "rv32ima_sv32_linux",
       "public": true,
-      "reason": "The value is an approximate private record from the later optimized checkpoint and has not been reproduced with the public binary/configuration flow",
+      "reason": "The exact private rerun is available, but its binary/build tree is external; the public filelist uses a different write-allocate setting",
       "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
       "statement": "Sv32 CoreMark CPI approximately 1.72 is a historical reference, not a publicly reproduced claim",
       "status": "not_claimed"
@@ -137,7 +142,7 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "The public checkout does not contain the exact external benchmark binary and has not rerun the matching workload",
+      "conditions": "The public runtime reproduced an external binary, but profile-matched difftest has an early GPR mismatch and the binary is not bundled",
       "evidence_status": "private_reference_only",
       "historical_reference": {
         "cpi": 0.882380204,
@@ -149,10 +154,46 @@
       "id": "ooo_coremark_cpi_not_yet_claimed",
       "profile": "rv32im_ooo_4k",
       "public": true,
-      "reason": "The public checkout does not contain the exact external benchmark binary and has not rerun the matching workload",
+      "reason": "The public runtime reproduced an external binary, but profile-matched difftest has an early GPR mismatch and the binary is not bundled",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
       "statement": "CoreMark CPI 0.882380204 is a private historical measurement, not a publicly reproduced claim",
       "status": "not_claimed"
+    },
+    {
+      "conditions": "CoreMark; external M-mode binary; 4,578,475 cycles / 3,081,067 commits / CPI 1.486003063; IF/LSU/memory=2/3/2; runtime PASS; difftest not accepted",
+      "evidence_id": "coremark_public_runtime",
+      "evidence_status": "public_runtime_provisional",
+      "id": "single_public_coremark_runtime_provisional",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The binary is external and the profile-matched difftest attempt is rejected by the device=false MMIO contract",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "Current public headless CoreMark CPI 1.486003063 is provisional external-input data, not a verified claim",
+      "status": "provisional"
+    },
+    {
+      "conditions": "CoreMark; external S-mode Sv32 binary; 5,668,250 cycles / 3,252,429 commits / CPI 1.742774400; IF/LSU/memory=0/0/0; WRITE_ALLOCATE=1; runtime PASS; difftest not accepted",
+      "evidence_id": "coremark_public_runtime",
+      "evidence_status": "public_runtime_provisional",
+      "id": "linux_public_coremark_runtime_provisional",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "The binary is external and the profile-matched difftest attempt is rejected at AXI timer MMIO under the device=false contract",
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "statement": "Current public headless CoreMark CPI 1.742774400 is provisional external-input data, not a verified claim",
+      "status": "provisional"
+    },
+    {
+      "conditions": "CoreMark; external M-mode binary; 2,718,694 cycles / 3,081,098 commits / CPI 0.882378295; IF/LSU/memory=2/3/2; runtime PASS; difftest not accepted",
+      "evidence_id": "coremark_public_runtime",
+      "evidence_status": "public_runtime_provisional",
+      "id": "ooo_public_coremark_runtime_provisional",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The binary is external and the profile-matched difftest attempt has an early deterministic GPR mismatch",
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "statement": "Current public headless CoreMark CPI 0.882378295 is provisional external-input data, not a verified claim",
+      "status": "provisional"
     },
     {
       "conditions": "RV32IM; IF/LSU/memory latencies 2/3/2; seed 1; difftest; seven-workload weighted CPI 0.912836351; CoreMark CPI 0.882380204",

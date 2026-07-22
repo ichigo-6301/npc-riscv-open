@@ -47,8 +47,15 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 
 ## 性能、频率与面积
 
-- 公开流程尚未独立复现三个 Profile 的 CoreMark 输入与全部性能条件，当前
-  CoreMark CPI 均为历史 `provisional` 参考。
+- 公开 headless runtime 已使用外部、未打包的 profile-matched CoreMark binary
+  跑通三个 Profile，并记录 cycles/commit/CPI；这些行仍是
+  `provisional_external_input`，不是 verified claim。
+- 公开 CoreMark 的 profile-matched difftest 目前未全部接受：Single/Linux 的
+  MMIO 访问超出 `device=false` 合同，OoO 在早期 commit 出现 GPR mismatch；
+  因此 runtime PASS 不能替代架构级 difftest PASS。
+- Linux 后续优化 checkpoint 的私有重跑为 CPI `1.725978726`（约 `1.72`），
+  当前公开 filelist 的 `WRITE_ALLOCATE=1` 运行是 `1.742774400`；两者配置不同，
+  不能合并成一个数字。
 - OoO 的 `0.912836351` 是有限七 workload 的 weighted CPI，不是通用 CPI
   保证，也不能替代 CoreMark CPI `0.882380204`。
 - Single 的约 704 MHz 是 1 ns DC stress 出现负 WNS 后的算术推算，不是

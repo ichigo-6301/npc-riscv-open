@@ -33,11 +33,43 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "f6991e43c6595320e5c1dc83b5b4eed1c94a7c54ac4cdf491293b3cd445043ef",
+      "sha256": "632e5687e23a1cba835e5fbdca1551d7ec1453d501b338455d43b888a2df76a0",
       "snapshot_id": "v0.1.0",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
+    },
+    {
+      "claims": [
+        "single_public_coremark_runtime_provisional",
+        "linux_public_coremark_runtime_provisional",
+        "ooo_public_coremark_runtime_provisional"
+      ],
+      "id": "coremark_public_runtime",
+      "path": "../docs/evidence/coremark_reproduction.md",
+      "profile": "all",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "1ed3982e6a33b2bfd7e23e0ae15d1d81966ba1a1b8efb89a3f8a5d02a6beb3be",
+      "snapshot_id": "v0.1.0",
+      "status": "provisional",
+      "tool": "public headless Verilator runtime with external CoreMark inputs",
+      "type": "public_performance_summary"
+    },
+    {
+      "claims": [
+        "linux_public_cpi_not_yet_claimed"
+      ],
+      "id": "linux_checkpoint_rerun",
+      "path": "../docs/evidence/coremark_reproduction.md",
+      "profile": "rv32ima_sv32_linux",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "1ed3982e6a33b2bfd7e23e0ae15d1d81966ba1a1b8efb89a3f8a5d02a6beb3be",
+      "snapshot_id": "v0.1.0",
+      "status": "provisional",
+      "tool": "private fixed-checkpoint rerun summary",
+      "type": "public_performance_summary"
     }
   ],
   "kind": "evidence_manifest",

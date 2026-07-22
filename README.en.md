@@ -85,9 +85,11 @@ by Git. See [Simulation](docs/simulation.en.md) and
   DPI runtime, Linux RTL timer, and NEMU/AM reference devices.
 
 The current public flow covers source closure, Verilator lint, bounded smoke,
-and regression. CoreMark, frequency, and area values that have not been
-independently reproduced by this repository remain `provisional`; they are not
-maximum-frequency, physical-implementation, or silicon claims.
+and regression; external CoreMark binaries can also be run by the headless
+runner to obtain cycles/commit/CPI. Because the binaries are not bundled and
+profile-matched difftest is not fully accepted, these performance rows remain
+`provisional`; they are not maximum-frequency, physical-implementation, or
+silicon claims.
 
 ## Project boundary
 

@@ -66,6 +66,16 @@ These cycle counts establish deterministic source-set, wrapper, DPI transport,
 and runner behavior only. They are not CoreMark, Linux boot, CPI, frequency,
 or area results.
 
+## External CoreMark runtime results
+
+The public runner emits `PUBLIC_SIM_PASS cycles=... commit=... commit2=...` at
+termination. All three Profiles have now reached CoreMark PASS in the headless
+runtime using external binaries. The inputs are not bundled and profile-matched
+difftest is not fully accepted, so the state is
+`provisional_external_input`. Exact input hashes, latency, CPI calculation, and
+difftest boundaries are recorded in [CoreMark runtime evidence](evidence/coremark_reproduction.en.md);
+the result is not presented as an architecture-level verified claim.
+
 ## Local strict difftest
 
 Using the three manifest-locked NEMU source trees and ignored local adapters,
