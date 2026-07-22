@@ -230,8 +230,7 @@
     {
       "compile": {
         "include_dirs": [
-          "rtl/profiles/rv32ima_sv32_linux",
-          "rtl/profiles/rv32ima_sv32_linux/cpu_top"
+          "rtl/profiles/rv32ima_sv32_linux"
         ],
         "verilog_defines": [
           "NPC_USE_DPI",
@@ -269,34 +268,10 @@
           "sha256": "945824a7610058e9c853c2c21954c54fa9285149da5741916f6d1d7aa5f9fbb1"
         },
         {
-          "blob": "71f0261f96f8126f70925876368e7f70b12d34ce",
-          "bytes": 3883,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/AclintTimer.v",
-          "sha256": "9e6b6cad8687fb9d9a78d8e6144b0a42357aff004b41cc038570634ab24953ed"
-        },
-        {
-          "blob": "6a82aefe5c123eca411b3ea755ba13a748b9093a",
-          "bytes": 9515,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/AxiPmemBridge.v",
-          "sha256": "a85d07723f89341bcfa08b4e0343ce6749bfa26d5bf5d8677efd6dc4e276d381"
-        },
-        {
           "blob": "c54bc5f78e8714f3d4633418ddce28ecd75e2cfe",
           "bytes": 2613,
           "destination": "rtl/profiles/rv32ima_sv32_linux/BranchCond.v",
           "sha256": "55ef12239f5194629434a5f59c283d612b9e5f71545af498e7ef43fa57a5f4b0"
-        },
-        {
-          "blob": "7825a525a791b74853550f63d62e2e6bac4e17bf",
-          "bytes": 36219,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/BranchStat.v",
-          "sha256": "37b5ecfddb5d8cfc2d9feb9f76b696968651eea5a15db4551dba304e8e1a4fa6"
-        },
-        {
-          "blob": "1f23084cb74829de34897e0d77115ca74b90fe7c",
-          "bytes": 8422,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/CacheStat.v",
-          "sha256": "a909a51934212ed4d176cc20f0c4cc8dc5feced33c21fb86c08d8aa67f02d503"
         },
         {
           "blob": "3de84d511f31eebe558e30e870d6ec38968b5b7b",
@@ -305,64 +280,10 @@
           "sha256": "371c1ac2eb3fb09916a25dc75fe6f6d98e92c6f41fbca449bfef4fe2aae3ee23"
         },
         {
-          "blob": "1dea1c63a6929e9e0507dffffd28c61018af1f4b",
-          "bytes": 3141,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/CsrContrGen.v",
-          "sha256": "3917d26439b20e9afc8be0540b5d91c0d0c889bb3ed0fdc16d277723c2fffd64"
-        },
-        {
-          "blob": "ee7f2b48a060f24942dde6cce2065bff3a545371",
-          "bytes": 7671,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/CsrRegisterFile.v",
-          "sha256": "9d97cef9e8242c88ddb28898676ca5a967e9d45a622c5b5fe98d5da6d25e436d"
-        },
-        {
-          "blob": "52db4a6f5ad52e9f95bfca965ef978ba2dffa618",
-          "bytes": 2843,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/DCacheMmioMux.v",
-          "sha256": "f38f65fed9becdf809f6e3fa025b2eab08780546b394e20d3d255fc3f11d833c"
-        },
-        {
-          "blob": "985c6fd389f29a451c74993d6ee8dc5b32e4c519",
-          "bytes": 5740,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/DataMem.v",
-          "sha256": "b4a272e1734d919fa98cb56bc57bb2d8b59e6e0c71f761257bc8e12b94a80cbe"
-        },
-        {
-          "blob": "2e7139452cbbd4ababd0568f5090dd317bfcac6e",
-          "bytes": 12989,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/HitPathStat.v",
-          "sha256": "2fe7cc3882faebb0b3c2bc14d8d030ee0e86da04655b2b52fd092ba9911f178c"
-        },
-        {
           "blob": "be764eefe1078e65bcbabf107a6a2fc08346e484",
           "bytes": 660,
           "destination": "rtl/profiles/rv32ima_sv32_linux/ImmGen.v",
           "sha256": "5431938d11bc6d613bc77078cac642b31c493efa091bfa9e0500404f710a794d"
-        },
-        {
-          "blob": "3c54d0f469cbf070400313d25c440dced69a6555",
-          "bytes": 413,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/InstrFetch.v",
-          "sha256": "e2eaf568fd075e6ab9d33ca7195ee6aba0cc7e056be590b920b5f1d3b06c9638"
-        },
-        {
-          "blob": "ee1d73c4bfdd28a918aed9702d570d7e6026680d",
-          "bytes": 16277,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/InstrStat.v",
-          "sha256": "01b23010b28a1bc0c4c024312065ecd830b423c1f8b1611a9416f9b7d6b85a63"
-        },
-        {
-          "blob": "f54d3e5df8a5226d1a98dace716dde45400ee3fb",
-          "bytes": 3330,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/MMUStat.v",
-          "sha256": "6e7115d1fefbbd2d5071de3b50852ee72b70b0ec2618a264b7373e1d6546aa4b"
-        },
-        {
-          "blob": "9c5650003c09ded4e96b2bce9774b269d2ac3d95",
-          "bytes": 6826,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Mdu.v",
-          "sha256": "baed4543aa6f09aeeffb79480738273beb3918014d32b3d9730965af6fe88ae7"
         },
         {
           "blob": "2a7dd773a73663bd7ccfad73db84a79a9fd29a2e",
@@ -389,24 +310,6 @@
           "sha256": "4bac812a8adf22c6b34fa16887e64e8d3ed2fdcdf9dd524b69366788369c87cb"
         },
         {
-          "blob": "58aabf759a23dd2707991152cffff247541a2daa",
-          "bytes": 23712,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/PipeStat.v",
-          "sha256": "2363f211341c2c417ac828ccd15f7105d99837b7811c8b3465ba086069e1a916"
-        },
-        {
-          "blob": "e6292c3976e16a69f986f5c710e5c6613defd4f8",
-          "bytes": 179845,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/PipelineCPIStat.v",
-          "sha256": "16caa42ea72fa6f3a0e4e2b43cf5d822f1f70cfd73fcf3d22e48af707133d706"
-        },
-        {
-          "blob": "118f88de6e7e3f9675241d1788dee837b66e3d36",
-          "bytes": 23002,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/PrivCsrRegs.v",
-          "sha256": "24cdbd4d71912bf31e1dab57707e569743ae9e9be12d267ad48cbe6335d2f88f"
-        },
-        {
           "blob": "df2ebf1859b8c5827b5201a26083c2402cedb213",
           "bytes": 292,
           "destination": "rtl/profiles/rv32ima_sv32_linux/Reg.v",
@@ -417,54 +320,6 @@
           "bytes": 821,
           "destination": "rtl/profiles/rv32ima_sv32_linux/RegisterFile.v",
           "sha256": "6db1ce01d66f583408ab8d1be977ce55fb27e14624afef4681c30ff1ef368ff2"
-        },
-        {
-          "blob": "26dc52b1b295d49c2025a32a0d7a4c2bc3b1046a",
-          "bytes": 5311,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/SimPmemBridge.v",
-          "sha256": "590b903f652c115098446c99d9d455cdfd1aa5b707f55f5e08160a43ad819fa3"
-        },
-        {
-          "blob": "9dc88f4ac5b1518bdf6430253eb7fab13cc359e8",
-          "bytes": 43353,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32DCacheBridge.v",
-          "sha256": "00839f5a7ac4af0afc07d3b4848cdc3bf5e2e50453c961628047675161e9d41c"
-        },
-        {
-          "blob": "4891bd69eec18dc04a8af24ce8d119ba4fe3886e",
-          "bytes": 36914,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32FrontendPipe.v",
-          "sha256": "707a030612cc22e0d8be8c00c3ef82c93f7c549b9d774c91b89205e6081c03db"
-        },
-        {
-          "blob": "5bd76eb095600b6ecf370142c816e82ac9777ee9",
-          "bytes": 16990,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32ICacheBridge.v",
-          "sha256": "797d7f8cf460dcda498033368af812da3749155321e2441665c81d2c750074d5"
-        },
-        {
-          "blob": "ad69784f26a18b7f788e2d7925d4933a509f5510",
-          "bytes": 19626,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32IFetchPipe.v",
-          "sha256": "bf6c70e42b3dae4e22fcc6eb2fc496be4e948d1d72233ff9a8e8bbfa6829b517"
-        },
-        {
-          "blob": "da9198de1918e331e8122d1f978239015809e23f",
-          "bytes": 29949,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32LSUPipe.v",
-          "sha256": "22c5c3dc466b2d4333bbd7286b187ddf1d04e8f95e4bf917eb879f278adb04f3"
-        },
-        {
-          "blob": "1d74c9b52e6f037ff79eaa17d1c92c33e7567d78",
-          "bytes": 4534,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/Sv32Tlb.v",
-          "sha256": "8d927b3685fe13d9a28d45f1aa681c304c0184baf344272e2f8cbb689e48c97c"
-        },
-        {
-          "blob": "0ef38ad9fba1dc58921853684b445fcbf82a4b2e",
-          "bytes": 12196,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/TrapCtrl.v",
-          "sha256": "b11bc4b4101ea1d076c782f5c1b206b99d63d7d01f9294cc727b00ab1ce2c10f"
         },
         {
           "blob": "58090292548b67296dbdbc205649289d7632db2e",
@@ -479,47 +334,245 @@
           "sha256": "59b19900e74e10d32c72762ea89678462dac9f0b5eb376f8f39594d7f59d415d"
         },
         {
-          "blob": "d3dc2f0192ae726bea214ab5ec02bf96d6adf1d0",
-          "bytes": 162716,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top.v",
-          "sha256": "a350063f5deec514056a3afa345705d9afa94e0a8bd0394c075ec88951bdaf7f"
+          "blob": "1dea1c63a6929e9e0507dffffd28c61018af1f4b",
+          "bytes": 3141,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/csr/CsrContrGen.v",
+          "sha256": "3917d26439b20e9afc8be0540b5d91c0d0c889bb3ed0fdc16d277723c2fffd64"
+        },
+        {
+          "blob": "ee7f2b48a060f24942dde6cce2065bff3a545371",
+          "bytes": 7671,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/csr/CsrRegisterFile.v",
+          "sha256": "9d97cef9e8242c88ddb28898676ca5a967e9d45a622c5b5fe98d5da6d25e436d"
+        },
+        {
+          "blob": "118f88de6e7e3f9675241d1788dee837b66e3d36",
+          "bytes": 23002,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/csr/PrivCsrRegs.v",
+          "sha256": "24cdbd4d71912bf31e1dab57707e569743ae9e9be12d267ad48cbe6335d2f88f"
+        },
+        {
+          "blob": "0ef38ad9fba1dc58921853684b445fcbf82a4b2e",
+          "bytes": 12196,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/csr/TrapCtrl.v",
+          "sha256": "b11bc4b4101ea1d076c782f5c1b206b99d63d7d01f9294cc727b00ab1ce2c10f"
+        },
+        {
+          "blob": "3c54d0f469cbf070400313d25c440dced69a6555",
+          "bytes": 413,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/frontend/InstrFetch.v",
+          "sha256": "e2eaf568fd075e6ab9d33ca7195ee6aba0cc7e056be590b920b5f1d3b06c9638"
+        },
+        {
+          "blob": "4891bd69eec18dc04a8af24ce8d119ba4fe3886e",
+          "bytes": 36914,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/frontend/Sv32FrontendPipe.v",
+          "sha256": "707a030612cc22e0d8be8c00c3ef82c93f7c549b9d774c91b89205e6081c03db"
+        },
+        {
+          "blob": "5bd76eb095600b6ecf370142c816e82ac9777ee9",
+          "bytes": 16990,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/frontend/Sv32ICacheBridge.v",
+          "sha256": "797d7f8cf460dcda498033368af812da3749155321e2441665c81d2c750074d5"
+        },
+        {
+          "blob": "ad69784f26a18b7f788e2d7925d4933a509f5510",
+          "bytes": 19626,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/frontend/Sv32IFetchPipe.v",
+          "sha256": "bf6c70e42b3dae4e22fcc6eb2fc496be4e948d1d72233ff9a8e8bbfa6829b517"
+        },
+        {
+          "blob": "71f0261f96f8126f70925876368e7f70b12d34ce",
+          "bytes": 3883,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/AclintTimer.v",
+          "sha256": "9e6b6cad8687fb9d9a78d8e6144b0a42357aff004b41cc038570634ab24953ed"
+        },
+        {
+          "blob": "6a82aefe5c123eca411b3ea755ba13a748b9093a",
+          "bytes": 9515,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/AxiPmemBridge.v",
+          "sha256": "a85d07723f89341bcfa08b4e0343ce6749bfa26d5bf5d8677efd6dc4e276d381"
+        },
+        {
+          "blob": "52db4a6f5ad52e9f95bfca965ef978ba2dffa618",
+          "bytes": 2843,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/DCacheMmioMux.v",
+          "sha256": "f38f65fed9becdf809f6e3fa025b2eab08780546b394e20d3d255fc3f11d833c"
+        },
+        {
+          "blob": "985c6fd389f29a451c74993d6ee8dc5b32e4c519",
+          "bytes": 5740,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/DataMem.v",
+          "sha256": "b4a272e1734d919fa98cb56bc57bb2d8b59e6e0c71f761257bc8e12b94a80cbe"
+        },
+        {
+          "blob": "26dc52b1b295d49c2025a32a0d7a4c2bc3b1046a",
+          "bytes": 5311,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/SimPmemBridge.v",
+          "sha256": "590b903f652c115098446c99d9d455cdfd1aa5b707f55f5e08160a43ad819fa3"
+        },
+        {
+          "blob": "9dc88f4ac5b1518bdf6430253eb7fab13cc359e8",
+          "bytes": 43353,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/Sv32DCacheBridge.v",
+          "sha256": "00839f5a7ac4af0afc07d3b4848cdc3bf5e2e50453c961628047675161e9d41c"
+        },
+        {
+          "blob": "da9198de1918e331e8122d1f978239015809e23f",
+          "bytes": 29949,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/lsu/Sv32LSUPipe.v",
+          "sha256": "22c5c3dc466b2d4333bbd7286b187ddf1d04e8f95e4bf917eb879f278adb04f3"
+        },
+        {
+          "blob": "9c5650003c09ded4e96b2bce9774b269d2ac3d95",
+          "bytes": 6826,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/mdu/Mdu.v",
+          "sha256": "baed4543aa6f09aeeffb79480738273beb3918014d32b3d9730965af6fe88ae7"
+        },
+        {
+          "blob": "1d74c9b52e6f037ff79eaa17d1c92c33e7567d78",
+          "bytes": 4534,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/mmu/Sv32Tlb.v",
+          "sha256": "8d927b3685fe13d9a28d45f1aa681c304c0184baf344272e2f8cbb689e48c97c"
         },
         {
           "blob": "e656b11721b681f30eca45f6aa484d145e21934b",
           "bytes": 27226,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/ex_stage.v",
+          "destination": "rtl/profiles/rv32ima_sv32_linux/pipeline/ex_stage.v",
           "sha256": "c08726e03eb8f270ccf5b637008ea85cd5605bb61f8f5cc3b14855163d7b7128"
         },
         {
           "blob": "2a255b0e6f2663b4178838594f8826d251cb38e0",
           "bytes": 19249,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/id_stage.v",
+          "destination": "rtl/profiles/rv32ima_sv32_linux/pipeline/id_stage.v",
           "sha256": "23b2df33b02c5551a40d7d624832a8d95aebef27850129f85eb219a062889a18"
         },
         {
           "blob": "1934d8368c174e6ac52f1ebaec45ac9034b72daa",
           "bytes": 32682,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/if_stage.v",
+          "destination": "rtl/profiles/rv32ima_sv32_linux/pipeline/if_stage.v",
           "sha256": "4813925437914ce1d3e7ccca52045639d98efa4925442741d0efd7340221387a"
         },
         {
           "blob": "db536c55a7f164a4e08140de02f2ac756eb379ee",
           "bytes": 55286,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/mem_stage.v",
+          "destination": "rtl/profiles/rv32ima_sv32_linux/pipeline/mem_stage.v",
           "sha256": "9dd4f530ac5e085049a4774db9173f05e2893b18e5217ac3797f786b1c37ad79"
         },
         {
           "blob": "3f576ad71945874365af4fd2ccf4dcb5a0285120",
           "bytes": 5688,
-          "destination": "rtl/profiles/rv32ima_sv32_linux/cpu_top/wb_stage.v",
+          "destination": "rtl/profiles/rv32ima_sv32_linux/pipeline/wb_stage.v",
           "sha256": "b75aea674be480ead6677dc0937f7b629dd123dcb8e6e3a5534a153514cbdcc9"
+        },
+        {
+          "blob": "7825a525a791b74853550f63d62e2e6bac4e17bf",
+          "bytes": 36219,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/BranchStat.v",
+          "sha256": "37b5ecfddb5d8cfc2d9feb9f76b696968651eea5a15db4551dba304e8e1a4fa6"
+        },
+        {
+          "blob": "1f23084cb74829de34897e0d77115ca74b90fe7c",
+          "bytes": 8422,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/CacheStat.v",
+          "sha256": "a909a51934212ed4d176cc20f0c4cc8dc5feced33c21fb86c08d8aa67f02d503"
+        },
+        {
+          "blob": "2e7139452cbbd4ababd0568f5090dd317bfcac6e",
+          "bytes": 12989,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/HitPathStat.v",
+          "sha256": "2fe7cc3882faebb0b3c2bc14d8d030ee0e86da04655b2b52fd092ba9911f178c"
+        },
+        {
+          "blob": "ee1d73c4bfdd28a918aed9702d570d7e6026680d",
+          "bytes": 16277,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/InstrStat.v",
+          "sha256": "01b23010b28a1bc0c4c024312065ecd830b423c1f8b1611a9416f9b7d6b85a63"
+        },
+        {
+          "blob": "f54d3e5df8a5226d1a98dace716dde45400ee3fb",
+          "bytes": 3330,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/MMUStat.v",
+          "sha256": "6e7115d1fefbbd2d5071de3b50852ee72b70b0ec2618a264b7373e1d6546aa4b"
+        },
+        {
+          "blob": "58aabf759a23dd2707991152cffff247541a2daa",
+          "bytes": 23712,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/PipeStat.v",
+          "sha256": "2363f211341c2c417ac828ccd15f7105d99837b7811c8b3465ba086069e1a916"
+        },
+        {
+          "blob": "fd0e7b5e32dd0978c9a30d55d28f15eb1e68a59f",
+          "bytes": 171220,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/PipelineCPIStat.v",
+          "sha256": "9dc7723d4846bf2a16a16e231c11399573aaf6797c06a8357272f004c6d2cf1d"
+        },
+        {
+          "blob": "60e988e945e8c76cfa2a9610f6b93512f96d958f",
+          "bytes": 12321,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/StatCpiAttribution.v",
+          "sha256": "72ce30b68619f213bc5fbcd2cebcc0c66b8b420002bdc0465721b972597e5d89"
+        },
+        {
+          "blob": "7dcab611932db3eead53e7d5e7b61d972e95b41e",
+          "bytes": 5081,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/StatFrontendBreakdown.v",
+          "sha256": "d93dfa4598f7f9b7f5929048c0fe0929f438e0bd1cb2347bf12b44141833c5b5"
+        },
+        {
+          "blob": "4231b90a7413a45ae03b64290aa4e83a86ca7ebf",
+          "bytes": 765,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/StatHazardAfterForwarding.v",
+          "sha256": "8573317c549040ba5b2cd21ba9a67d856d22bcc41165b24122e1f8669ec6ba37"
+        },
+        {
+          "blob": "cf420017334b64230559b0f395a50751b49d5b36",
+          "bytes": 2320,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/StatMemCpi.v",
+          "sha256": "584d01c6375134bbd6f15e9a377eeb2f8002731572e8c225ec4e998b6091f923"
+        },
+        {
+          "blob": "1d13f48428cb4a108e17c30869af5eba63a2ef7f",
+          "bytes": 2063,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/stat/StatStageLatencyBreakdown.v",
+          "sha256": "1c8eb4298cf300bc2edb9562c26d690f31ac3512ebc52847754e3998b22c4b69"
+        },
+        {
+          "blob": "ee89f08fe17c8a4a54674c60d892bd184445b986",
+          "bytes": 42627,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/top/CpuCorePipeline.v",
+          "sha256": "6eaf1907628f8ae7053ca0740b6d0e64d31c6f6e11aedd4c9250b51d2c1ab730"
+        },
+        {
+          "blob": "530a9a7ad2e6f9402179d70f82d5d9373182ea52",
+          "bytes": 25181,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/top/CpuDmemSubsystem.v",
+          "sha256": "4acbefc2af64fb50eb11f5a0dafcf70d2152cd990c0194e364e934e405f18b13"
+        },
+        {
+          "blob": "ec9f599910e6e63894dec5b40024c763cedeb472",
+          "bytes": 26234,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/top/CpuFrontendSubsystem.v",
+          "sha256": "6a0c8b8081b80d2e7d75bc97d6fcf574cd3a44c98eabd37f578036e0f4a4daaf"
+        },
+        {
+          "blob": "b8d30f0fa120938d7c1bf131e7a98964fb7cc78b",
+          "bytes": 48037,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/top/CpuPerfMonitors.v",
+          "sha256": "0a7af1243ca10eaf49353b37da664432e6878090053b13bbbf78c76eb72984bb"
+        },
+        {
+          "blob": "d922579ed1a5b6122266ffc8cdbac400ac9cdca4",
+          "bytes": 143533,
+          "destination": "rtl/profiles/rv32ima_sv32_linux/top/cpu_top.v",
+          "sha256": "e17588cc5c9393f15ab12424968b8cd13e80ea90752641e19afed294ee59bbb2"
         }
       ],
-      "entry_count": 42,
+      "entry_count": 51,
       "profile_id": "rv32ima_sv32_linux",
       "provenance_entries": [],
       "public_root": "rtl/profiles/rv32ima_sv32_linux",
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
       "source_root": "npc/vsrc_new",
       "wrapper": "rtl/wrappers/rv32ima_sv32_linux_sim_top.sv"
     },

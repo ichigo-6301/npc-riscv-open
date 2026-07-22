@@ -68,7 +68,11 @@ Fetch/ITLB -> Decode -> Execute -> Memory/DTLB -> Writeback/Commit
   `time/timeh` 的时间源。
 - OpenSBI、Linux image、DTB 与 NEMU 均为外部输入，不包含在 CPU source set。
 
-源身份：`e3a1cc91c4c00040f7180eec5e385326d9964893`。
+源身份：`abf66cad0f9ad02efc8beb641d4005adeaeeae0b`。
+
+该 source snapshot 采用后续的结构化 RTL 布局，将 CSR、frontend、LSU、MMU、
+pipeline、statistic 和 top glue 分到独立目录。它是保持 wrapper ABI 和架构
+行为边界不变的源码重构；公开仓库仍只编译该 Profile 的独立 filelist。
 
 ## `rv32im_ooo_4k`
 

@@ -15,6 +15,9 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 - One build selects one Profile. Combining several filelists is invalid.
 - Native RTL is neither reformatted nor deduplicated, preserving its source
   lock. Duplicate module names are legal only inside separate source sets.
+- The public Linux Profile uses a later structured RTL snapshot. The directory
+  refactor does not turn the three Profiles into one parameterized RTL or change
+  the public wrapper's functional contract.
 
 ## Systems and software
 

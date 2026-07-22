@@ -1,5 +1,5 @@
 {
-  "commit_sha": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+  "commit_sha": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
   "default_run_config": "rv32ima_sv32_linux_smoke",
   "design_config": "rv32ima_sv32_linux",
   "intent": "Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation",

@@ -97,6 +97,11 @@ module cpu_top(
     output dbus_axi_rready,
     input dbus_axi_rlast
 );
+    // Post-frontend wrapper ownership map:
+    // cpu_top remains the integration shell for global reset/clock/simulation
+    // policy, trap/CSR/privilege ownership, redirect/fence priority, top-level
+    // debug/DPI export, and external memory glue. Wrapper instances own
+    // structural clusters only and keep policy-bearing sideband explicit.
 `ifdef NPC_RESET_VECTOR
     localparam [31:0] RESET_VECTOR = `NPC_RESET_VECTOR;
 `else
@@ -262,6 +267,30 @@ module cpu_top(
     wire ds_stat_fwd_load_block;
     wire ds_stat_fwd_csr_block;
     wire ds_stat_fwd_kill_block;
+`else
+    wire ds_stage_block = 1'b0;
+    wire ds_stage_block_reg_hazard = 1'b0;
+    wire ds_stage_block_csr_hazard = 1'b0;
+    wire ds_stage_block_load_use = 1'b0;
+    wire ds_stage_block_ex_raw = 1'b0;
+    wire ds_stage_block_ms_raw = 1'b0;
+    wire ds_stage_block_hidden_raw = 1'b0;
+    wire ds_stat_uses_rs1 = 1'b0;
+    wire ds_stat_uses_rs2 = 1'b0;
+    wire ds_stat_rs1_match_es = 1'b0;
+    wire ds_stat_rs1_match_ms = 1'b0;
+    wire ds_stat_rs1_match_hidden = 1'b0;
+    wire ds_stat_rs1_match_ws = 1'b0;
+    wire ds_stat_rs2_match_es = 1'b0;
+    wire ds_stat_rs2_match_ms = 1'b0;
+    wire ds_stat_rs2_match_hidden = 1'b0;
+    wire ds_stat_rs2_match_ws = 1'b0;
+    wire ds_stat_csr_counter_hazard = 1'b0;
+    wire ds_stat_rs1_ex_alu_fwd = 1'b0;
+    wire ds_stat_rs2_ex_alu_fwd = 1'b0;
+    wire ds_stat_fwd_load_block = 1'b0;
+    wire ds_stat_fwd_csr_block = 1'b0;
+    wire ds_stat_fwd_kill_block = 1'b0;
 `endif
 `endif
 `ifdef NPC_M_EXTENSION
@@ -328,6 +357,31 @@ module cpu_top(
     wire es_stat_fast_mul_stall_wait_ready;
     wire es_stat_old_div_path;
     wire es_stat_old_rem_path;
+`else
+    wire es_stage_block = 1'b0;
+    wire es_stage_block_mdu_wait = 1'b0;
+    wire es_stage_block_redirect_wait = 1'b0;
+    wire es_stat_is_mdu = 1'b0;
+    wire es_stat_rs1_mem_alu_fwd = 1'b0;
+    wire es_stat_rs2_mem_alu_fwd = 1'b0;
+    wire es_stat_rs1_wb_fwd = 1'b0;
+    wire es_stat_rs2_wb_fwd = 1'b0;
+    wire es_stat_rs1_load_fwd = 1'b0;
+    wire es_stat_rs2_load_fwd = 1'b0;
+    wire [2:0] es_stat_mdu_op = 3'b0;
+    wire es_stat_mdu_req_fire = 1'b0;
+    wire es_stat_mdu_resp_valid = 1'b0;
+    wire es_stat_mdu_busy = 1'b0;
+    wire es_stat_mdu_result_ready = 1'b0;
+    wire es_stat_fast_mul = 1'b0;
+    wire es_stat_fast_mul_issue = 1'b0;
+    wire es_stat_fast_mul_resp_unused = 1'b0;
+    wire es_stat_fast_mul_kill = 1'b0;
+    wire es_stat_fast_mul_flush_drop = 1'b0;
+    wire es_stat_fast_mul_forward = 1'b0;
+    wire es_stat_fast_mul_stall_wait_ready = 1'b0;
+    wire es_stat_old_div_path = 1'b0;
+    wire es_stat_old_rem_path = 1'b0;
 `endif
 `endif
     wire es_fast_mul_stat_to_mem;
@@ -486,6 +540,95 @@ module cpu_top(
     wire stat_exmem_skid_dequeue_to_mreq_fire;
     wire stat_exmem_skid_mem_wait;
     wire stat_exmem_skid_mem_release;
+`else
+    wire ms_stage_block = 1'b0;
+    wire ms_stage_block_req_phase = 1'b0;
+    wire ms_stage_block_resp_phase = 1'b0;
+    wire ms_stage_block_load = 1'b0;
+    wire ms_stage_block_store = 1'b0;
+    wire ms_stage_block_req_load = 1'b0;
+    wire ms_stage_block_req_store = 1'b0;
+    wire ms_stage_block_resp_load = 1'b0;
+    wire ms_stage_block_resp_store = 1'b0;
+    wire ms_fast_req_fire_trace = 1'b0;
+    wire ms_slow_req_fire_trace = 1'b0;
+    wire ms_slow_req_fwd_dep_fire_trace = 1'b0;
+    wire ms_slow_req_nonfwd_fire_trace = 1'b0;
+    wire ms_stat_load_visible = 1'b0;
+    wire ms_stat_load_aligned = 1'b0;
+    wire ms_stat_load_result_ready = 1'b0;
+    wire ms_stat_load_fault = 1'b0;
+    wire ms_stat_load_signext_ready = 1'b0;
+    wire ms_stat_load_req_fire = 1'b0;
+    wire ms_stat_load_resp_valid = 1'b0;
+    wire ms_stat_load_resp_fire = 1'b0;
+    wire ms_stat_load_data_ready = 1'b0;
+    wire ms_stat_load_signext_data_ready = 1'b0;
+    wire ms_stat_load_to_wb_valid = 1'b0;
+    wire ms_stat_load_split_or_misaligned = 1'b0;
+    wire ms_stat_load_uncached = 1'b0;
+    wire ms_stat_load_atomic = 1'b0;
+    wire ms_stat_load_killed = 1'b0;
+    wire ms_stat_hidden_load = 1'b0;
+    wire ms_stat_load_store_block = 1'b0;
+    wire ms_stat_load_lsu_pending = 1'b0;
+    wire ms_stat_mreq_valid = 1'b0;
+    wire ms_stat_mreq_is_load = 1'b0;
+    wire ms_stat_mreq_is_store = 1'b0;
+    wire ms_stat_mreq_is_atomic = 1'b0;
+    wire ms_stat_mreq_need_mem = 1'b0;
+    wire ms_stat_mreq_fire = 1'b0;
+    wire ms_stat_mreq_misaligned = 1'b0;
+    wire ms_stat_mreq_split = 1'b0;
+    wire ms_stat_mreq_fault = 1'b0;
+    wire ms_stat_mreq_blocked_by_resp = 1'b0;
+    wire ms_stat_mresp_valid = 1'b0;
+    wire ms_stat_mresp_is_load = 1'b0;
+    wire ms_stat_mresp_is_store = 1'b0;
+    wire ms_stat_mresp_is_atomic = 1'b0;
+    wire ms_stat_mresp_resp_valid = 1'b0;
+    wire ms_stat_mresp_resp_fire = 1'b0;
+    wire ms_stat_mresp_split = 1'b0;
+    wire ms_stat_mresp_fault = 1'b0;
+    wire ms_stat_store_visible = 1'b0;
+    wire ms_stat_store_req_fire = 1'b0;
+    wire ms_stat_store_resp_valid = 1'b0;
+    wire ms_stat_store_resp_fire = 1'b0;
+    wire ms_stat_store_aligned = 1'b0;
+    wire ms_stat_store_fault = 1'b0;
+    wire ms_stat_store_split_or_misaligned = 1'b0;
+    wire ms_stat_store_uncached = 1'b0;
+    wire ms_stat_store_atomic = 1'b0;
+    wire ms_stat_store_killed = 1'b0;
+    wire ms_stat_store_buffer_safe = 1'b0;
+    wire ms_stat_store_resp_wait = 1'b0;
+    wire ms_stat_single_outstanding_wait = 1'b0;
+    wire ms_stat_uncached_wait = 1'b0;
+    wire ms_stat_writeback_wait = 1'b0;
+    wire [63:0] stat_exmem_skid_candidate = 64'd0;
+    wire [63:0] stat_exmem_skid_enqueue = 64'd0;
+    wire [63:0] stat_exmem_skid_dequeue = 64'd0;
+    wire [63:0] stat_exmem_skid_full_stall = 64'd0;
+    wire [63:0] stat_exmem_skid_flush_drop = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_not_safe = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_branch = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_mem = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_csr = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_exception = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_div = 64'd0;
+    wire [63:0] stat_exmem_skid_blocked_structural = 64'd0;
+    wire [63:0] stat_exmem_skid_hold_cycles = 64'd0;
+    wire [63:0] stat_exmem_skid_hold_mem_wait_cycles = 64'd0;
+    wire [63:0] stat_exmem_skid_dequeue_after_mem_release = 64'd0;
+    wire [63:0] stat_exmem_skid_dequeue_same_cycle_mem_release = 64'd0;
+    wire [63:0] stat_exmem_skid_dequeue_causes_wb_valid = 64'd0;
+    wire stat_exmem_skid_valid = 1'b0;
+    wire stat_exmem_skid_enqueue_fire = 1'b0;
+    wire stat_exmem_skid_dequeue_fire = 1'b0;
+    wire stat_exmem_skid_dequeue_commit_fire = 1'b0;
+    wire stat_exmem_skid_dequeue_to_mreq_fire = 1'b0;
+    wire stat_exmem_skid_mem_wait = 1'b0;
+    wire stat_exmem_skid_mem_release = 1'b0;
 `endif
 `endif
     wire hidden_mreq_valid;
@@ -676,6 +819,9 @@ module cpu_top(
     wire [63:0] lsu_pipe_slow_replay_latency_sum;
     wire [63:0] lsu_pipe_slow_replay_latency_count;
     wire [63:0] lsu_pipe_slow_replay_latency_max;
+
+    // Commit, trap, and CSR policy stays top-owned. These sideband wires keep
+    // architectural ownership outside the structural wrappers.
 `ifdef NPC_USE_DPI
     wire ws_is_semihosting_ebreak = semihosting_ebreak_match(ws_pc);
 `else
@@ -852,30 +998,6 @@ module cpu_top(
     wire dbus_dcache_resp_valid /* verilator public_flat */;
     wire dbus_dcache_resp_ready /* verilator public_flat */;
     wire [31:0] dbus_dcache_resp_data;
-    wire dbus_pipe_req_valid;
-    wire dbus_pipe_req_ready;
-    wire dbus_pipe_req_write;
-    wire [31:0] dbus_pipe_req_paddr;
-    wire [31:0] dbus_pipe_req_vaddr;
-    wire [31:0] dbus_pipe_req_wdata;
-    wire [3:0] dbus_pipe_req_wstrb;
-    wire [2:0] dbus_pipe_req_len;
-    wire [31:0] dbus_pipe_req_seq;
-    wire [15:0] dbus_pipe_req_epoch;
-    wire dbus_pipe_req_exception_valid;
-    wire [31:0] dbus_pipe_req_exception_cause;
-    wire [31:0] dbus_pipe_req_exception_tval;
-    wire dbus_pipe_resp_valid;
-    wire dbus_pipe_resp_ready;
-    wire [31:0] dbus_pipe_resp_rdata;
-    wire [31:0] dbus_pipe_resp_vaddr;
-    wire [31:0] dbus_pipe_resp_seq;
-    wire [15:0] dbus_pipe_resp_epoch;
-    wire dbus_pipe_resp_exception_valid;
-    wire [31:0] dbus_pipe_resp_exception_cause;
-    wire [31:0] dbus_pipe_resp_exception_tval;
-    wire dbus_pipe_resp_hit;
-    wire dbus_pipe_resp_miss;
     wire atomic_alu_ready;
     wire atomic_alu_req_valid;
     wire [3:0] atomic_alu_op;
@@ -906,37 +1028,6 @@ module cpu_top(
     wire ibus_icache_mem_resp_ready;
     wire [31:0] ibus_icache_mem_resp_data;
 
-    wire dbus_mem_req_valid;
-    wire dbus_mem_req_ready;
-    wire dbus_mem_req_write;
-    wire [31:0] dbus_mem_req_addr;
-    wire [31:0] dbus_mem_req_wdata;
-    wire [3:0] dbus_mem_req_wstrb;
-    wire [2:0] dbus_mem_req_len;
-    wire [31:0] dbus_mem_req_paddr;
-    wire dbus_mem_resp_valid;
-    wire dbus_mem_resp_ready;
-    wire [31:0] dbus_mem_resp_data;
-    wire dbus_dcache_mem_req_valid;
-    wire dbus_dcache_mem_req_ready;
-    wire dbus_dcache_mem_req_write;
-    wire [31:0] dbus_dcache_mem_req_addr;
-    wire [31:0] dbus_dcache_mem_req_wdata;
-    wire [3:0] dbus_dcache_mem_req_wstrb;
-    wire [2:0] dbus_dcache_mem_req_len;
-    wire dbus_dcache_mem_resp_valid;
-    wire dbus_dcache_mem_resp_ready;
-    wire [31:0] dbus_dcache_mem_resp_data;
-    wire timer_req_valid;
-    wire timer_req_ready;
-    wire timer_req_write;
-    wire [31:0] timer_req_addr;
-    wire [31:0] timer_req_wdata;
-    wire [3:0] timer_req_wstrb;
-    wire [2:0] timer_req_len;
-    wire timer_resp_valid;
-    wire timer_resp_ready;
-    wire [31:0] timer_resp_data;
     wire [63:0] timer_time_value /* verilator public_flat */;
     wire [63:0] timer_timecmp_value /* verilator public_flat */;
     wire [31:0] timer_step_accum_value /* verilator public_flat */;
@@ -1002,21 +1093,71 @@ module cpu_top(
     wire [63:0] icache_stat_hit_resp_wait_cycle = 64'd0;
     wire [63:0] icache_stat_miss_wait_cycle = 64'd0;
     wire [63:0] icache_stat_uncached_access = 64'd0;
-    wire [63:0] dcache_stat_req_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_hit_resp_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_miss_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_uncached_access = 64'd0;
-    wire [63:0] dcache_stat_writeback_cycle = 64'd0;
+    wire [63:0] dcache_stat_req_wait_cycle;
+    wire [63:0] dcache_stat_hit_resp_wait_cycle;
+    wire [63:0] dcache_stat_miss_wait_cycle;
+    wire [63:0] dcache_stat_uncached_access;
+    wire [63:0] dcache_stat_writeback_cycle;
 `elsif NPC_PIPE_STAT
     wire [63:0] icache_stat_req_wait_cycle = 64'd0;
     wire [63:0] icache_stat_hit_resp_wait_cycle = 64'd0;
     wire [63:0] icache_stat_miss_wait_cycle = 64'd0;
     wire [63:0] icache_stat_uncached_access = 64'd0;
-    wire [63:0] dcache_stat_req_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_hit_resp_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_miss_wait_cycle = 64'd0;
-    wire [63:0] dcache_stat_uncached_access = 64'd0;
-    wire [63:0] dcache_stat_writeback_cycle = 64'd0;
+    wire [63:0] dcache_stat_req_wait_cycle;
+    wire [63:0] dcache_stat_hit_resp_wait_cycle;
+    wire [63:0] dcache_stat_miss_wait_cycle;
+    wire [63:0] dcache_stat_uncached_access;
+    wire [63:0] dcache_stat_writeback_cycle;
+`else
+    wire [63:0] icache_stat_access = 64'd0;
+    wire [63:0] icache_stat_hit = 64'd0;
+    wire [63:0] icache_stat_miss = 64'd0;
+    wire [63:0] icache_stat_refill_req = 64'd0;
+    wire [63:0] icache_stat_refill_resp = 64'd0;
+    wire [63:0] icache_stat_refill_bypass = 64'd0;
+    wire [63:0] icache_stat_req_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_hit_resp_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_miss_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_uncached_access = 64'd0;
+    wire [63:0] icache_pipe_req_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_valid_not_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_data_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_block_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_state_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_data_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_resp_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_cpu_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_maint_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_idle_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_refill_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_uncached_cycle = 64'd0;
+    wire [63:0] icache_pipe_hit_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_miss_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_refill_busy_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_fifo_full_cycle = 64'd0;
+    wire [63:0] dcache_stat_access;
+    wire [63:0] dcache_stat_load_access;
+    wire [63:0] dcache_stat_store_access;
+    wire [63:0] dcache_stat_load_hit;
+    wire [63:0] dcache_stat_load_miss;
+    wire [63:0] dcache_stat_store_hit;
+    wire [63:0] dcache_stat_store_miss;
+    wire [63:0] dcache_stat_refill_req;
+    wire [63:0] dcache_stat_refill_resp;
+    wire [63:0] dcache_stat_write_req;
+    wire [63:0] dcache_stat_write_resp;
+    wire [63:0] dcache_stat_refill_ld_bypass;
+    wire [63:0] dcache_stat_refill_store_merge;
+    wire [63:0] dcache_stat_req_wait_cycle;
+    wire [63:0] dcache_stat_hit_resp_wait_cycle;
+    wire [63:0] dcache_stat_miss_wait_cycle;
+    wire [63:0] dcache_stat_uncached_access;
+    wire [63:0] dcache_stat_writeback_cycle;
 `endif
 `endif
 
@@ -1041,9 +1182,6 @@ module cpu_top(
     wire [31:0] branch_stat_fetch_drop_pc;
     wire [31:0] branch_stat_fetch_drop_instr;
     wire branch_stat_resolve_valid;
-    wire [63:0] branch_stat_redirect_wait_cycle;
-    wire [63:0] branch_stat_redirect_count;
-    wire [63:0] branch_stat_mispredict_count;
     wire [63:0] bpu_btb_lookup_count;
     wire [63:0] bpu_btb_hit_count;
     wire [63:0] bpu_btb_miss_count;
@@ -1062,16 +1200,35 @@ module cpu_top(
 
     assign branch_stat_resolve_valid = es_valid && ms_allowin && (es_branch != BRANCH_DEFAULT);
 `else
-    wire [63:0] branch_stat_redirect_wait_cycle = 64'd0;
-    wire [63:0] branch_stat_redirect_count = 64'd0;
-    wire [63:0] branch_stat_mispredict_count = 64'd0;
+    wire branch_stat_fetch_req_valid = 1'b0;
+    wire [31:0] branch_stat_fetch_req_pc = 32'b0;
+    wire branch_stat_fetch_accept_valid = 1'b0;
+    wire [31:0] branch_stat_fetch_accept_pc = 32'b0;
+    wire [31:0] branch_stat_fetch_accept_instr = 32'b0;
+    wire branch_stat_fetch_drop_valid = 1'b0;
+    wire branch_stat_fetch_drop_redirect = 1'b0;
+    wire [31:0] branch_stat_fetch_drop_pc = 32'b0;
+    wire [31:0] branch_stat_fetch_drop_instr = 32'b0;
+    wire branch_stat_resolve_valid = 1'b0;
+    wire [63:0] bpu_btb_lookup_count = 64'd0;
+    wire [63:0] bpu_btb_hit_count = 64'd0;
+    wire [63:0] bpu_btb_miss_count = 64'd0;
+    wire [63:0] bpu_bht_pred_taken_count = 64'd0;
+    wire [63:0] bpu_bht_pred_not_taken_count = 64'd0;
+    wire [63:0] bpu_btb_conflict_count = 64'd0;
+    wire [63:0] bpu_btb_update_count = 64'd0;
+    wire [63:0] bpu_btb_replace_count = 64'd0;
+    wire [63:0] bpu_bht_lookup_count = 64'd0;
+    wire [63:0] bpu_bht_update_count = 64'd0;
+    wire [63:0] bpu_bht_weak_taken_count = 64'd0;
+    wire [63:0] bpu_bht_weak_not_taken_count = 64'd0;
+    wire [63:0] bpu_bht_strong_taken_count = 64'd0;
+    wire [63:0] bpu_bht_strong_not_taken_count = 64'd0;
+    wire [31:0] bpu_bhr_value = 32'b0;
 `endif
 
 `ifdef NPC_USE_DPI
 `ifdef NPC_PIPE_STAT
-    wire [63:0] pipe_stat_load_use_stall_cycle;
-    wire [63:0] pipe_stat_id_reg_hazard_cycle;
-    wire [63:0] pipe_stat_ms_block_cycle;
     wire if_stat_fs_valid /* verilator public_flat */;
     wire [1:0] if_stat_queue_count /* verilator public_flat */;
     wire if_stat_fetch_room /* verilator public_flat */;
@@ -1098,14 +1255,58 @@ module cpu_top(
     wire if_pipe_stat_lower_resp_valid;
     wire if_pipe_stat_lower_resp_ready;
 `else
-    wire [63:0] pipe_stat_load_use_stall_cycle = 64'd0;
-    wire [63:0] pipe_stat_id_reg_hazard_cycle = 64'd0;
-    wire [63:0] pipe_stat_ms_block_cycle = 64'd0;
+    wire if_stat_fs_valid = 1'b0;
+    wire [1:0] if_stat_queue_count = 2'b0;
+    wire if_stat_fetch_room = 1'b0;
+    wire if_stat_req_fire = 1'b0;
+    wire if_stat_resp_fire = 1'b0;
+    wire if_stat_resp_accept = 1'b0;
+    wire if_stat_resp_drop = 1'b0;
+    wire if_stat_bypass_direct = 1'b0;
+    wire if_stat_waiting_resp = 1'b0;
+    wire if_stat_drop_resp = 1'b0;
+    wire if_stat_fs_pop = 1'b0;
+    wire if_stat_resp_enq = 1'b0;
+    wire if_stat_queue_full = 1'b0;
+    wire if_stat_resp_block = 1'b0;
+    wire if_pipe_stat_outstanding = 1'b0;
+    wire if_pipe_stat_replay_valid = 1'b0;
+    wire if_pipe_stat_ptw_busy = 1'b0;
+    wire if_pipe_stat_req_valid = 1'b0;
+    wire if_pipe_stat_req_ready = 1'b0;
+    wire if_pipe_stat_resp_current = 1'b0;
+    wire if_pipe_stat_resp_stale = 1'b0;
+    wire if_pipe_stat_lower_req_valid = 1'b0;
+    wire if_pipe_stat_lower_req_ready = 1'b0;
+    wire if_pipe_stat_lower_resp_valid = 1'b0;
+    wire if_pipe_stat_lower_resp_ready = 1'b0;
 `endif
 `else
-    wire [63:0] pipe_stat_load_use_stall_cycle = 64'd0;
-    wire [63:0] pipe_stat_id_reg_hazard_cycle = 64'd0;
-    wire [63:0] pipe_stat_ms_block_cycle = 64'd0;
+    wire if_stat_fs_valid = 1'b0;
+    wire [1:0] if_stat_queue_count = 2'b0;
+    wire if_stat_fetch_room = 1'b0;
+    wire if_stat_req_fire = 1'b0;
+    wire if_stat_resp_fire = 1'b0;
+    wire if_stat_resp_accept = 1'b0;
+    wire if_stat_resp_drop = 1'b0;
+    wire if_stat_bypass_direct = 1'b0;
+    wire if_stat_waiting_resp = 1'b0;
+    wire if_stat_drop_resp = 1'b0;
+    wire if_stat_fs_pop = 1'b0;
+    wire if_stat_resp_enq = 1'b0;
+    wire if_stat_queue_full = 1'b0;
+    wire if_stat_resp_block = 1'b0;
+    wire if_pipe_stat_outstanding = 1'b0;
+    wire if_pipe_stat_replay_valid = 1'b0;
+    wire if_pipe_stat_ptw_busy = 1'b0;
+    wire if_pipe_stat_req_valid = 1'b0;
+    wire if_pipe_stat_req_ready = 1'b0;
+    wire if_pipe_stat_resp_current = 1'b0;
+    wire if_pipe_stat_resp_stale = 1'b0;
+    wire if_pipe_stat_lower_req_valid = 1'b0;
+    wire if_pipe_stat_lower_req_ready = 1'b0;
+    wire if_pipe_stat_lower_resp_valid = 1'b0;
+    wire if_pipe_stat_lower_resp_ready = 1'b0;
 `endif
 
     wire bpu_update_is_cond =
@@ -1203,6 +1404,9 @@ module cpu_top(
         (ms_datatoreg == 2'b01) ? ms_load_data_ext :
         ms_csr_read_data;
 
+    // Redirect priority is intentionally top-owned: trap/xret first, then
+    // fence.i/sfence maintenance, then EX branch redirect. Wrapper cleanup must
+    // not reorder these valid/ready or flush gates.
     assign ex_redirect_fire = ex_mispredict_flush_valid && !ex_redirect_seen_r;
     assign redirect_flush_valid = trap_redirect_valid || fencei_start || vm_flush_start || ex_redirect_fire;
     wire [31:0] redirect_flush_pc =
@@ -1351,6 +1555,8 @@ module cpu_top(
         5'd0;
     wire [31:0] async_irq_cause = {1'b1, 26'b0, async_irq_no};
 
+    // TrapCtrl decides trap/xret redirects and privilege updates. PrivCsrRegs
+    // owns architectural CSR state; wrappers consume the resulting sideband.
     TrapCtrl u_trap_ctrl(
         .commit_pc(ws_pc),
         .commit_instr(ws_instr),
@@ -1516,29 +1722,31 @@ module cpu_top(
     assign ibus_req_vaddr_w = ibus_req_addr_w;
     assign dbus_req_vaddr = dbus_req_addr;
     assign ibus_mem_req_paddr = ibus_mem_req_addr;
-    assign dbus_mem_req_paddr = dbus_mem_req_addr;
 
-    if_stage #(
-        .BTB_ENTRIES(BPU_BTB_ENTRIES),
-        .BHT_ENTRIES(BPU_BHT_ENTRIES),
-        .BHR_BITS(BPU_BHR_BITS),
+    // CpuCorePipeline owns only IF/ID/EX/MEM/WB stage instances. Top-level
+    // glue still composes redirect/flush, fence maintenance, CSR/trap sideband,
+    // register-file ownership, and predictor update policy.
+    CpuCorePipeline #(
+        .BPU_BTB_ENTRIES(BPU_BTB_ENTRIES),
+        .BPU_BHT_ENTRIES(BPU_BHT_ENTRIES),
+        .BPU_BHR_BITS(BPU_BHR_BITS),
         .RESET_VECTOR(RESET_VECTOR)
-    ) u_if_stage(
+    ) u_core_pipeline(
         .clk(clk),
         .rst_n(rst_n),
         .ds_allowin(ds_allowin),
         .stop_fetch(stop_fetch),
-        .pause_fetch(store_buffer_drain_before_maint),
+        .store_buffer_drain_before_maint(store_buffer_drain_before_maint),
         .hold_fetch(fencei_start || fencei_maint_active || fencei_commit_pending_r),
-        .redirect_flush(redirect_flush_valid),
-        .stop_clear(stop_clear_valid),
-        .flush_pc(redirect_flush_pc),
+        .redirect_flush_valid(redirect_flush_valid),
+        .stop_clear_valid(stop_clear_valid),
+        .redirect_flush_pc(redirect_flush_pc),
         .bpu_update_valid(bpu_update_valid),
-        .bpu_update_pc(es_pc),
+        .es_pc(es_pc),
         .bpu_update_is_cond(bpu_update_is_cond),
-        .bpu_update_taken(ex_branch_taken_actual),
-        .bpu_update_target(es_nextpc),
-        .bpu_update_pht_idx(ex_branch_pred_pht_idx),
+        .ex_branch_taken_actual(ex_branch_taken_actual),
+        .es_nextpc(es_nextpc),
+        .ex_branch_pred_pht_idx(ex_branch_pred_pht_idx),
         .fs_to_ds_valid(fs_to_ds_valid),
         .fs_pc(fs_pc),
         .fs_instr(fs_instr),
@@ -1552,9 +1760,9 @@ module cpu_top(
         .fs_pred_bht_state(fs_pred_bht_state),
         .fs_pred_pht_idx(fs_pred_pht_idx),
         .if_stall(if_stall),
-        .ibus_req_valid(ibus_req_valid_w),
+        .ibus_req_valid_w(ibus_req_valid_w),
         .ibus_req_ready(ibus_req_ready),
-        .ibus_req_addr(ibus_req_addr_w),
+        .ibus_req_addr_w(ibus_req_addr_w),
         .ibus_req_pred_taken(ibus_req_pred_taken),
         .ibus_req_pred_target(ibus_req_pred_target),
         .ibus_req_pred_btb_hit(ibus_req_pred_btb_hit),
@@ -1562,13 +1770,11 @@ module cpu_top(
         .ibus_req_pred_bht_state(ibus_req_pred_bht_state),
         .ibus_req_pred_pht_idx(ibus_req_pred_pht_idx),
         .ibus_resp_valid(ibus_resp_valid),
-        .ibus_resp_ready(ibus_resp_ready_w),
+        .ibus_resp_ready_w(ibus_resp_ready_w),
         .ibus_resp_data(ibus_resp_data),
         .ibus_resp_exc_valid(ibus_resp_exc_valid),
         .ibus_resp_exc_cause(ibus_resp_exc_cause),
-        .ibus_resp_exc_tval(ibus_resp_exc_tval)
-`ifdef NPC_PIPE_STAT
-        ,
+        .ibus_resp_exc_tval(ibus_resp_exc_tval),
         .if_stat_fs_valid(if_stat_fs_valid),
         .if_stat_queue_count(if_stat_queue_count),
         .if_stat_fetch_room(if_stat_fetch_room),
@@ -1582,10 +1788,7 @@ module cpu_top(
         .if_stat_fs_pop(if_stat_fs_pop),
         .if_stat_resp_enq(if_stat_resp_enq),
         .if_stat_queue_full(if_stat_queue_full),
-        .if_stat_resp_block(if_stat_resp_block)
-`endif
-`ifdef NPC_IF_HIT_PIPELINE
-        ,
+        .if_stat_resp_block(if_stat_resp_block),
         .ibus_resp_pc(ibus_resp_pc),
         .ibus_resp_seq(ibus_resp_seq),
         .ibus_resp_epoch(ibus_resp_epoch),
@@ -1594,20 +1797,17 @@ module cpu_top(
         .ibus_resp_pred_btb_hit(ibus_resp_pred_btb_hit),
         .ibus_resp_pred_btb_is_cond(ibus_resp_pred_btb_is_cond),
         .ibus_resp_pred_bht_state(ibus_resp_pred_bht_state),
-        .ibus_resp_pred_pht_idx(ibus_resp_pred_pht_idx)
-`endif
-`ifdef NPC_BRANCH_STAT
-        ,
-        .flush_trace_is_redirect(ex_mispredict_flush_valid),
-        .fetch_req_trace_valid(branch_stat_fetch_req_valid),
-        .fetch_req_trace_pc(branch_stat_fetch_req_pc),
-        .fetch_accept_trace_valid(branch_stat_fetch_accept_valid),
-        .fetch_accept_trace_pc(branch_stat_fetch_accept_pc),
-        .fetch_accept_trace_instr(branch_stat_fetch_accept_instr),
-        .fetch_drop_trace_valid(branch_stat_fetch_drop_valid),
-        .fetch_drop_trace_redirect(branch_stat_fetch_drop_redirect),
-        .fetch_drop_trace_pc(branch_stat_fetch_drop_pc),
-        .fetch_drop_trace_instr(branch_stat_fetch_drop_instr),
+        .ibus_resp_pred_pht_idx(ibus_resp_pred_pht_idx),
+        .ex_mispredict_flush_valid(ex_mispredict_flush_valid),
+        .branch_stat_fetch_req_valid(branch_stat_fetch_req_valid),
+        .branch_stat_fetch_req_pc(branch_stat_fetch_req_pc),
+        .branch_stat_fetch_accept_valid(branch_stat_fetch_accept_valid),
+        .branch_stat_fetch_accept_pc(branch_stat_fetch_accept_pc),
+        .branch_stat_fetch_accept_instr(branch_stat_fetch_accept_instr),
+        .branch_stat_fetch_drop_valid(branch_stat_fetch_drop_valid),
+        .branch_stat_fetch_drop_redirect(branch_stat_fetch_drop_redirect),
+        .branch_stat_fetch_drop_pc(branch_stat_fetch_drop_pc),
+        .branch_stat_fetch_drop_instr(branch_stat_fetch_drop_instr),
         .bpu_btb_lookup_count(bpu_btb_lookup_count),
         .bpu_btb_hit_count(bpu_btb_hit_count),
         .bpu_btb_miss_count(bpu_btb_miss_count),
@@ -1622,27 +1822,8 @@ module cpu_top(
         .bpu_bht_weak_not_taken_count(bpu_bht_weak_not_taken_count),
         .bpu_bht_strong_taken_count(bpu_bht_strong_taken_count),
         .bpu_bht_strong_not_taken_count(bpu_bht_strong_not_taken_count),
-        .bpu_bhr_value(bpu_bhr_value)
-`endif
-    );
-
-    id_stage u_id_stage(
-        .clk(clk),
-        .rst_n(rst_n),
-        .flush(flush_id),
-        .fs_to_ds_valid(fs_to_ds_valid),
-        .fs_pc(fs_pc),
-        .fs_instr(fs_instr),
-        .fs_exc_valid(fs_exc_valid),
-        .fs_exc_cause(fs_exc_cause),
-        .fs_exc_tval(fs_exc_tval),
-        .fs_pred_taken(fs_pred_taken),
-        .fs_pred_target(fs_pred_target),
-        .fs_pred_btb_hit(fs_pred_btb_hit),
-        .fs_pred_btb_is_cond(fs_pred_btb_is_cond),
-        .fs_pred_bht_state(fs_pred_bht_state),
-        .fs_pred_pht_idx(fs_pred_pht_idx),
-        .ds_allowin(ds_allowin),
+        .bpu_bhr_value(bpu_bhr_value),
+        .flush_id(flush_id),
         .es_allowin(es_allowin),
         .ds_to_es_valid(ds_to_es_valid),
         .rf_raddr1(rf_raddr1),
@@ -1723,8 +1904,6 @@ module cpu_top(
         .ds_illegal(ds_illegal),
         .ds_is_ebreak(ds_is_ebreak),
         .ds_stop_fetch(ds_stop_fetch),
-`ifdef NPC_USE_DPI
-`ifdef NPC_PIPE_STAT
         .ds_stage_block(ds_stage_block),
         .ds_stage_block_reg_hazard(ds_stage_block_reg_hazard),
         .ds_stage_block_csr_hazard(ds_stage_block_csr_hazard),
@@ -1748,95 +1927,27 @@ module cpu_top(
         .ds_stat_fwd_load_block(ds_stat_fwd_load_block),
         .ds_stat_fwd_csr_block(ds_stat_fwd_csr_block),
         .ds_stat_fwd_kill_block(ds_stat_fwd_kill_block),
-`endif
-`endif
-`ifdef NPC_M_EXTENSION
-        .ds_mdu_en(ds_mdu_en),
-        .ds_mdu_op(ds_mdu_op)
-`else
-        .ds_mdu_en_dummy(ds_mdu_en_dummy),
-        .ds_mdu_op_dummy(ds_mdu_op_dummy)
-`endif
-    );
-
-    ex_stage u_ex_stage(
-        .clk(clk),
-        .rst_n(rst_n),
-        .flush(flush_ex),
-        .ds_to_es_valid(ds_to_es_fire),
-        .es_allowin(es_allowin),
-        .ms_allowin(ms_allowin),
-        .es_to_ms_valid(es_to_ms_valid),
-        .ds_pc(ds_pc),
-        .ds_instr(ds_instr),
-        .ds_exc_valid(ds_exc_valid),
-        .ds_exc_cause(ds_exc_cause),
-        .ds_exc_tval(ds_exc_tval),
-        .ds_rs1(ds_rs1),
-        .ds_rs2(ds_rs2),
-        .ds_src1(ds_src1),
-        .ds_src2(ds_src2),
-        .ds_src1_from_prev_ex(ds_src1_from_prev_ex),
-        .ds_src2_from_prev_ex(ds_src2_from_prev_ex),
-        .ds_src1_from_prev_wb(ds_src1_from_prev_wb),
-        .ds_src2_from_prev_wb(ds_src2_from_prev_wb),
-        .ds_pred_taken(ds_pred_taken),
-        .ds_pred_target(ds_pred_target),
-        .ds_pred_btb_hit(ds_pred_btb_hit),
-        .ds_pred_btb_is_cond(ds_pred_btb_is_cond),
-        .ds_pred_bht_state(ds_pred_bht_state),
-        .ds_pred_pht_idx(ds_pred_pht_idx),
-        .ws_rf_wdata(ws_rf_wdata),
-        .ms_alu_fwd_valid(ms_alu_fwd_valid),
-        .ms_alu_fwd_rd(ms_rd),
-        .ms_alu_fwd_data(ms_aluout),
-        .ms_fast_mul_stat(ms_fast_mul_stat),
-        .ms_load_bypass_valid(ms_load_bypass_valid),
-        .ms_load_bypass_rd(ms_load_bypass_rd),
-        .ms_load_bypass_data(ms_load_bypass_data),
-        .hidden_alu_fwd_valid(hidden_alu_fwd_valid),
-        .hidden_alu_fwd_rd(hidden_mreq_rd),
-        .hidden_alu_fwd_data(hidden_mreq_aluout),
-        .hidden_alu_fwd_fast_mul_stat(hidden_mreq_fast_mul_stat),
-        .ws_alu_fwd_valid(ws_alu_fwd_valid),
-        .ws_alu_fwd_rd(ws_rd),
-        .ws_alu_fwd_data(ws_rf_wdata),
-        .ws_load_fwd_valid(ws_load_fwd_valid),
-        .ws_load_fwd_rd(ws_rd),
-        .ws_load_fwd_data(ws_rf_wdata),
-        .ws_fast_mul_stat(ws_fast_mul_stat),
-        .ds_imm(ds_imm),
-        .ds_zimm(ds_zimm),
-        .ds_scsr(ds_scsr),
-        .ds_rd(ds_rd),
-        .ds_reg_wen(ds_reg_wen),
-        .ds_branch(ds_branch),
-        .ds_datatoreg(ds_datatoreg),
-        .ds_mem_wr(ds_mem_wr),
-        .ds_mem_op(ds_mem_op),
-        .ds_atomic_en(ds_atomic_en),
-        .ds_atomic_op(ds_atomic_op),
-        .ds_alu_a_src(ds_alu_a_src),
-        .ds_alu_b_src(ds_alu_b_src),
-        .ds_alu_ctr(ds_alu_ctr),
-        .ds_csr_wen(ds_csr_wen),
-        .ds_csr_waddr1(ds_csr_waddr1),
-        .ds_csr_waddr2(ds_csr_waddr2),
-        .ds_csr_wdata_src1(ds_csr_wdata_src1),
-        .ds_csr_wdata_src2(ds_csr_wdata_src2),
-        .ds_illegal(ds_illegal),
-        .ds_is_ebreak(ds_is_ebreak),
 `ifdef NPC_M_EXTENSION
         .ds_mdu_en(ds_mdu_en),
         .ds_mdu_op(ds_mdu_op),
+`else
+        .ds_mdu_en_dummy(ds_mdu_en_dummy),
+        .ds_mdu_op_dummy(ds_mdu_op_dummy),
 `endif
-        .es_valid(es_valid),
-        .es_result_bypassable(es_result_bypassable),
-        .es_pc(es_pc),
+        .flush_ex(flush_ex),
+        .ds_to_es_fire(ds_to_es_fire),
+        .ms_allowin(ms_allowin),
+        .es_to_ms_valid(es_to_ms_valid),
+        .ws_rf_wdata(ws_rf_wdata),
+        .ms_aluout(ms_aluout),
+        .ms_fast_mul_stat(ms_fast_mul_stat),
+        .ms_load_bypass_data(ms_load_bypass_data),
+        .hidden_alu_fwd_valid(hidden_alu_fwd_valid),
+        .hidden_mreq_aluout(hidden_mreq_aluout),
+        .hidden_mreq_fast_mul_stat(hidden_mreq_fast_mul_stat),
+        .ws_load_fwd_valid(ws_load_fwd_valid),
+        .ws_fast_mul_stat(ws_fast_mul_stat),
         .es_instr(es_instr),
-        .es_nextpc(es_nextpc),
-        .es_rd(es_rd),
-        .es_reg_wen(es_reg_wen),
         .es_datatoreg(es_datatoreg),
         .es_mem_wr(es_mem_wr),
         .es_mem_op(es_mem_op),
@@ -1845,9 +1956,6 @@ module cpu_top(
         .es_aluout(es_aluout),
         .es_mem_wdata(es_mem_wdata),
         .es_csr_read_data(es_csr_read_data),
-        .es_csr_wen(es_csr_wen),
-        .es_csr_waddr1(es_csr_waddr1),
-        .es_csr_waddr2(es_csr_waddr2),
         .es_csr_wdata1(es_csr_wdata1),
         .es_csr_wdata2(es_csr_wdata2),
         .es_illegal(es_illegal),
@@ -1865,8 +1973,6 @@ module cpu_top(
         .atomic_alu_rs2(atomic_alu_rs2),
         .atomic_alu_resp_valid(atomic_alu_resp_valid),
         .atomic_alu_result(atomic_alu_result),
-`ifdef NPC_USE_DPI
-`ifdef NPC_PIPE_STAT
         .es_stage_block(es_stage_block),
         .es_stage_block_mdu_wait(es_stage_block_mdu_wait),
         .es_stage_block_redirect_wait(es_stage_block_redirect_wait),
@@ -1884,78 +1990,33 @@ module cpu_top(
         .es_stat_mdu_result_ready(es_stat_mdu_result_ready),
         .es_stat_fast_mul(es_stat_fast_mul),
         .es_stat_fast_mul_issue(es_stat_fast_mul_issue),
-        .es_stat_fast_mul_resp(es_stat_fast_mul_resp_unused),
+        .es_stat_fast_mul_resp_unused(es_stat_fast_mul_resp_unused),
         .es_stat_fast_mul_kill(es_stat_fast_mul_kill),
         .es_stat_fast_mul_flush_drop(es_stat_fast_mul_flush_drop),
         .es_stat_fast_mul_forward(es_stat_fast_mul_forward),
         .es_stat_fast_mul_stall_wait_ready(es_stat_fast_mul_stall_wait_ready),
         .es_stat_old_div_path(es_stat_old_div_path),
         .es_stat_old_rem_path(es_stat_old_rem_path),
-`endif
-`endif
-        .flush_valid(ex_flush_valid),
-        .flush_pc(ex_flush_pc),
-        .mispredict_flush_valid(ex_mispredict_flush_valid),
-        .mispredict_flush_pc(ex_mispredict_flush_pc),
-        .branch_taken_actual(ex_branch_taken_actual),
-        .branch_pred_taken(ex_branch_pred_taken),
-        .branch_pred_target(ex_branch_pred_target),
-        .branch_pred_btb_hit(ex_branch_pred_btb_hit),
-        .branch_pred_btb_is_cond(ex_branch_pred_btb_is_cond),
-        .branch_pred_bht_state(ex_branch_pred_bht_state),
-        .branch_pred_pht_idx(ex_branch_pred_pht_idx),
-        .branch_target_mismatch(ex_branch_target_mismatch)
-    );
-
-    mem_stage u_mem_stage(
-        .clk(clk),
-        .rst_n(rst_n),
-        .flush(flush_mem),
-        .es_to_ms_valid(es_to_ms_valid),
-        .ms_allowin(ms_allowin),
+        .ex_flush_valid(ex_flush_valid),
+        .ex_flush_pc(ex_flush_pc),
+        .ex_mispredict_flush_pc(ex_mispredict_flush_pc),
+        .ex_branch_pred_taken(ex_branch_pred_taken),
+        .ex_branch_pred_target(ex_branch_pred_target),
+        .ex_branch_pred_btb_hit(ex_branch_pred_btb_hit),
+        .ex_branch_pred_btb_is_cond(ex_branch_pred_btb_is_cond),
+        .ex_branch_pred_bht_state(ex_branch_pred_bht_state),
+        .ex_branch_target_mismatch(ex_branch_target_mismatch),
+        .flush_mem(flush_mem),
         .ws_allowin(ws_allowin),
         .ms_to_ws_valid(ms_to_ws_valid),
-        .es_pc(es_pc),
-        .es_instr(es_instr),
-        .es_nextpc(es_nextpc),
-        .es_rd(es_rd),
-        .es_reg_wen(es_reg_wen),
-        .es_datatoreg(es_datatoreg),
-        .es_mem_wr(es_mem_wr),
-        .es_mem_op(es_mem_op),
-        .es_atomic_en(es_atomic_en),
-        .es_atomic_op(es_atomic_op),
-        .es_aluout(es_aluout),
-        .es_mem_wdata(es_mem_wdata),
-        .es_mem_fwd_dep(es_mem_fwd_dep),
-        .es_fast_mul_stat(es_fast_mul_stat_to_mem),
-        .es_csr_read_data(es_csr_read_data),
-        .es_csr_wen(es_csr_wen),
-        .es_csr_waddr1(es_csr_waddr1),
-        .es_csr_waddr2(es_csr_waddr2),
-        .es_csr_wdata1(es_csr_wdata1),
-        .es_csr_wdata2(es_csr_wdata2),
-        .es_illegal(es_illegal),
-        .es_exc_valid(es_exc_valid),
-        .es_exc_cause(es_exc_cause),
-        .es_exc_tval(es_exc_tval),
-        .es_is_ebreak(es_is_ebreak),
-        .es_branch(es_branch),
-        .es_src1_value(es_src1_value),
-        .ms_valid(ms_valid),
+        .es_fast_mul_stat_to_mem(es_fast_mul_stat_to_mem),
         .ms_pc(ms_pc),
         .ms_instr(ms_instr),
         .ms_nextpc(ms_nextpc),
-        .ms_rd(ms_rd),
-        .ms_reg_wen(ms_reg_wen),
         .ms_datatoreg(ms_datatoreg),
         .ms_mem_op(ms_mem_op),
-        .ms_aluout(ms_aluout),
         .ms_mem_rdata(ms_mem_rdata),
         .ms_csr_read_data(ms_csr_read_data),
-        .ms_csr_wen(ms_csr_wen),
-        .ms_csr_waddr1(ms_csr_waddr1),
-        .ms_csr_waddr2(ms_csr_waddr2),
         .ms_csr_wdata1(ms_csr_wdata1),
         .ms_csr_wdata2(ms_csr_wdata2),
         .ms_illegal(ms_illegal),
@@ -1965,9 +2026,6 @@ module cpu_top(
         .ms_is_ebreak(ms_is_ebreak),
         .ms_branch(ms_branch),
         .ms_src1_value(ms_src1_value),
-        .ms_fast_mul_stat(ms_fast_mul_stat),
-`ifdef NPC_USE_DPI
-`ifdef NPC_PIPE_STAT
         .ms_stage_block(ms_stage_block),
         .ms_stage_block_req_phase(ms_stage_block_req_phase),
         .ms_stage_block_resp_phase(ms_stage_block_resp_phase),
@@ -1977,10 +2035,10 @@ module cpu_top(
         .ms_stage_block_req_store(ms_stage_block_req_store),
         .ms_stage_block_resp_load(ms_stage_block_resp_load),
         .ms_stage_block_resp_store(ms_stage_block_resp_store),
-        .fast_req_fire_trace(ms_fast_req_fire_trace),
-        .slow_req_fire_trace(ms_slow_req_fire_trace),
-        .slow_req_fwd_dep_fire_trace(ms_slow_req_fwd_dep_fire_trace),
-        .slow_req_nonfwd_fire_trace(ms_slow_req_nonfwd_fire_trace),
+        .ms_fast_req_fire_trace(ms_fast_req_fire_trace),
+        .ms_slow_req_fire_trace(ms_slow_req_fire_trace),
+        .ms_slow_req_fwd_dep_fire_trace(ms_slow_req_fwd_dep_fire_trace),
+        .ms_slow_req_nonfwd_fire_trace(ms_slow_req_nonfwd_fire_trace),
         .ms_stat_load_visible(ms_stat_load_visible),
         .ms_stat_load_aligned(ms_stat_load_aligned),
         .ms_stat_load_result_ready(ms_stat_load_result_ready),
@@ -2056,18 +2114,8 @@ module cpu_top(
         .stat_exmem_skid_dequeue_to_mreq_fire(stat_exmem_skid_dequeue_to_mreq_fire),
         .stat_exmem_skid_mem_wait(stat_exmem_skid_mem_wait),
         .stat_exmem_skid_mem_release(stat_exmem_skid_mem_release),
-`endif
-`endif
-        .hidden_mreq_valid(hidden_mreq_valid),
-        .hidden_mreq_reg_wen(hidden_mreq_reg_wen),
-        .hidden_mreq_rd(hidden_mreq_rd),
         .hidden_mreq_datatoreg(hidden_mreq_datatoreg),
         .hidden_mreq_mem_wr(hidden_mreq_mem_wr),
-        .hidden_mreq_aluout(hidden_mreq_aluout),
-        .hidden_mreq_csr_wen(hidden_mreq_csr_wen),
-        .hidden_mreq_csr_waddr1(hidden_mreq_csr_waddr1),
-        .hidden_mreq_csr_waddr2(hidden_mreq_csr_waddr2),
-        .hidden_mreq_fast_mul_stat(hidden_mreq_fast_mul_stat),
         .dbus_req_valid(dbus_req_valid),
         .dbus_req_ready(dbus_req_ready),
         .dbus_req_fast_ok(dbus_req_fast_ok),
@@ -2089,44 +2137,38 @@ module cpu_top(
         .dbus_resp_exc_valid(dbus_resp_exc_valid),
         .dbus_resp_exc_cause(dbus_resp_exc_cause),
         .dbus_resp_exc_tval(dbus_resp_exc_tval),
-        .atomic_alu_ready(atomic_alu_ready),
-        .atomic_alu_req_valid(atomic_alu_req_valid),
-        .atomic_alu_op(atomic_alu_op),
-        .atomic_alu_old(atomic_alu_old),
-        .atomic_alu_rs2(atomic_alu_rs2),
-        .atomic_alu_resp_valid(atomic_alu_resp_valid),
-        .atomic_alu_result(atomic_alu_result),
-        .dbg_mreq_valid(dbg_mem_mreq_valid),
-        .dbg_mresp_valid(dbg_mem_mresp_valid),
-        .dbg_skid_valid(dbg_mem_skid_valid),
-        .dbg_mreq_instr(dbg_mem_mreq_instr),
-        .dbg_mresp_instr(dbg_mem_mresp_instr),
-        .dbg_mreq_need_mem(dbg_mem_mreq_need_mem),
-        .dbg_mreq_req_valid(dbg_mem_mreq_req_valid),
-        .dbg_mreq_mem_fire(dbg_mem_mreq_mem_fire),
-        .dbg_mreq_nonmem_fire(dbg_mem_mreq_nonmem_fire),
-        .dbg_mreq_consumed_eff(dbg_mem_mreq_consumed_eff),
-        .dbg_mresp_ready_go(dbg_mem_mresp_ready_go),
-        .dbg_mresp_commit_fire(dbg_mem_mresp_commit_fire),
-        .dbg_old_mreq_allowin(dbg_mem_old_mreq_allowin),
-        .dbg_mresp_atomic_en(dbg_mem_mresp_atomic_en),
-        .dbg_mresp_split(dbg_mem_mresp_split),
-        .dbg_mresp_phase1_amo_read(dbg_mem_mresp_phase1_amo_read)
+        .dbg_mem_mreq_valid(dbg_mem_mreq_valid),
+        .dbg_mem_mresp_valid(dbg_mem_mresp_valid),
+        .dbg_mem_skid_valid(dbg_mem_skid_valid),
+        .dbg_mem_mreq_instr(dbg_mem_mreq_instr),
+        .dbg_mem_mresp_instr(dbg_mem_mresp_instr),
+        .dbg_mem_mreq_need_mem(dbg_mem_mreq_need_mem),
+        .dbg_mem_mreq_req_valid(dbg_mem_mreq_req_valid),
+        .dbg_mem_mreq_mem_fire(dbg_mem_mreq_mem_fire),
+        .dbg_mem_mreq_nonmem_fire(dbg_mem_mreq_nonmem_fire),
+        .dbg_mem_mreq_consumed_eff(dbg_mem_mreq_consumed_eff),
+        .dbg_mem_mresp_ready_go(dbg_mem_mresp_ready_go),
+        .dbg_mem_mresp_commit_fire(dbg_mem_mresp_commit_fire),
+        .dbg_mem_old_mreq_allowin(dbg_mem_old_mreq_allowin),
+        .dbg_mem_mresp_atomic_en(dbg_mem_mresp_atomic_en),
+        .dbg_mem_mresp_split(dbg_mem_mresp_split),
+        .dbg_mem_mresp_phase1_amo_read(dbg_mem_mresp_phase1_amo_read),
+        .wb_flush(trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active),
+        .ws_pc(ws_pc),
+        .ws_instr(ws_instr),
+        .ws_nextpc(ws_nextpc),
+        .ws_stat_datatoreg(ws_stat_datatoreg),
+        .ws_stat_mem_op(ws_stat_mem_op),
+        .ws_csr_wdata1(ws_csr_wdata1),
+        .ws_csr_wdata2(ws_csr_wdata2),
+        .ws_illegal(ws_illegal),
+        .ws_exc_valid(ws_exc_valid),
+        .ws_exc_cause(ws_exc_cause),
+        .ws_exc_tval(ws_exc_tval),
+        .ws_is_ebreak(ws_is_ebreak),
+        .ws_branch(ws_branch),
+        .ws_src1_value(ws_src1_value)
     );
-
-    assign dbus_pipe_req_valid = 1'b0;
-    assign dbus_pipe_req_write = 1'b0;
-    assign dbus_pipe_req_paddr = 32'b0;
-    assign dbus_pipe_req_vaddr = 32'b0;
-    assign dbus_pipe_req_wdata = 32'b0;
-    assign dbus_pipe_req_wstrb = 4'b0;
-    assign dbus_pipe_req_len = 3'b0;
-    assign dbus_pipe_req_seq = 32'b0;
-    assign dbus_pipe_req_epoch = 16'b0;
-    assign dbus_pipe_req_exception_valid = 1'b0;
-    assign dbus_pipe_req_exception_cause = 32'b0;
-    assign dbus_pipe_req_exception_tval = 32'b0;
-    assign dbus_pipe_resp_ready = 1'b1;
 
 `ifdef NPC_LSU_HIT_PIPELINE
     // v1 keeps LSU_HIT_PIPELINE as a metadata/stat shell only. Functional
@@ -2225,220 +2267,250 @@ module cpu_top(
     assign lsu_pipe_slow_replay_latency_max = 64'b0;
 `endif
 
-    Sv32DCacheBridge u_dcache_bridge(
+    // CpuDmemSubsystem owns the D-side bridge/cache/timer/dbus instances. Top
+    // still owns trap/CSR/privilege policy and passes maintenance sideband in.
+    CpuDmemSubsystem #(
+        .DCACHE_LINE_BYTES(DCACHE_LINE_BYTES),
+        .DCACHE_LINE_COUNT(DCACHE_LINE_COUNT),
+        .DCACHE_LINE_WORDS(DCACHE_LINE_WORDS),
+        .DPI_MEM_LATENCY(DPI_MEM_LATENCY),
+        .TIMER_CLK_HZ(TIMER_CLK_HZ),
+        .TIMEBASE_HZ(TIMEBASE_HZ)
+    ) u_dmem_subsystem (
         .clk(clk),
         .rst_n(rst_n),
-        .flush(flush_mem),
+        .flush_mem(flush_mem),
         .tlb_flush_all(tlb_flush_all),
-        .cpu_req_valid(dbus_req_valid),
-        .cpu_req_ready(dbus_req_ready),
-        .cpu_req_write(dbus_req_write),
-        .cpu_req_atomic(dbus_req_atomic),
-        .cpu_req_store_bufferable(dbus_req_store_bufferable),
-        .cpu_req_vaddr(dbus_req_addr),
-        .cpu_req_wdata(dbus_req_wdata),
-        .cpu_req_wstrb(dbus_req_wstrb),
-        .cpu_req_len(dbus_req_len),
-        .priv_i(priv_state),
-        .mstatus_i(csr_mstatus),
-        .satp_i(csr_satp),
-        .cpu_resp_valid(dbus_resp_valid),
-        .cpu_resp_ready(dbus_resp_ready),
-        .cpu_resp_rdata(dbus_resp_data),
-        .cpu_resp_exc_valid(dbus_resp_exc_valid),
-        .cpu_resp_exc_cause(dbus_resp_exc_cause),
-        .cpu_resp_exc_tval(dbus_resp_exc_tval),
-        .lower_req_valid(dbus_dcache_req_valid),
-        .lower_req_ready(dbus_dcache_req_ready),
-        .lower_req_write(dbus_dcache_req_write),
-        .lower_req_addr(dbus_req_paddr),
-        .lower_req_wdata(dbus_dcache_req_wdata),
-        .lower_req_wstrb(dbus_dcache_req_wstrb),
-        .lower_req_len(dbus_dcache_req_len),
-        .lower_req_is_ptw(dbus_dcache_req_is_ptw),
-        .lower_resp_valid(dbus_dcache_resp_valid),
-        .lower_resp_ready(dbus_dcache_resp_ready),
-        .lower_resp_rdata(dbus_dcache_resp_data),
-        .dtlb_refill_valid_o(),
-        .dtlb_refill_vaddr_o(),
-        .dtlb_refill_pte_o(),
-        .dtlb_refill_level_o(),
-        .stat_req_count(lsu_mmu_req_count),
-        .stat_bypass_count(lsu_mmu_bypass_count),
-        .stat_translate_count(lsu_mmu_translate_count),
-        .stat_ptw_cycle_count(lsu_mmu_ptw_cycle_count),
-        .stat_ptw_l1_read_count(lsu_mmu_ptw_l1_read_count),
-        .stat_ptw_l0_read_count(lsu_mmu_ptw_l0_read_count),
-        .stat_page_fault_count(lsu_mmu_page_fault_count),
-        .stat_ptw_walk_start_count(lsu_mmu_ptw_walk_start_count),
-        .stat_ptw_walk_done_count(lsu_mmu_ptw_walk_done_count),
-        .stat_ptw_walk_fault_count(lsu_mmu_ptw_walk_fault_count),
-        .stat_tlb_hit_count(lsu_mmu_tlb_hit_count),
-        .stat_tlb_miss_count(lsu_mmu_tlb_miss_count),
-        .stat_tlb_hit_to_cache_req_cycle(lsu_mmu_tlb_hit_to_cache_req_cycle),
-        .stat_cache_req_wait_cycle(lsu_mmu_cache_req_wait_cycle),
-        .stat_cache_resp_wait_cycle(lsu_mmu_cache_resp_wait_cycle),
-        .stat_bridge_state_wait_cycle(lsu_mmu_bridge_state_wait_cycle),
-        .stat_data_req_count(lsu_mmu_data_req_count),
-        .stat_data_resp_count(lsu_mmu_data_resp_count),
-        .stat_uncached_req_count(lsu_mmu_uncached_req_count),
-        .store_buffer_empty(dbus_store_buffer_empty),
-        .store_buffer_busy(dbus_store_buffer_busy),
-        .stat_sbuf_enqueue(store_buffer_enqueue_count),
-        .stat_sbuf_dequeue(store_buffer_dequeue_count),
-        .stat_sbuf_full_stall(store_buffer_full_stall_count),
-        .stat_sbuf_drain_req(store_buffer_drain_req_count),
-        .stat_sbuf_drain_resp(store_buffer_drain_resp_count),
-        .stat_sbuf_drain_wait(store_buffer_drain_wait_count),
-        .stat_sbuf_load_forward(store_buffer_load_forward_count),
-        .stat_sbuf_load_stall_conflict(store_buffer_load_stall_conflict_count),
-        .stat_sbuf_load_stall_buffer_nonempty(store_buffer_load_stall_buffer_nonempty_count),
-        .stat_sbuf_fence_drain_wait(store_buffer_fence_drain_wait_bridge_count),
-        .stat_sbuf_uncached_drain_wait(store_buffer_uncached_drain_wait_count),
-        .stat_sbuf_killed_store_block(store_buffer_killed_store_block_count),
-        .stat_sbuf_occupancy0(store_buffer_occupancy0_count),
-        .stat_sbuf_occupancy1(store_buffer_occupancy1_count),
-        .stat_sbuf_occupancy2(store_buffer_occupancy2_count),
-        .stat_sbuf_max_occupancy(store_buffer_max_occupancy_count),
-        .stat_sbuf_enqueue_occ0(store_buffer_enqueue_occ0_count),
-        .stat_sbuf_enqueue_occ1(store_buffer_enqueue_occ1_count),
-        .stat_sbuf_enqueue_full(store_buffer_enqueue_full_count),
-        .stat_dhitopt_candidate(dhitopt_candidate_count),
-        .stat_dhitopt_success(dhitopt_success_count),
-        .stat_dhitopt_fallback(dhitopt_fallback_count),
-        .stat_dhitopt_block_store_buffer(dhitopt_block_store_buffer_count),
-        .stat_dhitopt_block_uncached(dhitopt_block_uncached_count),
-        .stat_dhitopt_block_fault(dhitopt_block_fault_count),
-        .stat_dhitopt_block_miss(dhitopt_block_miss_count),
-        .stat_dhitopt_block_alignment(dhitopt_block_alignment_count),
-        .stat_dhitopt_unknown(dhitopt_unknown_count),
-        .dbg_state(dbg_dcache_bridge_state),
-        .dbg_drop_resp(dbg_dcache_bridge_drop_resp),
-        .dbg_req_write(dbg_dcache_bridge_req_write),
-        .dbg_req_store_bufferable(dbg_dcache_bridge_req_store_bufferable),
-        .dbg_req_safe_store_bufferable(dbg_dcache_bridge_req_safe_store_bufferable),
-        .dbg_sbuf0_valid(dbg_dcache_bridge_sbuf0_valid),
-        .dbg_sbuf1_valid(dbg_dcache_bridge_sbuf1_valid),
-        .dbg_sbuf0_sent(dbg_dcache_bridge_sbuf0_sent),
-        .dbg_sbuf1_sent(dbg_dcache_bridge_sbuf1_sent),
-        .dbg_sbuf_drain_active(dbg_dcache_bridge_sbuf_drain_active),
-        .dbg_sbuf_drain_resp_pending(dbg_dcache_bridge_sbuf_drain_resp_pending),
-        .dbg_sbuf_drain_req_valid(dbg_dcache_bridge_sbuf_drain_req_valid),
-        .dbg_sbuf_drain_grant(dbg_dcache_bridge_sbuf_drain_grant),
-        .dbg_sbuf_drain_req_fire(dbg_dcache_bridge_sbuf_drain_req_fire),
-        .dbg_sbuf_drain_resp_fire(dbg_dcache_bridge_sbuf_drain_resp_fire),
-        .dbg_data_req_fire(dbg_dcache_bridge_data_req_fire),
-        .dbg_lower_resp_ready(dbg_dcache_bridge_lower_resp_ready),
-        .dbg_lower_req_valid(dbg_dcache_bridge_lower_req_valid),
-        .dbg_lower_req_write(dbg_dcache_bridge_lower_req_write),
-        .dbg_lower_req_addr(dbg_dcache_bridge_lower_req_addr),
-        .dbg_sbuf_conflict_stall(dbg_dcache_bridge_sbuf_conflict_stall),
-        .dbg_req_store_buffer_full(dbg_dcache_bridge_req_store_buffer_full),
-        .dbg_sbuf_forward_hit(dbg_dcache_bridge_sbuf_forward_hit)
+        .dcache_maint_flush_req(dcache_maint_flush_req),
+        .priv_state(priv_state),
+        .csr_mstatus(csr_mstatus),
+        .csr_satp(csr_satp),
+        .dbus_req_valid(dbus_req_valid),
+        .dbus_req_ready(dbus_req_ready),
+        .dbus_req_write(dbus_req_write),
+        .dbus_req_atomic(dbus_req_atomic),
+        .dbus_req_store_bufferable(dbus_req_store_bufferable),
+        .dbus_req_addr(dbus_req_addr),
+        .dbus_req_wdata(dbus_req_wdata),
+        .dbus_req_wstrb(dbus_req_wstrb),
+        .dbus_req_len(dbus_req_len),
+        .dbus_resp_valid(dbus_resp_valid),
+        .dbus_resp_ready(dbus_resp_ready),
+        .dbus_resp_data(dbus_resp_data),
+        .dbus_resp_exc_valid(dbus_resp_exc_valid),
+        .dbus_resp_exc_cause(dbus_resp_exc_cause),
+        .dbus_resp_exc_tval(dbus_resp_exc_tval),
+        .dbus_req_paddr(dbus_req_paddr),
+        .dbus_dcache_req_valid(dbus_dcache_req_valid),
+        .dbus_dcache_req_ready(dbus_dcache_req_ready),
+        .dbus_dcache_req_write(dbus_dcache_req_write),
+        .dbus_dcache_req_len(dbus_dcache_req_len),
+        .dbus_dcache_req_is_ptw(dbus_dcache_req_is_ptw),
+        .dbus_store_buffer_empty(dbus_store_buffer_empty),
+        .dbus_store_buffer_busy(dbus_store_buffer_busy),
+        .dbg_dcache_bridge_state(dbg_dcache_bridge_state),
+        .dbg_dcache_bridge_drop_resp(dbg_dcache_bridge_drop_resp),
+        .dbg_dcache_bridge_req_write(dbg_dcache_bridge_req_write),
+        .dbg_dcache_bridge_req_store_bufferable(dbg_dcache_bridge_req_store_bufferable),
+        .dbg_dcache_bridge_req_safe_store_bufferable(dbg_dcache_bridge_req_safe_store_bufferable),
+        .dbg_dcache_bridge_sbuf0_valid(dbg_dcache_bridge_sbuf0_valid),
+        .dbg_dcache_bridge_sbuf1_valid(dbg_dcache_bridge_sbuf1_valid),
+        .dbg_dcache_bridge_sbuf0_sent(dbg_dcache_bridge_sbuf0_sent),
+        .dbg_dcache_bridge_sbuf1_sent(dbg_dcache_bridge_sbuf1_sent),
+        .dbg_dcache_bridge_sbuf_drain_active(dbg_dcache_bridge_sbuf_drain_active),
+        .dbg_dcache_bridge_sbuf_drain_resp_pending(dbg_dcache_bridge_sbuf_drain_resp_pending),
+        .dbg_dcache_bridge_sbuf_drain_req_valid(dbg_dcache_bridge_sbuf_drain_req_valid),
+        .dbg_dcache_bridge_sbuf_drain_grant(dbg_dcache_bridge_sbuf_drain_grant),
+        .dbg_dcache_bridge_sbuf_drain_req_fire(dbg_dcache_bridge_sbuf_drain_req_fire),
+        .dbg_dcache_bridge_sbuf_drain_resp_fire(dbg_dcache_bridge_sbuf_drain_resp_fire),
+        .dbg_dcache_bridge_data_req_fire(dbg_dcache_bridge_data_req_fire),
+        .dbg_dcache_bridge_lower_resp_ready(dbg_dcache_bridge_lower_resp_ready),
+        .dbg_dcache_bridge_lower_req_valid(dbg_dcache_bridge_lower_req_valid),
+        .dbg_dcache_bridge_lower_req_write(dbg_dcache_bridge_lower_req_write),
+        .dbg_dcache_bridge_lower_req_addr(dbg_dcache_bridge_lower_req_addr),
+        .dbg_dcache_bridge_sbuf_conflict_stall(dbg_dcache_bridge_sbuf_conflict_stall),
+        .dbg_dcache_bridge_req_store_buffer_full(dbg_dcache_bridge_req_store_buffer_full),
+        .dbg_dcache_bridge_sbuf_forward_hit(dbg_dcache_bridge_sbuf_forward_hit),
+        .dcache_maint_flush_done(dcache_maint_flush_done),
+        .timer_time_value(timer_time_value),
+        .timer_timecmp_value(timer_timecmp_value),
+        .timer_step_accum_value(timer_step_accum_value),
+        .timer_mtip(timer_mtip),
+        .lsu_mmu_req_count(lsu_mmu_req_count),
+        .lsu_mmu_bypass_count(lsu_mmu_bypass_count),
+        .lsu_mmu_translate_count(lsu_mmu_translate_count),
+        .lsu_mmu_ptw_cycle_count(lsu_mmu_ptw_cycle_count),
+        .lsu_mmu_ptw_l1_read_count(lsu_mmu_ptw_l1_read_count),
+        .lsu_mmu_ptw_l0_read_count(lsu_mmu_ptw_l0_read_count),
+        .lsu_mmu_page_fault_count(lsu_mmu_page_fault_count),
+        .lsu_mmu_ptw_walk_start_count(lsu_mmu_ptw_walk_start_count),
+        .lsu_mmu_ptw_walk_done_count(lsu_mmu_ptw_walk_done_count),
+        .lsu_mmu_ptw_walk_fault_count(lsu_mmu_ptw_walk_fault_count),
+        .lsu_mmu_tlb_hit_count(lsu_mmu_tlb_hit_count),
+        .lsu_mmu_tlb_miss_count(lsu_mmu_tlb_miss_count),
+        .lsu_mmu_tlb_hit_to_cache_req_cycle(lsu_mmu_tlb_hit_to_cache_req_cycle),
+        .lsu_mmu_cache_req_wait_cycle(lsu_mmu_cache_req_wait_cycle),
+        .lsu_mmu_cache_resp_wait_cycle(lsu_mmu_cache_resp_wait_cycle),
+        .lsu_mmu_bridge_state_wait_cycle(lsu_mmu_bridge_state_wait_cycle),
+        .lsu_mmu_data_req_count(lsu_mmu_data_req_count),
+        .lsu_mmu_data_resp_count(lsu_mmu_data_resp_count),
+        .lsu_mmu_uncached_req_count(lsu_mmu_uncached_req_count),
+        .store_buffer_enqueue_count(store_buffer_enqueue_count),
+        .store_buffer_dequeue_count(store_buffer_dequeue_count),
+        .store_buffer_full_stall_count(store_buffer_full_stall_count),
+        .store_buffer_drain_req_count(store_buffer_drain_req_count),
+        .store_buffer_drain_resp_count(store_buffer_drain_resp_count),
+        .store_buffer_drain_wait_count(store_buffer_drain_wait_count),
+        .store_buffer_load_forward_count(store_buffer_load_forward_count),
+        .store_buffer_load_stall_conflict_count(store_buffer_load_stall_conflict_count),
+        .store_buffer_load_stall_buffer_nonempty_count(store_buffer_load_stall_buffer_nonempty_count),
+        .store_buffer_fence_drain_wait_bridge_count(store_buffer_fence_drain_wait_bridge_count),
+        .store_buffer_uncached_drain_wait_count(store_buffer_uncached_drain_wait_count),
+        .store_buffer_killed_store_block_count(store_buffer_killed_store_block_count),
+        .store_buffer_occupancy0_count(store_buffer_occupancy0_count),
+        .store_buffer_occupancy1_count(store_buffer_occupancy1_count),
+        .store_buffer_occupancy2_count(store_buffer_occupancy2_count),
+        .store_buffer_max_occupancy_count(store_buffer_max_occupancy_count),
+        .store_buffer_enqueue_occ0_count(store_buffer_enqueue_occ0_count),
+        .store_buffer_enqueue_occ1_count(store_buffer_enqueue_occ1_count),
+        .store_buffer_enqueue_full_count(store_buffer_enqueue_full_count),
+        .dhitopt_candidate_count(dhitopt_candidate_count),
+        .dhitopt_success_count(dhitopt_success_count),
+        .dhitopt_fallback_count(dhitopt_fallback_count),
+        .dhitopt_block_store_buffer_count(dhitopt_block_store_buffer_count),
+        .dhitopt_block_uncached_count(dhitopt_block_uncached_count),
+        .dhitopt_block_fault_count(dhitopt_block_fault_count),
+        .dhitopt_block_miss_count(dhitopt_block_miss_count),
+        .dhitopt_block_alignment_count(dhitopt_block_alignment_count),
+        .dhitopt_unknown_count(dhitopt_unknown_count)
+`ifdef NPC_USE_DPI
+        ,
+        .dcache_stat_access(dcache_stat_access),
+        .dcache_stat_load_access(dcache_stat_load_access),
+        .dcache_stat_store_access(dcache_stat_store_access),
+        .dcache_stat_load_hit(dcache_stat_load_hit),
+        .dcache_stat_load_miss(dcache_stat_load_miss),
+        .dcache_stat_store_hit(dcache_stat_store_hit),
+        .dcache_stat_store_miss(dcache_stat_store_miss),
+        .dcache_stat_refill_req(dcache_stat_refill_req),
+        .dcache_stat_refill_resp(dcache_stat_refill_resp),
+        .dcache_stat_write_req(dcache_stat_write_req),
+        .dcache_stat_write_resp(dcache_stat_write_resp),
+        .dcache_stat_refill_ld_bypass(dcache_stat_refill_ld_bypass),
+        .dcache_stat_refill_store_merge(dcache_stat_refill_store_merge),
+        .dcache_stat_req_wait_cycle(dcache_stat_req_wait_cycle),
+        .dcache_stat_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
+        .dcache_stat_miss_wait_cycle(dcache_stat_miss_wait_cycle),
+        .dcache_stat_uncached_access(dcache_stat_uncached_access),
+        .dcache_stat_writeback_cycle(dcache_stat_writeback_cycle)
+`endif
+        ,
+        .dbus_axi_awaddr(dbus_axi_awaddr),
+        .dbus_axi_awlen(dbus_axi_awlen),
+        .dbus_axi_awsize(dbus_axi_awsize),
+        .dbus_axi_awburst(dbus_axi_awburst),
+        .dbus_axi_awvalid(dbus_axi_awvalid),
+        .dbus_axi_awready(dbus_axi_awready),
+        .dbus_axi_wdata(dbus_axi_wdata),
+        .dbus_axi_wstrb(dbus_axi_wstrb),
+        .dbus_axi_wlast(dbus_axi_wlast),
+        .dbus_axi_wvalid(dbus_axi_wvalid),
+        .dbus_axi_wready(dbus_axi_wready),
+        .dbus_axi_bresp(dbus_axi_bresp),
+        .dbus_axi_bvalid(dbus_axi_bvalid),
+        .dbus_axi_bready(dbus_axi_bready),
+        .dbus_axi_araddr(dbus_axi_araddr),
+        .dbus_axi_arlen(dbus_axi_arlen),
+        .dbus_axi_arsize(dbus_axi_arsize),
+        .dbus_axi_arburst(dbus_axi_arburst),
+        .dbus_axi_arvalid(dbus_axi_arvalid),
+        .dbus_axi_arready(dbus_axi_arready),
+        .dbus_axi_rdata(dbus_axi_rdata),
+        .dbus_axi_rresp(dbus_axi_rresp),
+        .dbus_axi_rvalid(dbus_axi_rvalid),
+        .dbus_axi_rready(dbus_axi_rready),
+        .dbus_axi_rlast(dbus_axi_rlast)
     );
 
-`ifdef NPC_IF_HIT_PIPELINE
-    Sv32FrontendPipe u_frontend_pipe(
+    // CpuFrontendSubsystem owns the frontend / I-side structural cluster.
+    // Redirect/fence/CSR policy stays in cpu_top and crosses as explicit
+    // sideband so wrapper cleanup cannot change priority or timing.
+    CpuFrontendSubsystem #(
+        .ICACHE_LINE_BYTES(ICACHE_LINE_BYTES),
+        .ICACHE_LINE_COUNT(ICACHE_LINE_COUNT)
+    ) u_frontend_subsystem (
         .clk(clk),
         .rst_n(rst_n),
-        // New frontend pipe owns epoch/drop handling, so pulse-style frontend
-        // redirects can kill in-flight hit-path metadata without waiting for
-        // old responses. Keep long fence maintenance out of this flush.
-        .flush(redirect_flush_valid || stop_clear_valid),
+        .redirect_flush_valid(redirect_flush_valid),
+        .stop_clear_valid(stop_clear_valid),
         .tlb_flush_all(tlb_flush_all),
-        .cpu_req_valid(ibus_req_valid_w),
-        .cpu_req_ready(ibus_req_ready),
-        .cpu_req_vaddr(ibus_req_vaddr_w),
-        .cpu_req_pred_taken(ibus_req_pred_taken),
-        .cpu_req_pred_target(ibus_req_pred_target),
-        .cpu_req_pred_btb_hit(ibus_req_pred_btb_hit),
-        .cpu_req_pred_btb_is_cond(ibus_req_pred_btb_is_cond),
-        .cpu_req_pred_bht_state(ibus_req_pred_bht_state),
-        .cpu_req_pred_pht_idx(ibus_req_pred_pht_idx),
-        .priv_i(priv_state),
-        .satp_i(csr_satp),
-        .cpu_resp_valid(ibus_resp_valid),
-        .cpu_resp_ready(ibus_resp_ready_w),
-        .cpu_resp_rdata(ibus_resp_data),
-        .cpu_resp_exc_valid(ibus_resp_exc_valid),
-        .cpu_resp_exc_cause(ibus_resp_exc_cause),
-        .cpu_resp_exc_tval(ibus_resp_exc_tval),
-        .cpu_resp_pc(ibus_resp_pc),
-        .cpu_resp_seq(ibus_resp_seq),
-        .cpu_resp_epoch(ibus_resp_epoch),
-        .cpu_resp_pred_taken(ibus_resp_pred_taken),
-        .cpu_resp_pred_target(ibus_resp_pred_target),
-        .cpu_resp_pred_btb_hit(ibus_resp_pred_btb_hit),
-        .cpu_resp_pred_btb_is_cond(ibus_resp_pred_btb_is_cond),
-        .cpu_resp_pred_bht_state(ibus_resp_pred_bht_state),
-        .cpu_resp_pred_pht_idx(ibus_resp_pred_pht_idx),
-        .pipe_req_valid(ibus_icache_pipe_req_valid),
-        .pipe_req_ready(ibus_icache_pipe_req_ready),
-        .pipe_req_paddr(ibus_icache_pipe_req_paddr),
-        .pipe_req_vaddr(ibus_icache_pipe_req_vaddr),
-        .pipe_req_pc(ibus_icache_pipe_req_pc),
-        .pipe_req_seq(ibus_icache_pipe_req_seq),
-        .pipe_req_epoch(ibus_icache_pipe_req_epoch),
-        .pipe_req_pred_taken(ibus_icache_pipe_req_pred_taken),
-        .pipe_req_pred_target(ibus_icache_pipe_req_pred_target),
-        .pipe_req_pred_btb_hit(ibus_icache_pipe_req_pred_btb_hit),
-        .pipe_req_pred_btb_is_cond(ibus_icache_pipe_req_pred_btb_is_cond),
-        .pipe_req_pred_bht_state(ibus_icache_pipe_req_pred_bht_state),
-        .pipe_req_pred_pht_idx(ibus_icache_pipe_req_pred_pht_idx),
-        .pipe_req_priv(ibus_icache_pipe_req_priv),
-        .pipe_req_exception_valid(ibus_icache_pipe_req_exception_valid),
-        .pipe_req_exception_cause(ibus_icache_pipe_req_exception_cause),
-        .pipe_req_exception_tval(ibus_icache_pipe_req_exception_tval),
-        .pipe_resp_valid(ibus_icache_pipe_resp_valid),
-        .pipe_resp_ready(ibus_icache_pipe_resp_ready),
-        .pipe_resp_instr(ibus_icache_pipe_resp_instr),
-        .pipe_resp_pc(ibus_icache_pipe_resp_pc),
-        .pipe_resp_seq(ibus_icache_pipe_resp_seq),
-        .pipe_resp_epoch(ibus_icache_pipe_resp_epoch),
-        .pipe_resp_pred_taken(ibus_icache_pipe_resp_pred_taken),
-        .pipe_resp_pred_target(ibus_icache_pipe_resp_pred_target),
-        .pipe_resp_pred_btb_hit(ibus_icache_pipe_resp_pred_btb_hit),
-        .pipe_resp_pred_btb_is_cond(ibus_icache_pipe_resp_pred_btb_is_cond),
-        .pipe_resp_pred_bht_state(ibus_icache_pipe_resp_pred_bht_state),
-        .pipe_resp_pred_pht_idx(ibus_icache_pipe_resp_pred_pht_idx),
-        .pipe_resp_exception_valid(ibus_icache_pipe_resp_exception_valid),
-        .pipe_resp_exception_cause(ibus_icache_pipe_resp_exception_cause),
-        .pipe_resp_exception_tval(ibus_icache_pipe_resp_exception_tval),
-        .pipe_resp_hit(ibus_icache_pipe_resp_hit),
-        .pipe_resp_miss(ibus_icache_pipe_resp_miss),
-        .lower_req_valid(ibus_ptw_req_valid),
-        .lower_req_ready(ibus_ptw_req_ready),
-        .lower_req_addr(ibus_ptw_req_addr),
-        .lower_resp_valid(ibus_ptw_resp_valid),
-        .lower_resp_ready(ibus_ptw_resp_ready),
-        .lower_resp_rdata(ibus_ptw_resp_data),
-        .stat_req_count(if_mmu_req_count),
-        .stat_bypass_count(if_mmu_bypass_count),
-        .stat_translate_count(if_mmu_translate_count),
-        .stat_ptw_cycle_count(if_mmu_ptw_cycle_count),
-        .stat_ptw_l1_read_count(if_mmu_ptw_l1_read_count),
-        .stat_ptw_l0_read_count(if_mmu_ptw_l0_read_count),
-        .stat_page_fault_count(if_mmu_page_fault_count),
-        .stat_ptw_walk_start_count(if_mmu_ptw_walk_start_count),
-        .stat_ptw_walk_done_count(if_mmu_ptw_walk_done_count),
-        .stat_ptw_walk_fault_count(if_mmu_ptw_walk_fault_count),
-        .stat_tlb_hit_count(if_mmu_tlb_hit_count),
-        .stat_tlb_miss_count(if_mmu_tlb_miss_count),
-        .stat_tlb_hit_to_cache_req_cycle(if_mmu_tlb_hit_to_cache_req_cycle),
-        .stat_cache_req_wait_cycle(if_mmu_cache_req_wait_cycle),
-        .stat_cache_resp_wait_cycle(if_mmu_cache_resp_wait_cycle),
-        .stat_bridge_state_wait_cycle(if_mmu_bridge_state_wait_cycle),
-        .stat_fetch_req_count(if_mmu_fetch_req_count),
-        .stat_fetch_resp_count(if_mmu_fetch_resp_count),
-        .stat_if_pipe_issue_count(if_pipe_issue_count),
-        .stat_if_pipe_resp_count(if_pipe_resp_count),
-        .stat_if_pipe_epoch_drop_count(if_pipe_epoch_drop_count),
-        .stat_if_pipe_replay_count(if_pipe_replay_count),
-        .stat_if_pipe_ptw_miss_count(if_pipe_ptw_miss_count),
-        .stat_if_pipe_ptw_fault_count(if_pipe_ptw_fault_count),
-        .stat_if_pipe_stall_cycle(if_pipe_stall_cycle),
-        .stat_if_pipe_icache_miss_count(if_pipe_icache_miss_count),
-        .stat_if_pipe_icache_replay_count(if_pipe_icache_replay_count)
+        .priv_state(priv_state),
+        .csr_satp(csr_satp),
+        .ibus_req_valid_w(ibus_req_valid_w),
+        .ibus_req_ready(ibus_req_ready),
+        .ibus_req_addr_w(ibus_req_addr_w),
+        .ibus_req_pred_taken(ibus_req_pred_taken),
+        .ibus_req_pred_target(ibus_req_pred_target),
+        .ibus_req_pred_btb_hit(ibus_req_pred_btb_hit),
+        .ibus_req_pred_btb_is_cond(ibus_req_pred_btb_is_cond),
+        .ibus_req_pred_bht_state(ibus_req_pred_bht_state),
+        .ibus_req_pred_pht_idx(ibus_req_pred_pht_idx),
+        .ibus_resp_valid(ibus_resp_valid),
+        .ibus_resp_ready_w(ibus_resp_ready_w),
+        .ibus_resp_data(ibus_resp_data),
+        .ibus_resp_exc_valid(ibus_resp_exc_valid),
+        .ibus_resp_exc_cause(ibus_resp_exc_cause),
+        .ibus_resp_exc_tval(ibus_resp_exc_tval),
+        .ibus_resp_pc(ibus_resp_pc),
+        .ibus_resp_seq(ibus_resp_seq),
+        .ibus_resp_epoch(ibus_resp_epoch),
+        .ibus_resp_pred_taken(ibus_resp_pred_taken),
+        .ibus_resp_pred_target(ibus_resp_pred_target),
+        .ibus_resp_pred_btb_hit(ibus_resp_pred_btb_hit),
+        .ibus_resp_pred_btb_is_cond(ibus_resp_pred_btb_is_cond),
+        .ibus_resp_pred_bht_state(ibus_resp_pred_bht_state),
+        .ibus_resp_pred_pht_idx(ibus_resp_pred_pht_idx),
+        .ibus_icache_pipe_resp_valid(ibus_icache_pipe_resp_valid),
+        .ibus_icache_pipe_resp_ready(ibus_icache_pipe_resp_ready),
+        .icache_maint_inv_req(icache_maint_inv_req),
+        .icache_maint_inv_done(icache_maint_inv_done),
+        .ibus_mem_req_valid(ibus_mem_req_valid),
+        .ibus_mem_req_ready(ibus_mem_req_ready),
+        .ibus_mem_req_write(ibus_mem_req_write),
+        .ibus_mem_req_addr(ibus_mem_req_addr),
+        .ibus_mem_req_wdata(ibus_mem_req_wdata),
+        .ibus_mem_req_wstrb(ibus_mem_req_wstrb),
+        .ibus_mem_req_len(ibus_mem_req_len),
+        .ibus_mem_resp_valid(ibus_mem_resp_valid),
+        .ibus_mem_resp_ready(ibus_mem_resp_ready),
+        .ibus_mem_resp_data(ibus_mem_resp_data),
+        .if_mmu_req_count(if_mmu_req_count),
+        .if_mmu_bypass_count(if_mmu_bypass_count),
+        .if_mmu_translate_count(if_mmu_translate_count),
+        .if_mmu_ptw_cycle_count(if_mmu_ptw_cycle_count),
+        .if_mmu_ptw_l1_read_count(if_mmu_ptw_l1_read_count),
+        .if_mmu_ptw_l0_read_count(if_mmu_ptw_l0_read_count),
+        .if_mmu_page_fault_count(if_mmu_page_fault_count),
+        .if_mmu_ptw_walk_start_count(if_mmu_ptw_walk_start_count),
+        .if_mmu_ptw_walk_done_count(if_mmu_ptw_walk_done_count),
+        .if_mmu_ptw_walk_fault_count(if_mmu_ptw_walk_fault_count),
+        .if_mmu_tlb_hit_count(if_mmu_tlb_hit_count),
+        .if_mmu_tlb_miss_count(if_mmu_tlb_miss_count),
+        .if_mmu_tlb_hit_to_cache_req_cycle(if_mmu_tlb_hit_to_cache_req_cycle),
+        .if_mmu_cache_req_wait_cycle(if_mmu_cache_req_wait_cycle),
+        .if_mmu_cache_resp_wait_cycle(if_mmu_cache_resp_wait_cycle),
+        .if_mmu_bridge_state_wait_cycle(if_mmu_bridge_state_wait_cycle),
+        .if_mmu_fetch_req_count(if_mmu_fetch_req_count),
+        .if_mmu_fetch_resp_count(if_mmu_fetch_resp_count),
+        .if_pipe_issue_count(if_pipe_issue_count),
+        .if_pipe_resp_count(if_pipe_resp_count),
+        .if_pipe_epoch_drop_count(if_pipe_epoch_drop_count),
+        .if_pipe_replay_count(if_pipe_replay_count),
+        .if_pipe_ptw_miss_count(if_pipe_ptw_miss_count),
+        .if_pipe_ptw_fault_count(if_pipe_ptw_fault_count),
+        .if_pipe_stall_cycle(if_pipe_stall_cycle),
+        .if_pipe_icache_miss_count(if_pipe_icache_miss_count),
+        .if_pipe_icache_replay_count(if_pipe_icache_replay_count)
 `ifdef NPC_PIPE_STAT
         ,
         .if_pipe_stat_outstanding(if_pipe_stat_outstanding),
@@ -2453,393 +2525,76 @@ module cpu_top(
         .if_pipe_stat_lower_resp_valid(if_pipe_stat_lower_resp_valid),
         .if_pipe_stat_lower_resp_ready(if_pipe_stat_lower_resp_ready)
 `endif
+`ifdef NPC_USE_DPI
+`ifdef NPC_CACHE_STAT
+        ,
+        .icache_stat_access(icache_stat_access),
+        .icache_stat_hit(icache_stat_hit),
+        .icache_stat_miss(icache_stat_miss),
+        .icache_stat_refill_req(icache_stat_refill_req),
+        .icache_stat_refill_resp(icache_stat_refill_resp),
+        .icache_stat_refill_bypass(icache_stat_refill_bypass),
+        .icache_stat_req_wait_cycle(icache_stat_req_wait_cycle),
+        .icache_stat_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
+        .icache_stat_miss_wait_cycle(icache_stat_miss_wait_cycle),
+        .icache_stat_uncached_access(icache_stat_uncached_access),
+        .icache_pipe_req_valid_cycle(icache_pipe_req_valid_cycle),
+        .icache_pipe_req_ready_cycle(icache_pipe_req_ready_cycle),
+        .icache_pipe_req_fire_cycle(icache_pipe_req_fire_cycle),
+        .icache_pipe_req_valid_not_ready_cycle(icache_pipe_req_valid_not_ready_cycle),
+        .icache_pipe_resp_valid_cycle(icache_pipe_resp_valid_cycle),
+        .icache_pipe_resp_ready_cycle(icache_pipe_resp_ready_cycle),
+        .icache_pipe_resp_fire_cycle(icache_pipe_resp_fire_cycle),
+        .icache_pipe_data_valid_cycle(icache_pipe_data_valid_cycle),
+        .icache_pipe_resp_block_cycle(icache_pipe_resp_block_cycle),
+        .icache_pipe_ready_block_state_cycle(icache_pipe_ready_block_state_cycle),
+        .icache_pipe_ready_block_data_cycle(icache_pipe_ready_block_data_cycle),
+        .icache_pipe_ready_block_resp_cycle(icache_pipe_ready_block_resp_cycle),
+        .icache_pipe_ready_block_cpu_cycle(icache_pipe_ready_block_cpu_cycle),
+        .icache_pipe_ready_block_maint_cycle(icache_pipe_ready_block_maint_cycle),
+        .icache_pipe_state_idle_cycle(icache_pipe_state_idle_cycle),
+        .icache_pipe_state_refill_cycle(icache_pipe_state_refill_cycle),
+        .icache_pipe_state_uncached_cycle(icache_pipe_state_uncached_cycle),
+        .icache_pipe_hit_fire_cycle(icache_pipe_hit_fire_cycle),
+        .icache_pipe_miss_fire_cycle(icache_pipe_miss_fire_cycle),
+        .icache_pipe_refill_busy_cycle(icache_pipe_refill_busy_cycle),
+        .icache_pipe_resp_fifo_full_cycle(icache_pipe_resp_fifo_full_cycle)
+`endif
+`endif
     );
-`else
-    Sv32ICacheBridge u_icache_bridge(
+
+    // CpuPerfMonitors owns stat-module instantiations only. Top keeps the
+    // legacy debug/stat visibility and decides when monitor output prints.
+    CpuPerfMonitors #(
+        .ICACHE_MISS_PENALTY(ICACHE_MISS_PENALTY),
+        .DCACHE_MISS_PENALTY(DCACHE_MISS_PENALTY)
+    ) u_perf_monitors (
         .clk(clk),
         .rst_n(rst_n),
-        // IF owns redirect/drop handling. Flushing this bridge on sfence/satp
-        // can cancel a response that IF is still waiting for and deadlock fetch.
-        .flush(1'b0),
-        .tlb_flush_all(tlb_flush_all),
-        .cpu_req_valid(ibus_req_valid_w),
-        .cpu_req_ready(ibus_req_ready),
-        .cpu_req_vaddr(ibus_req_vaddr_w),
-        .priv_i(priv_state),
-        .satp_i(csr_satp),
-        .cpu_resp_valid(ibus_resp_valid),
-        .cpu_resp_ready(ibus_resp_ready_w),
-        .cpu_resp_rdata(ibus_resp_data),
-        .cpu_resp_exc_valid(ibus_resp_exc_valid),
-        .cpu_resp_exc_cause(ibus_resp_exc_cause),
-        .cpu_resp_exc_tval(ibus_resp_exc_tval),
-        .lower_req_valid(ibus_icache_req_valid),
-        .lower_req_ready(ibus_icache_req_ready),
-        .lower_req_addr(ibus_req_paddr_w),
-        .lower_resp_valid(ibus_icache_resp_valid),
-        .lower_resp_ready(ibus_icache_resp_ready),
-        .lower_resp_rdata(ibus_icache_resp_data),
-        .stat_req_count(if_mmu_req_count),
-        .stat_bypass_count(if_mmu_bypass_count),
-        .stat_translate_count(if_mmu_translate_count),
-        .stat_ptw_cycle_count(if_mmu_ptw_cycle_count),
-        .stat_ptw_l1_read_count(if_mmu_ptw_l1_read_count),
-        .stat_ptw_l0_read_count(if_mmu_ptw_l0_read_count),
-        .stat_page_fault_count(if_mmu_page_fault_count),
-        .stat_ptw_walk_start_count(if_mmu_ptw_walk_start_count),
-        .stat_ptw_walk_done_count(if_mmu_ptw_walk_done_count),
-        .stat_ptw_walk_fault_count(if_mmu_ptw_walk_fault_count),
-        .stat_tlb_hit_count(if_mmu_tlb_hit_count),
-        .stat_tlb_miss_count(if_mmu_tlb_miss_count),
-        .stat_tlb_hit_to_cache_req_cycle(if_mmu_tlb_hit_to_cache_req_cycle),
-        .stat_cache_req_wait_cycle(if_mmu_cache_req_wait_cycle),
-        .stat_cache_resp_wait_cycle(if_mmu_cache_resp_wait_cycle),
-        .stat_bridge_state_wait_cycle(if_mmu_bridge_state_wait_cycle),
-        .stat_fetch_req_count(if_mmu_fetch_req_count),
-        .stat_fetch_resp_count(if_mmu_fetch_resp_count)
-    );
-    assign ibus_resp_pc = 32'b0;
-    assign ibus_resp_seq = 32'b0;
-    assign ibus_resp_epoch = 16'b0;
-    assign ibus_resp_pred_taken = 1'b0;
-    assign ibus_resp_pred_target = 32'b0;
-    assign ibus_resp_pred_btb_hit = 1'b0;
-    assign ibus_resp_pred_btb_is_cond = 1'b0;
-    assign ibus_resp_pred_bht_state = 2'b0;
-    assign ibus_resp_pred_pht_idx = 32'b0;
-    assign if_pipe_issue_count = 64'b0;
-    assign if_pipe_resp_count = 64'b0;
-    assign if_pipe_epoch_drop_count = 64'b0;
-    assign if_pipe_replay_count = 64'b0;
-    assign if_pipe_ptw_miss_count = 64'b0;
-    assign if_pipe_ptw_fault_count = 64'b0;
-    assign if_pipe_stall_cycle = 64'b0;
-    assign if_pipe_icache_miss_count = 64'b0;
-    assign if_pipe_icache_replay_count = 64'b0;
-`ifdef NPC_PIPE_STAT
-    assign if_pipe_stat_outstanding = 1'b0;
-    assign if_pipe_stat_replay_valid = 1'b0;
-    assign if_pipe_stat_ptw_busy = 1'b0;
-    assign if_pipe_stat_req_valid = 1'b0;
-    assign if_pipe_stat_req_ready = 1'b0;
-    assign if_pipe_stat_resp_current = 1'b0;
-    assign if_pipe_stat_resp_stale = 1'b0;
-    assign if_pipe_stat_lower_req_valid = 1'b0;
-    assign if_pipe_stat_lower_req_ready = 1'b0;
-    assign if_pipe_stat_lower_resp_valid = 1'b0;
-    assign if_pipe_stat_lower_resp_ready = 1'b0;
-`endif
-`endif
-
-`ifndef NPC_IF_HIT_PIPELINE
-    assign ibus_icache_pipe_req_valid = 1'b0;
-    assign ibus_icache_pipe_req_paddr = 32'b0;
-    assign ibus_icache_pipe_req_vaddr = 32'b0;
-    assign ibus_icache_pipe_req_pc = 32'b0;
-    assign ibus_icache_pipe_req_seq = 32'b0;
-    assign ibus_icache_pipe_req_epoch = 16'b0;
-    assign ibus_icache_pipe_req_pred_taken = 1'b0;
-    assign ibus_icache_pipe_req_pred_target = 32'b0;
-    assign ibus_icache_pipe_req_pred_btb_hit = 1'b0;
-    assign ibus_icache_pipe_req_pred_btb_is_cond = 1'b0;
-    assign ibus_icache_pipe_req_pred_bht_state = 2'b0;
-    assign ibus_icache_pipe_req_pred_pht_idx = 32'b0;
-    assign ibus_icache_pipe_req_priv = 2'b0;
-    assign ibus_icache_pipe_req_exception_valid = 1'b0;
-    assign ibus_icache_pipe_req_exception_cause = 32'b0;
-    assign ibus_icache_pipe_req_exception_tval = 32'b0;
-    assign ibus_icache_pipe_resp_ready = 1'b0;
-`endif
-
-    wb_stage u_wb_stage(
-        .clk(clk),
-        .rst_n(rst_n),
-        .flush(trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active),
-        .hold(store_buffer_drain_before_maint),
-        .ms_to_ws_valid(ms_to_ws_valid),
-        .ws_allowin(ws_allowin),
-        .ms_pc(ms_pc),
-        .ms_instr(ms_instr),
-        .ms_nextpc(ms_nextpc),
-        .ms_rd(ms_rd),
-        .ms_reg_wen(ms_reg_wen),
-        .ms_datatoreg(ms_datatoreg),
-        .ms_mem_op(ms_mem_op),
-        .ms_aluout(ms_aluout),
-        .ms_mem_rdata(ms_mem_rdata),
-        .ms_csr_read_data(ms_csr_read_data),
-        .ms_csr_wen(ms_csr_wen),
-        .ms_csr_waddr1(ms_csr_waddr1),
-        .ms_csr_waddr2(ms_csr_waddr2),
-        .ms_csr_wdata1(ms_csr_wdata1),
-        .ms_csr_wdata2(ms_csr_wdata2),
-        .ms_illegal(ms_illegal),
-        .ms_exc_valid(ms_exc_valid),
-        .ms_exc_cause(ms_exc_cause),
-        .ms_exc_tval(ms_exc_tval),
-        .ms_is_ebreak(ms_is_ebreak),
-        .ms_branch(ms_branch),
-        .ms_src1_value(ms_src1_value),
-        .ms_fast_mul_stat(ms_fast_mul_stat),
         .ws_valid(ws_valid),
+        .commit_is_ebreak(commit_is_ebreak),
+        .ws_illegal(ws_illegal),
         .ws_pc(ws_pc),
         .ws_instr(ws_instr),
         .ws_nextpc(ws_nextpc),
-        .ws_rd(ws_rd),
-        .ws_reg_wen(ws_reg_wen),
-        .ws_rf_wdata(ws_rf_wdata),
-        .ws_stat_datatoreg(ws_stat_datatoreg),
-        .ws_stat_mem_op(ws_stat_mem_op),
-        .ws_csr_wen(ws_csr_wen),
-        .ws_csr_waddr1(ws_csr_waddr1),
-        .ws_csr_waddr2(ws_csr_waddr2),
-        .ws_csr_wdata1(ws_csr_wdata1),
-        .ws_csr_wdata2(ws_csr_wdata2),
-        .ws_illegal(ws_illegal),
-        .ws_exc_valid(ws_exc_valid),
-        .ws_exc_cause(ws_exc_cause),
-        .ws_exc_tval(ws_exc_tval),
-        .ws_is_ebreak(ws_is_ebreak),
-        .ws_branch(ws_branch),
-        .ws_src1_value(ws_src1_value),
-        .ws_fast_mul_stat(ws_fast_mul_stat)
-    );
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_BRANCH_STAT
-    BranchStat u_branch_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .fetch_req_valid(branch_stat_fetch_req_valid),
-        .fetch_req_pc(branch_stat_fetch_req_pc),
-        .fetch_accept_valid(branch_stat_fetch_accept_valid),
-        .fetch_accept_pc(branch_stat_fetch_accept_pc),
-        .fetch_accept_instr(branch_stat_fetch_accept_instr),
-        .fetch_drop_valid(branch_stat_fetch_drop_valid),
-        .fetch_drop_redirect(branch_stat_fetch_drop_redirect),
-        .fetch_drop_pc(branch_stat_fetch_drop_pc),
-        .fetch_drop_instr(branch_stat_fetch_drop_instr),
-        .branch_resolve_valid(branch_stat_resolve_valid),
-        .branch_kind(es_branch),
-        .branch_pc(es_pc),
-        .branch_instr(es_instr),
-        .branch_nextpc(es_nextpc),
-        .branch_redirect(ex_mispredict_flush_valid),
-        .branch_taken(ex_branch_taken_actual),
-        .branch_pred_taken(ex_branch_pred_taken),
-        .branch_pred_target(ex_branch_pred_target),
-        .branch_pred_btb_hit(ex_branch_pred_btb_hit),
-        .branch_pred_btb_is_cond(ex_branch_pred_btb_is_cond),
-        .branch_pred_bht_state(ex_branch_pred_bht_state),
-        .branch_target_mismatch(ex_branch_target_mismatch),
-        .bpu_btb_lookup_count(bpu_btb_lookup_count),
-        .bpu_btb_hit_count(bpu_btb_hit_count),
-        .bpu_btb_miss_count(bpu_btb_miss_count),
-        .bpu_bht_pred_taken_count(bpu_bht_pred_taken_count),
-        .bpu_bht_pred_not_taken_count(bpu_bht_pred_not_taken_count),
-        .bpu_btb_conflict_count(bpu_btb_conflict_count),
-        .bpu_btb_update_count(bpu_btb_update_count),
-        .bpu_btb_replace_count(bpu_btb_replace_count),
-        .bpu_bht_lookup_count(bpu_bht_lookup_count),
-        .bpu_bht_update_count(bpu_bht_update_count),
-        .bpu_bht_weak_taken_count(bpu_bht_weak_taken_count),
-        .bpu_bht_weak_not_taken_count(bpu_bht_weak_not_taken_count),
-        .bpu_bht_strong_taken_count(bpu_bht_strong_taken_count),
-        .bpu_bht_strong_not_taken_count(bpu_bht_strong_not_taken_count),
-        .bpu_gshare_enable(BPU_GSHARE_ENABLE),
-        .bpu_bhr_bits(BPU_BHR_BITS),
-        .bpu_bhr_value(bpu_bhr_value),
-        .stop_clear_valid(stop_clear_valid),
-        .stop_clear_pc(ds_pc),
-        .stop_clear_instr(ds_instr),
-        .commit_valid(ws_valid),
-        .commit_pc(ws_pc),
-        .commit_instr(ws_instr),
-        .commit_nextpc(ws_nextpc),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal),
-        .ibus_req_valid(ibus_req_valid_w),
+        .ibus_req_valid_w(ibus_req_valid_w),
         .ibus_req_ready(ibus_req_ready),
         .ibus_resp_valid(ibus_resp_valid),
-        .ibus_resp_ready(ibus_resp_ready_w),
+        .ibus_resp_ready_w(ibus_resp_ready_w),
         .dbus_req_valid(dbus_req_valid),
         .dbus_req_ready(dbus_req_ready),
         .dbus_resp_valid(dbus_resp_valid),
         .dbus_resp_ready(dbus_resp_ready),
-        .if_mmu_translate_count(if_mmu_translate_count),
-        .lsu_mmu_translate_count(lsu_mmu_translate_count),
-        .stat_redirect_wait_cycle(branch_stat_redirect_wait_cycle),
-        .stat_redirect_count(branch_stat_redirect_count),
-        .stat_mispredict_count(branch_stat_mispredict_count)
-    );
-`endif
-`endif
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_MMU_STAT
-    MMUStat u_mmu_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .commit_valid(ws_valid),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal),
-        .if_req_count(if_mmu_req_count),
-        .if_bypass_count(if_mmu_bypass_count),
-        .if_translate_count(if_mmu_translate_count),
-        .if_ptw_cycle_count(if_mmu_ptw_cycle_count),
-        .if_ptw_l1_read_count(if_mmu_ptw_l1_read_count),
-        .if_ptw_l0_read_count(if_mmu_ptw_l0_read_count),
-        .if_page_fault_count(if_mmu_page_fault_count),
-        .if_ptw_walk_start_count(if_mmu_ptw_walk_start_count),
-        .if_ptw_walk_done_count(if_mmu_ptw_walk_done_count),
-        .if_ptw_walk_fault_count(if_mmu_ptw_walk_fault_count),
-        .if_tlb_hit_count(if_mmu_tlb_hit_count),
-        .if_tlb_miss_count(if_mmu_tlb_miss_count),
-        .lsu_req_count(lsu_mmu_req_count),
-        .lsu_bypass_count(lsu_mmu_bypass_count),
-        .lsu_translate_count(lsu_mmu_translate_count),
-        .lsu_ptw_cycle_count(lsu_mmu_ptw_cycle_total),
-        .lsu_ptw_l1_read_count(lsu_mmu_ptw_l1_read_total),
-        .lsu_ptw_l0_read_count(lsu_mmu_ptw_l0_read_total),
-        .lsu_page_fault_count(lsu_mmu_page_fault_count),
-        .lsu_ptw_walk_start_count(lsu_mmu_ptw_walk_start_total),
-        .lsu_ptw_walk_done_count(lsu_mmu_ptw_walk_done_total),
-        .lsu_ptw_walk_fault_count(lsu_mmu_ptw_walk_fault_total),
-        .lsu_tlb_hit_count(lsu_mmu_tlb_hit_count),
-        .lsu_tlb_miss_count(lsu_mmu_tlb_miss_count)
-    );
-`endif
-`endif
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_HIT_PATH_STAT
-    HitPathStat u_hit_path_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .commit_valid(ws_valid),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal),
-        .if_ptw_cycle(if_mmu_ptw_cycle_count),
-        .lsu_ptw_cycle(lsu_mmu_ptw_cycle_total),
-        .if_tlb_hit_to_cache_req_cycle(if_mmu_tlb_hit_to_cache_req_cycle),
-        .lsu_tlb_hit_to_cache_req_cycle(lsu_mmu_tlb_hit_to_cache_req_cycle),
-        .if_bridge_state_wait_cycle(if_mmu_bridge_state_wait_cycle),
-        .lsu_bridge_state_wait_cycle(lsu_mmu_bridge_state_wait_cycle),
-        .if_cache_req_wait_cycle(if_mmu_cache_req_wait_cycle),
-        .if_cache_resp_wait_cycle(if_mmu_cache_resp_wait_cycle),
-        .lsu_cache_req_wait_cycle(lsu_mmu_cache_req_wait_cycle),
-        .lsu_cache_resp_wait_cycle(lsu_mmu_cache_resp_wait_cycle),
-        .if_fetch_req_count(if_mmu_fetch_req_count),
-        .if_fetch_resp_count(if_mmu_fetch_resp_count),
-        .if_pipe_issue_count(if_pipe_issue_count),
-        .if_pipe_resp_count(if_pipe_resp_count),
-        .if_pipe_epoch_drop_count(if_pipe_epoch_drop_count),
-        .if_pipe_replay_count(if_pipe_replay_count),
-        .if_pipe_ptw_miss_count(if_pipe_ptw_miss_count),
-        .if_pipe_ptw_fault_count(if_pipe_ptw_fault_count),
-        .if_pipe_stall_cycle(if_pipe_stall_cycle),
-        .if_pipe_icache_miss_count(if_pipe_icache_miss_count),
-        .if_pipe_icache_replay_count(if_pipe_icache_replay_count),
-        .lsu_data_req_count(lsu_mmu_data_req_count),
-        .lsu_data_resp_count(lsu_mmu_data_resp_count),
-        .lsu_uncached_req_count(lsu_mmu_uncached_req_count),
-        .lsu_pipe_issue_count(lsu_pipe_issue_count),
-        .lsu_pipe_resp_count(lsu_pipe_resp_count),
-        .lsu_pipe_epoch_drop_count(lsu_pipe_epoch_drop_count),
-        .lsu_pipe_dtlb_hit_count(lsu_pipe_dtlb_hit_count),
-        .lsu_pipe_dtlb_miss_count(lsu_pipe_dtlb_miss_count),
-        .lsu_pipe_replay_count(lsu_pipe_replay_count),
-        .lsu_pipe_fault_count(lsu_pipe_fault_count),
-        .lsu_pipe_stall_cycle(lsu_pipe_stall_cycle),
-        .lsu_pipe_dcache_hit_count(lsu_pipe_dcache_hit_count),
-        .lsu_pipe_dcache_miss_count(lsu_pipe_dcache_miss_count),
-        .lsu_pipe_store_hit_count(lsu_pipe_store_hit_count),
-        .lsu_pipe_load_hit_count(lsu_pipe_load_hit_count),
-        .lsu_pipe_slow_fallback_count(lsu_pipe_slow_fallback_count),
-        .lsu_pipe_load_miss_replay_count(lsu_pipe_load_miss_replay_count),
-        .lsu_pipe_store_miss_replay_count(lsu_pipe_store_miss_replay_count),
-        .lsu_pipe_direct_uncached_count(lsu_pipe_direct_uncached_count),
-        .lsu_pipe_direct_non_dtlb_hit_count(lsu_pipe_direct_non_dtlb_hit_count),
-        .lsu_pipe_direct_perm_fault_count(lsu_pipe_direct_perm_fault_count),
-        .lsu_pipe_direct_cross_page_count(lsu_pipe_direct_cross_page_count),
-        .lsu_pipe_direct_fast_block_count(lsu_pipe_direct_fast_block_count),
-        .lsu_pipe_direct_fast_block_atomic_count(lsu_pipe_direct_fast_block_atomic_count),
-        .lsu_pipe_direct_fast_block_misaligned_count(lsu_pipe_direct_fast_block_misaligned_count),
-        .lsu_pipe_direct_fast_block_exception_count(lsu_pipe_direct_fast_block_exception_count),
-        .lsu_pipe_direct_fast_block_phase2_count(lsu_pipe_direct_fast_block_phase2_count),
-        .lsu_pipe_direct_fast_block_other_count(lsu_pipe_direct_fast_block_other_count),
-        .lsu_pipe_direct_other_count(lsu_pipe_direct_other_count),
-        .lsu_pipe_hit_latency_sum(lsu_pipe_hit_latency_sum),
-        .lsu_pipe_hit_latency_count(lsu_pipe_hit_latency_count),
-        .lsu_pipe_hit_latency_max(lsu_pipe_hit_latency_max),
-        .lsu_pipe_load_hit_latency_sum(lsu_pipe_load_hit_latency_sum),
-        .lsu_pipe_load_hit_latency_count(lsu_pipe_load_hit_latency_count),
-        .lsu_pipe_load_hit_latency_max(lsu_pipe_load_hit_latency_max),
-        .lsu_pipe_store_hit_latency_sum(lsu_pipe_store_hit_latency_sum),
-        .lsu_pipe_store_hit_latency_count(lsu_pipe_store_hit_latency_count),
-        .lsu_pipe_store_hit_latency_max(lsu_pipe_store_hit_latency_max),
-        .lsu_pipe_slow_fallback_latency_sum(lsu_pipe_slow_fallback_latency_sum),
-        .lsu_pipe_slow_fallback_latency_count(lsu_pipe_slow_fallback_latency_count),
-        .lsu_pipe_slow_fallback_latency_max(lsu_pipe_slow_fallback_latency_max),
-        .lsu_pipe_slow_direct_latency_sum(lsu_pipe_slow_direct_latency_sum),
-        .lsu_pipe_slow_direct_latency_count(lsu_pipe_slow_direct_latency_count),
-        .lsu_pipe_slow_direct_latency_max(lsu_pipe_slow_direct_latency_max),
-        .lsu_pipe_slow_replay_latency_sum(lsu_pipe_slow_replay_latency_sum),
-        .lsu_pipe_slow_replay_latency_count(lsu_pipe_slow_replay_latency_count),
-        .lsu_pipe_slow_replay_latency_max(lsu_pipe_slow_replay_latency_max),
-        .icache_req_wait_cycle(icache_stat_req_wait_cycle),
-        .icache_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
-        .icache_miss_wait_cycle(icache_stat_miss_wait_cycle),
-        .icache_uncached_access(icache_stat_uncached_access),
-        .dcache_req_wait_cycle(dcache_stat_req_wait_cycle),
-        .dcache_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
-        .dcache_miss_wait_cycle(dcache_stat_miss_wait_cycle),
-        .dcache_uncached_access(dcache_stat_uncached_access),
-        .dcache_writeback_cycle(dcache_stat_writeback_cycle),
-        .branch_redirect_wait_cycle(branch_stat_redirect_wait_cycle),
-        .branch_redirect_count(branch_stat_redirect_count),
-        .branch_mispredict_count(branch_stat_mispredict_count),
-        .load_use_stall_cycle(pipe_stat_load_use_stall_cycle),
-        .id_reg_hazard_cycle(pipe_stat_id_reg_hazard_cycle),
-        .ms_block_cycle(pipe_stat_ms_block_cycle)
-    );
-`endif
-`endif
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_INSTR_STAT
-    InstrStat u_instr_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .commit_valid(ws_valid),
-        .commit_instr(ws_instr),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal)
-    );
-`endif
-`endif
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_CACHE_STAT
-    CacheStat #(
-        .ICACHE_MISS_PENALTY(ICACHE_MISS_PENALTY),
-        .DCACHE_MISS_PENALTY(DCACHE_MISS_PENALTY)
-    ) u_cache_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .commit_valid(ws_valid),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal),
-        .icache_access(icache_stat_access),
-        .icache_hit(icache_stat_hit),
-        .icache_miss(icache_stat_miss),
-        .icache_refill_req(icache_stat_refill_req),
-        .icache_refill_resp(icache_stat_refill_resp),
-        .icache_refill_bypass(icache_stat_refill_bypass),
-        .icache_req_wait_cycle(icache_stat_req_wait_cycle),
-        .icache_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
-        .icache_miss_wait_cycle(icache_stat_miss_wait_cycle),
-        .icache_uncached_access(icache_stat_uncached_access),
+        .icache_stat_access(icache_stat_access),
+        .icache_stat_hit(icache_stat_hit),
+        .icache_stat_miss(icache_stat_miss),
+        .icache_stat_refill_req(icache_stat_refill_req),
+        .icache_stat_refill_resp(icache_stat_refill_resp),
+        .icache_stat_refill_bypass(icache_stat_refill_bypass),
+        .icache_stat_req_wait_cycle(icache_stat_req_wait_cycle),
+        .icache_stat_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
+        .icache_stat_miss_wait_cycle(icache_stat_miss_wait_cycle),
+        .icache_stat_uncached_access(icache_stat_uncached_access),
         .icache_pipe_req_valid_cycle(icache_pipe_req_valid_cycle),
         .icache_pipe_req_ready_cycle(icache_pipe_req_ready_cycle),
         .icache_pipe_req_fire_cycle(icache_pipe_req_fire_cycle),
@@ -2861,251 +2616,24 @@ module cpu_top(
         .icache_pipe_miss_fire_cycle(icache_pipe_miss_fire_cycle),
         .icache_pipe_refill_busy_cycle(icache_pipe_refill_busy_cycle),
         .icache_pipe_resp_fifo_full_cycle(icache_pipe_resp_fifo_full_cycle),
-        .if_pipe_epoch_drop_count(if_pipe_epoch_drop_count),
-        .dcache_access(dcache_stat_access),
-        .dcache_load_access(dcache_stat_load_access),
-        .dcache_store_access(dcache_stat_store_access),
-        .dcache_load_hit(dcache_stat_load_hit),
-        .dcache_load_miss(dcache_stat_load_miss),
-        .dcache_store_hit(dcache_stat_store_hit),
-        .dcache_store_miss(dcache_stat_store_miss),
-        .dcache_refill_req(dcache_stat_refill_req),
-        .dcache_refill_resp(dcache_stat_refill_resp),
-        .dcache_write_req(dcache_stat_write_req),
-        .dcache_write_resp(dcache_stat_write_resp),
-        .dcache_refill_ld_bypass(dcache_stat_refill_ld_bypass),
-        .dcache_refill_store_merge(dcache_stat_refill_store_merge),
-        .dcache_req_wait_cycle(dcache_stat_req_wait_cycle),
-        .dcache_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
-        .dcache_miss_wait_cycle(dcache_stat_miss_wait_cycle),
-        .dcache_uncached_access(dcache_stat_uncached_access),
-        .dcache_writeback_cycle(dcache_stat_writeback_cycle),
-        .ibus_req_valid(ibus_req_valid_w),
-        .ibus_req_ready(ibus_req_ready),
-        .ibus_resp_valid(ibus_resp_valid),
-        .ibus_resp_ready(ibus_resp_ready_w),
-        .dbus_req_valid(dbus_req_valid),
-        .dbus_req_ready(dbus_req_ready),
-        .dbus_resp_valid(dbus_resp_valid),
-        .dbus_resp_ready(dbus_resp_ready)
-    );
-`endif
-`endif
-
-`ifdef NPC_USE_DPI
-`ifdef NPC_PIPE_STAT
-    PipeStat u_pipe_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .fs_to_ds_valid(fs_to_ds_valid),
-        .if_stall(if_stall),
-        .ds_allowin(ds_allowin),
-        .ds_to_es_valid(ds_to_es_valid),
-        .es_allowin(es_allowin),
-        .es_to_ms_valid(es_to_ms_valid),
-        .ms_allowin(ms_allowin),
-        .ms_to_ws_valid(ms_to_ws_valid),
-        .ws_allowin(ws_allowin),
-        .id_stage_block(ds_stage_block),
-        .id_stage_block_reg_hazard(ds_stage_block_reg_hazard),
-        .id_stage_block_csr_hazard(ds_stage_block_csr_hazard),
-        .id_stage_block_load_use(ds_stage_block_load_use),
-        .id_stage_block_ex_raw(ds_stage_block_ex_raw),
-        .id_stage_block_ms_raw(ds_stage_block_ms_raw),
-        .id_stage_block_hidden_raw(ds_stage_block_hidden_raw),
-        .ex_stage_block(es_stage_block),
-        .ex_stage_block_mdu_wait(es_stage_block_mdu_wait),
-        .ex_stage_block_redirect_wait(es_stage_block_redirect_wait),
-        .ms_stage_block(ms_stage_block),
-        .ms_stage_block_req_phase(ms_stage_block_req_phase),
-        .ms_stage_block_resp_phase(ms_stage_block_resp_phase),
-        .es_mem_wr(es_mem_wr),
-        .es_mem_fast_block(es_mem_fwd_dep),
-        .ms_fast_req_fire(ms_fast_req_fire_trace),
-        .ms_slow_req_fire(ms_slow_req_fire_trace),
-        .ms_slow_req_fwd_dep_fire(ms_slow_req_fwd_dep_fire_trace),
-        .ms_slow_req_nonfwd_fire(ms_slow_req_nonfwd_fire_trace),
-        .commit_valid(ws_valid),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal),
-        .stat_load_use_stall_cycle(pipe_stat_load_use_stall_cycle),
-        .stat_id_reg_hazard_cycle(pipe_stat_id_reg_hazard_cycle),
-        .stat_ms_block_cycle(pipe_stat_ms_block_cycle)
-    );
-
-    PipelineCPIStat u_pipeline_cpi_stat(
-        .clk(clk),
-        .rst_n(rst_n),
-        .fs_to_ds_valid(fs_to_ds_valid),
-        .if_stall(if_stall),
-        .ds_allowin(ds_allowin),
-        .ds_to_es_valid(ds_to_es_valid),
-        .es_allowin(es_allowin),
-        .es_to_ms_valid(es_to_ms_valid),
-        .ms_allowin(ms_allowin),
-        .ms_to_ws_valid(ms_to_ws_valid),
-        .ws_allowin(ws_allowin),
-        .es_valid(es_valid),
-        .ms_valid(ms_valid),
-        .ws_valid(ws_valid),
-        .id_stage_block(ds_stage_block),
-        .id_stage_block_reg_hazard(ds_stage_block_reg_hazard),
-        .id_stage_block_csr_hazard(ds_stage_block_csr_hazard),
-        .id_stage_block_load_use(ds_stage_block_load_use),
-        .id_stage_block_ex_raw(ds_stage_block_ex_raw),
-        .id_stage_block_ms_raw(ds_stage_block_ms_raw),
-        .id_stage_block_hidden_raw(ds_stage_block_hidden_raw),
-        .ds_stat_uses_rs1(ds_stat_uses_rs1),
-        .ds_stat_uses_rs2(ds_stat_uses_rs2),
-        .ds_stat_rs1_match_es(ds_stat_rs1_match_es),
-        .ds_stat_rs1_match_ms(ds_stat_rs1_match_ms),
-        .ds_stat_rs1_match_hidden(ds_stat_rs1_match_hidden),
-        .ds_stat_rs1_match_ws(ds_stat_rs1_match_ws),
-        .ds_stat_rs2_match_es(ds_stat_rs2_match_es),
-        .ds_stat_rs2_match_ms(ds_stat_rs2_match_ms),
-        .ds_stat_rs2_match_hidden(ds_stat_rs2_match_hidden),
-        .ds_stat_rs2_match_ws(ds_stat_rs2_match_ws),
-        .ds_stat_csr_counter_hazard(ds_stat_csr_counter_hazard),
-        .ds_stat_rs1_ex_alu_fwd(ds_stat_rs1_ex_alu_fwd),
-        .ds_stat_rs2_ex_alu_fwd(ds_stat_rs2_ex_alu_fwd),
-        .ds_stat_fwd_load_block(ds_stat_fwd_load_block),
-        .ds_stat_fwd_csr_block(ds_stat_fwd_csr_block),
-        .ds_stat_fwd_kill_block(ds_stat_fwd_kill_block),
-        .ex_stage_block(es_stage_block),
-        .ex_stage_block_mdu_wait(es_stage_block_mdu_wait),
-        .ex_stage_block_redirect_wait(es_stage_block_redirect_wait),
-        .es_result_bypassable(es_result_bypassable),
-        .es_datatoreg(es_datatoreg),
-        .es_mem_wr(es_mem_wr),
-        .es_atomic_en(es_atomic_en),
-        .es_csr_wen(es_csr_wen),
-        .es_stat_is_mdu(es_stat_is_mdu),
-        .es_stat_rs1_mem_alu_fwd(es_stat_rs1_mem_alu_fwd),
-        .es_stat_rs2_mem_alu_fwd(es_stat_rs2_mem_alu_fwd),
-        .es_stat_rs1_wb_fwd(es_stat_rs1_wb_fwd),
-        .es_stat_rs2_wb_fwd(es_stat_rs2_wb_fwd),
-        .es_stat_rs1_load_fwd(es_stat_rs1_load_fwd),
-        .es_stat_rs2_load_fwd(es_stat_rs2_load_fwd),
-        .es_stat_mdu_op(es_stat_mdu_op),
-        .es_stat_mdu_req_fire(es_stat_mdu_req_fire),
-        .es_stat_mdu_resp_valid(es_stat_mdu_resp_valid),
-        .es_stat_mdu_busy(es_stat_mdu_busy),
-        .es_stat_mdu_result_ready(es_stat_mdu_result_ready),
-        .es_stat_fast_mul(es_stat_fast_mul),
-        .es_stat_fast_mul_issue(es_stat_fast_mul_issue),
-        .es_stat_fast_mul_resp(fast_mul_resp_wb),
-        .es_stat_fast_mul_kill(es_stat_fast_mul_kill),
-        .es_stat_fast_mul_flush_drop(es_stat_fast_mul_flush_drop),
-        .es_stat_fast_mul_forward(es_stat_fast_mul_forward),
-        .es_stat_fast_mul_stall_wait_ready(es_stat_fast_mul_stall_wait_ready),
-        .es_stat_old_div_path(es_stat_old_div_path),
-        .es_stat_old_rem_path(es_stat_old_rem_path),
-        .ms_stage_block(ms_stage_block),
-        .ms_stage_block_req_phase(ms_stage_block_req_phase),
-        .ms_stage_block_resp_phase(ms_stage_block_resp_phase),
-        .ms_stage_block_load(ms_stage_block_load),
-        .ms_stage_block_store(ms_stage_block_store),
-        .ms_stage_block_req_load(ms_stage_block_req_load),
-        .ms_stage_block_req_store(ms_stage_block_req_store),
-        .ms_stage_block_resp_load(ms_stage_block_resp_load),
-        .ms_stage_block_resp_store(ms_stage_block_resp_store),
-        .ms_datatoreg(ms_datatoreg),
-        .ms_csr_wen(ms_csr_wen),
-        .ms_fwd_valid(ms_fwd_valid),
-        .ms_stat_load_visible(ms_stat_load_visible),
-        .ms_stat_load_aligned(ms_stat_load_aligned),
-        .ms_stat_load_result_ready(ms_stat_load_result_ready),
-        .ms_stat_load_fault(ms_stat_load_fault),
-        .ms_stat_load_signext_ready(ms_stat_load_signext_ready),
-        .ms_stat_load_req_fire(ms_stat_load_req_fire),
-        .ms_stat_load_resp_valid(ms_stat_load_resp_valid),
-        .ms_stat_load_resp_fire(ms_stat_load_resp_fire),
-        .ms_stat_load_data_ready(ms_stat_load_data_ready),
-        .ms_stat_load_signext_data_ready(ms_stat_load_signext_data_ready),
-        .ms_stat_load_to_wb_valid(ms_stat_load_to_wb_valid),
-        .ms_stat_load_split_or_misaligned(ms_stat_load_split_or_misaligned),
-        .ms_stat_load_uncached(ms_stat_load_uncached),
-        .ms_stat_load_atomic(ms_stat_load_atomic),
-        .ms_stat_load_killed(ms_stat_load_killed),
-        .ms_stat_hidden_load(ms_stat_hidden_load),
-        .ms_stat_load_store_block(ms_stat_load_store_block),
-        .ms_stat_load_lsu_pending(ms_stat_load_lsu_pending),
-        .ms_stat_mreq_valid(ms_stat_mreq_valid),
-        .ms_stat_mreq_is_load(ms_stat_mreq_is_load),
-        .ms_stat_mreq_is_store(ms_stat_mreq_is_store),
-        .ms_stat_mreq_is_atomic(ms_stat_mreq_is_atomic),
-        .ms_stat_mreq_need_mem(ms_stat_mreq_need_mem),
-        .ms_stat_mreq_fire(ms_stat_mreq_fire),
-        .ms_stat_mreq_misaligned(ms_stat_mreq_misaligned),
-        .ms_stat_mreq_split(ms_stat_mreq_split),
-        .ms_stat_mreq_fault(ms_stat_mreq_fault),
-        .ms_stat_mreq_blocked_by_resp(ms_stat_mreq_blocked_by_resp),
-        .ms_stat_mresp_valid(ms_stat_mresp_valid),
-        .ms_stat_mresp_is_load(ms_stat_mresp_is_load),
-        .ms_stat_mresp_is_store(ms_stat_mresp_is_store),
-        .ms_stat_mresp_is_atomic(ms_stat_mresp_is_atomic),
-        .ms_stat_mresp_resp_valid(ms_stat_mresp_resp_valid),
-        .ms_stat_mresp_resp_fire(ms_stat_mresp_resp_fire),
-        .ms_stat_mresp_split(ms_stat_mresp_split),
-        .ms_stat_mresp_fault(ms_stat_mresp_fault),
-        .ms_stat_store_visible(ms_stat_store_visible),
-        .ms_stat_store_req_fire(ms_stat_store_req_fire),
-        .ms_stat_store_resp_valid(ms_stat_store_resp_valid),
-        .ms_stat_store_resp_fire(ms_stat_store_resp_fire),
-        .ms_stat_store_aligned(ms_stat_store_aligned),
-        .ms_stat_store_fault(ms_stat_store_fault),
-        .ms_stat_store_split_or_misaligned(ms_stat_store_split_or_misaligned),
-        .ms_stat_store_uncached(ms_stat_store_uncached),
-        .ms_stat_store_atomic(ms_stat_store_atomic),
-        .ms_stat_store_killed(ms_stat_store_killed),
-        .ms_stat_store_buffer_safe(ms_stat_store_buffer_safe),
-        .ms_stat_store_resp_wait(ms_stat_store_resp_wait),
-        .ms_stat_single_outstanding_wait(ms_stat_single_outstanding_wait),
-        .ms_stat_uncached_wait(ms_stat_uncached_wait),
-        .ms_stat_writeback_wait(ms_stat_writeback_wait),
-        .stat_exmem_skid_candidate(stat_exmem_skid_candidate),
-        .stat_exmem_skid_enqueue(stat_exmem_skid_enqueue),
-        .stat_exmem_skid_dequeue(stat_exmem_skid_dequeue),
-        .stat_exmem_skid_full_stall(stat_exmem_skid_full_stall),
-        .stat_exmem_skid_flush_drop(stat_exmem_skid_flush_drop),
-        .stat_exmem_skid_blocked_not_safe(stat_exmem_skid_blocked_not_safe),
-        .stat_exmem_skid_blocked_branch(stat_exmem_skid_blocked_branch),
-        .stat_exmem_skid_blocked_mem(stat_exmem_skid_blocked_mem),
-        .stat_exmem_skid_blocked_csr(stat_exmem_skid_blocked_csr),
-        .stat_exmem_skid_blocked_exception(stat_exmem_skid_blocked_exception),
-        .stat_exmem_skid_blocked_div(stat_exmem_skid_blocked_div),
-        .stat_exmem_skid_blocked_structural(stat_exmem_skid_blocked_structural),
-        .stat_exmem_skid_hold_cycles(stat_exmem_skid_hold_cycles),
-        .stat_exmem_skid_hold_mem_wait_cycles(stat_exmem_skid_hold_mem_wait_cycles),
-        .stat_exmem_skid_dequeue_after_mem_release(stat_exmem_skid_dequeue_after_mem_release),
-        .stat_exmem_skid_dequeue_same_cycle_mem_release(stat_exmem_skid_dequeue_same_cycle_mem_release),
-        .stat_exmem_skid_dequeue_causes_wb_valid(stat_exmem_skid_dequeue_causes_wb_valid),
-        .stat_exmem_skid_valid(stat_exmem_skid_valid),
-        .stat_exmem_skid_enqueue_fire(stat_exmem_skid_enqueue_fire),
-        .stat_exmem_skid_dequeue_fire(stat_exmem_skid_dequeue_fire),
-        .stat_exmem_skid_dequeue_commit_fire(stat_exmem_skid_dequeue_commit_fire),
-        .stat_exmem_skid_dequeue_to_mreq_fire(stat_exmem_skid_dequeue_to_mreq_fire),
-        .stat_exmem_skid_mem_wait(stat_exmem_skid_mem_wait),
-        .stat_exmem_skid_mem_release(stat_exmem_skid_mem_release),
-        .store_buffer_enqueue_count(store_buffer_enqueue_count),
-        .store_buffer_dequeue_count(store_buffer_dequeue_count),
-        .store_buffer_full_stall_count(store_buffer_full_stall_count),
-        .store_buffer_drain_req_count(store_buffer_drain_req_count),
-        .store_buffer_drain_resp_count(store_buffer_drain_resp_count),
-        .store_buffer_drain_wait_count(store_buffer_drain_wait_count),
-        .store_buffer_load_forward_count(store_buffer_load_forward_count),
-        .store_buffer_load_stall_conflict_count(store_buffer_load_stall_conflict_count),
-        .store_buffer_load_stall_buffer_nonempty_count(store_buffer_load_stall_buffer_nonempty_count),
-        .store_buffer_fence_drain_wait_count(store_buffer_fence_drain_wait_count),
-        .store_buffer_uncached_drain_wait_count(store_buffer_uncached_drain_wait_count),
-        .store_buffer_killed_store_block_count(store_buffer_killed_store_block_count),
-        .store_buffer_occupancy0_count(store_buffer_occupancy0_count),
-        .store_buffer_occupancy1_count(store_buffer_occupancy1_count),
-        .store_buffer_occupancy2_count(store_buffer_occupancy2_count),
-        .store_buffer_max_occupancy_count(store_buffer_max_occupancy_count),
-        .store_buffer_enqueue_occ0_count(store_buffer_enqueue_occ0_count),
-        .store_buffer_enqueue_occ1_count(store_buffer_enqueue_occ1_count),
-        .store_buffer_enqueue_full_count(store_buffer_enqueue_full_count),
+        .dcache_stat_access(dcache_stat_access),
+        .dcache_stat_load_access(dcache_stat_load_access),
+        .dcache_stat_store_access(dcache_stat_store_access),
+        .dcache_stat_load_hit(dcache_stat_load_hit),
+        .dcache_stat_load_miss(dcache_stat_load_miss),
+        .dcache_stat_store_hit(dcache_stat_store_hit),
+        .dcache_stat_store_miss(dcache_stat_store_miss),
+        .dcache_stat_refill_req(dcache_stat_refill_req),
+        .dcache_stat_refill_resp(dcache_stat_refill_resp),
+        .dcache_stat_write_req(dcache_stat_write_req),
+        .dcache_stat_write_resp(dcache_stat_write_resp),
+        .dcache_stat_refill_ld_bypass(dcache_stat_refill_ld_bypass),
+        .dcache_stat_refill_store_merge(dcache_stat_refill_store_merge),
+        .dcache_stat_req_wait_cycle(dcache_stat_req_wait_cycle),
+        .dcache_stat_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
+        .dcache_stat_miss_wait_cycle(dcache_stat_miss_wait_cycle),
+        .dcache_stat_uncached_access(dcache_stat_uncached_access),
+        .dcache_stat_writeback_cycle(dcache_stat_writeback_cycle),
         .dhitopt_candidate_count(dhitopt_candidate_count),
         .dhitopt_success_count(dhitopt_success_count),
         .dhitopt_fallback_count(dhitopt_fallback_count),
@@ -3115,356 +2643,356 @@ module cpu_top(
         .dhitopt_block_miss_count(dhitopt_block_miss_count),
         .dhitopt_block_alignment_count(dhitopt_block_alignment_count),
         .dhitopt_unknown_count(dhitopt_unknown_count),
+        .ds_allowin(ds_allowin),
+        .ds_instr(ds_instr),
+        .ds_pc(ds_pc),
+        .ds_stage_block(ds_stage_block),
+        .ds_stage_block_csr_hazard(ds_stage_block_csr_hazard),
+        .ds_stage_block_ex_raw(ds_stage_block_ex_raw),
+        .ds_stage_block_hidden_raw(ds_stage_block_hidden_raw),
+        .ds_stage_block_load_use(ds_stage_block_load_use),
+        .ds_stage_block_ms_raw(ds_stage_block_ms_raw),
+        .ds_stage_block_reg_hazard(ds_stage_block_reg_hazard),
+        .ds_stat_csr_counter_hazard(ds_stat_csr_counter_hazard),
+        .ds_stat_fwd_csr_block(ds_stat_fwd_csr_block),
+        .ds_stat_fwd_kill_block(ds_stat_fwd_kill_block),
+        .ds_stat_fwd_load_block(ds_stat_fwd_load_block),
+        .ds_stat_rs1_ex_alu_fwd(ds_stat_rs1_ex_alu_fwd),
+        .ds_stat_rs1_match_es(ds_stat_rs1_match_es),
+        .ds_stat_rs1_match_hidden(ds_stat_rs1_match_hidden),
+        .ds_stat_rs1_match_ms(ds_stat_rs1_match_ms),
+        .ds_stat_rs1_match_ws(ds_stat_rs1_match_ws),
+        .ds_stat_rs2_ex_alu_fwd(ds_stat_rs2_ex_alu_fwd),
+        .ds_stat_rs2_match_es(ds_stat_rs2_match_es),
+        .ds_stat_rs2_match_hidden(ds_stat_rs2_match_hidden),
+        .ds_stat_rs2_match_ms(ds_stat_rs2_match_ms),
+        .ds_stat_rs2_match_ws(ds_stat_rs2_match_ws),
+        .ds_stat_uses_rs1(ds_stat_uses_rs1),
+        .ds_stat_uses_rs2(ds_stat_uses_rs2),
+        .ds_to_es_valid(ds_to_es_valid),
+        .es_allowin(es_allowin),
+        .es_atomic_en(es_atomic_en),
+        .es_branch(es_branch),
+        .es_csr_wen(es_csr_wen),
+        .es_datatoreg(es_datatoreg),
+        .es_instr(es_instr),
+        .es_mem_fwd_dep(es_mem_fwd_dep),
+        .es_mem_wr(es_mem_wr),
+        .es_nextpc(es_nextpc),
+        .es_pc(es_pc),
+        .es_result_bypassable(es_result_bypassable),
+        .es_stage_block(es_stage_block),
+        .es_stage_block_mdu_wait(es_stage_block_mdu_wait),
+        .es_stage_block_redirect_wait(es_stage_block_redirect_wait),
+        .es_stat_fast_mul(es_stat_fast_mul),
+        .es_stat_fast_mul_flush_drop(es_stat_fast_mul_flush_drop),
+        .es_stat_fast_mul_forward(es_stat_fast_mul_forward),
+        .es_stat_fast_mul_issue(es_stat_fast_mul_issue),
+        .es_stat_fast_mul_kill(es_stat_fast_mul_kill),
+        .es_stat_fast_mul_stall_wait_ready(es_stat_fast_mul_stall_wait_ready),
+        .es_stat_is_mdu(es_stat_is_mdu),
+        .es_stat_mdu_busy(es_stat_mdu_busy),
+        .es_stat_mdu_op(es_stat_mdu_op),
+        .es_stat_mdu_req_fire(es_stat_mdu_req_fire),
+        .es_stat_mdu_resp_valid(es_stat_mdu_resp_valid),
+        .es_stat_mdu_result_ready(es_stat_mdu_result_ready),
+        .es_stat_old_div_path(es_stat_old_div_path),
+        .es_stat_old_rem_path(es_stat_old_rem_path),
+        .es_stat_rs1_load_fwd(es_stat_rs1_load_fwd),
+        .es_stat_rs1_mem_alu_fwd(es_stat_rs1_mem_alu_fwd),
+        .es_stat_rs1_wb_fwd(es_stat_rs1_wb_fwd),
+        .es_stat_rs2_load_fwd(es_stat_rs2_load_fwd),
+        .es_stat_rs2_mem_alu_fwd(es_stat_rs2_mem_alu_fwd),
+        .es_stat_rs2_wb_fwd(es_stat_rs2_wb_fwd),
+        .es_to_ms_valid(es_to_ms_valid),
+        .es_valid(es_valid),
+        .ex_branch_pred_bht_state(ex_branch_pred_bht_state),
+        .ex_branch_pred_btb_hit(ex_branch_pred_btb_hit),
+        .ex_branch_pred_btb_is_cond(ex_branch_pred_btb_is_cond),
+        .ex_branch_pred_taken(ex_branch_pred_taken),
+        .ex_branch_pred_target(ex_branch_pred_target),
+        .ex_branch_taken_actual(ex_branch_taken_actual),
+        .ex_branch_target_mismatch(ex_branch_target_mismatch),
+        .ex_mispredict_flush_valid(ex_mispredict_flush_valid),
+        .fast_mul_resp_wb(fast_mul_resp_wb),
+        .fencei_maint_active(fencei_maint_active),
+        .fencei_start(fencei_start),
+        .fs_to_ds_valid(fs_to_ds_valid),
+        .hidden_mreq_csr_wen(hidden_mreq_csr_wen),
         .hidden_mreq_datatoreg(hidden_mreq_datatoreg),
         .hidden_mreq_mem_wr(hidden_mreq_mem_wr),
-        .hidden_mreq_csr_wen(hidden_mreq_csr_wen),
-        .ws_stat_datatoreg(ws_stat_datatoreg),
-        .ws_stat_mem_op(ws_stat_mem_op),
-        .ws_csr_wen(ws_csr_wen),
-        .redirect_flush_valid(redirect_flush_valid),
-        .redirect_clear_valid(redirect_clear_valid),
-        .stop_clear_valid(stop_clear_valid),
-        .trap_redirect_valid(trap_redirect_valid),
-        .fencei_start(fencei_start),
-        .vm_flush_start(vm_flush_start),
-        .fencei_maint_active(fencei_maint_active),
-        .ibus_req_valid(ibus_req_valid_w),
-        .ibus_req_ready(ibus_req_ready),
-        .ibus_resp_valid(ibus_resp_valid),
-        .ibus_resp_ready(ibus_resp_ready_w),
-        .dbus_req_valid(dbus_req_valid),
-        .dbus_req_ready(dbus_req_ready),
-        .dbus_resp_valid(dbus_resp_valid),
-        .dbus_resp_ready(dbus_resp_ready),
-        .branch_redirect_wait_cycle(branch_stat_redirect_wait_cycle),
-        .icache_req_wait_cycle(icache_stat_req_wait_cycle),
-        .icache_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
-        .icache_miss_wait_cycle(icache_stat_miss_wait_cycle),
-        .dcache_req_wait_cycle(dcache_stat_req_wait_cycle),
-        .dcache_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
-        .dcache_miss_wait_cycle(dcache_stat_miss_wait_cycle),
-        .dcache_uncached_access(dcache_stat_uncached_access),
-        .dcache_writeback_cycle(dcache_stat_writeback_cycle),
+        .ibus_icache_pipe_resp_ready(ibus_icache_pipe_resp_ready),
+        .ibus_icache_pipe_resp_valid(ibus_icache_pipe_resp_valid),
+        .if_mmu_bridge_state_wait_cycle(if_mmu_bridge_state_wait_cycle),
+        .if_mmu_bypass_count(if_mmu_bypass_count),
+        .if_mmu_cache_req_wait_cycle(if_mmu_cache_req_wait_cycle),
+        .if_mmu_cache_resp_wait_cycle(if_mmu_cache_resp_wait_cycle),
+        .if_mmu_fetch_req_count(if_mmu_fetch_req_count),
+        .if_mmu_fetch_resp_count(if_mmu_fetch_resp_count),
+        .if_mmu_page_fault_count(if_mmu_page_fault_count),
+        .if_mmu_ptw_cycle_count(if_mmu_ptw_cycle_count),
+        .if_mmu_ptw_l0_read_count(if_mmu_ptw_l0_read_count),
+        .if_mmu_ptw_l1_read_count(if_mmu_ptw_l1_read_count),
+        .if_mmu_ptw_walk_done_count(if_mmu_ptw_walk_done_count),
+        .if_mmu_ptw_walk_fault_count(if_mmu_ptw_walk_fault_count),
+        .if_mmu_ptw_walk_start_count(if_mmu_ptw_walk_start_count),
+        .if_mmu_req_count(if_mmu_req_count),
+        .if_mmu_tlb_hit_count(if_mmu_tlb_hit_count),
+        .if_mmu_tlb_hit_to_cache_req_cycle(if_mmu_tlb_hit_to_cache_req_cycle),
+        .if_mmu_tlb_miss_count(if_mmu_tlb_miss_count),
+        .if_mmu_translate_count(if_mmu_translate_count),
         .if_pipe_epoch_drop_count(if_pipe_epoch_drop_count),
-        .if_pipe_stall_cycle(if_pipe_stall_cycle),
         .if_pipe_icache_miss_count(if_pipe_icache_miss_count),
-        .if_stat_fs_valid(if_stat_fs_valid),
-        .if_stat_queue_count(if_stat_queue_count),
-        .if_stat_fetch_room(if_stat_fetch_room),
-        .if_stat_req_fire(if_stat_req_fire),
-        .if_stat_resp_fire(if_stat_resp_fire),
-        .if_stat_resp_accept(if_stat_resp_accept),
-        .if_stat_resp_drop(if_stat_resp_drop),
-        .if_stat_bypass_direct(if_stat_bypass_direct),
-        .if_stat_waiting_resp(if_stat_waiting_resp),
-        .if_stat_drop_resp(if_stat_drop_resp),
-        .if_stat_fs_pop(if_stat_fs_pop),
-        .if_stat_resp_enq(if_stat_resp_enq),
-        .if_stat_queue_full(if_stat_queue_full),
-        .if_stat_resp_block(if_stat_resp_block),
+        .if_pipe_icache_replay_count(if_pipe_icache_replay_count),
+        .if_pipe_issue_count(if_pipe_issue_count),
+        .if_pipe_ptw_fault_count(if_pipe_ptw_fault_count),
+        .if_pipe_ptw_miss_count(if_pipe_ptw_miss_count),
+        .if_pipe_replay_count(if_pipe_replay_count),
+        .if_pipe_resp_count(if_pipe_resp_count),
+        .if_pipe_stall_cycle(if_pipe_stall_cycle),
+        .if_pipe_stat_lower_req_ready(if_pipe_stat_lower_req_ready),
+        .if_pipe_stat_lower_req_valid(if_pipe_stat_lower_req_valid),
+        .if_pipe_stat_lower_resp_ready(if_pipe_stat_lower_resp_ready),
+        .if_pipe_stat_lower_resp_valid(if_pipe_stat_lower_resp_valid),
         .if_pipe_stat_outstanding(if_pipe_stat_outstanding),
-        .if_pipe_stat_replay_valid(if_pipe_stat_replay_valid),
         .if_pipe_stat_ptw_busy(if_pipe_stat_ptw_busy),
-        .if_pipe_stat_req_valid(if_pipe_stat_req_valid),
+        .if_pipe_stat_replay_valid(if_pipe_stat_replay_valid),
         .if_pipe_stat_req_ready(if_pipe_stat_req_ready),
+        .if_pipe_stat_req_valid(if_pipe_stat_req_valid),
         .if_pipe_stat_resp_current(if_pipe_stat_resp_current),
         .if_pipe_stat_resp_stale(if_pipe_stat_resp_stale),
-        .if_pipe_stat_lower_req_valid(if_pipe_stat_lower_req_valid),
-        .if_pipe_stat_lower_req_ready(if_pipe_stat_lower_req_ready),
-        .if_pipe_stat_lower_resp_valid(if_pipe_stat_lower_resp_valid),
-        .if_pipe_stat_lower_resp_ready(if_pipe_stat_lower_resp_ready),
-        .icache_pipe_resp_valid(ibus_icache_pipe_resp_valid),
-        .icache_pipe_resp_ready(ibus_icache_pipe_resp_ready),
-        .icache_pipe_resp_fifo_full_cycle(icache_pipe_resp_fifo_full_cycle),
-        .commit_valid(ws_valid),
-        .commit_is_ebreak(commit_is_ebreak),
-        .commit_illegal(ws_illegal)
-    );
-`endif
-`endif
-
-    reg ibus_mem_owner_valid;
-    reg ibus_mem_owner_ptw;
-    reg [4:0] ibus_mem_resp_left;
-    wire ibus_mem_idle = !ibus_mem_owner_valid;
-    wire ibus_icache_mem_grant = ibus_mem_idle && ibus_icache_mem_req_valid;
-    wire ibus_ptw_mem_grant = ibus_mem_idle && !ibus_icache_mem_req_valid && ibus_ptw_req_valid;
-    wire ibus_mem_req_fire = ibus_mem_req_valid && ibus_mem_req_ready;
-    wire ibus_mem_resp_fire = ibus_mem_resp_valid && ibus_mem_resp_ready;
-    wire [4:0] ibus_mem_req_beats =
-        (ibus_mem_req_len == 3'd0) ? ICACHE_LINE_BEATS : 5'd1;
-
-    assign ibus_icache_mem_req_ready = ibus_icache_mem_grant && ibus_mem_req_ready;
-    assign ibus_ptw_req_ready = ibus_ptw_mem_grant && ibus_mem_req_ready;
-    assign ibus_mem_req_valid = ibus_icache_mem_grant || ibus_ptw_mem_grant;
-    assign ibus_mem_req_write = ibus_icache_mem_grant ? ibus_icache_mem_req_write : 1'b0;
-    assign ibus_mem_req_addr = ibus_icache_mem_grant ? ibus_icache_mem_req_addr : ibus_ptw_req_addr;
-    assign ibus_mem_req_wdata = ibus_icache_mem_grant ? ibus_icache_mem_req_wdata : 32'b0;
-    assign ibus_mem_req_wstrb = ibus_icache_mem_grant ? ibus_icache_mem_req_wstrb : 4'b0;
-    assign ibus_mem_req_len = ibus_icache_mem_grant ? ibus_icache_mem_req_len : 3'd4;
-    assign ibus_icache_mem_resp_valid = ibus_mem_resp_valid && ibus_mem_owner_valid && !ibus_mem_owner_ptw;
-    assign ibus_ptw_resp_valid = ibus_mem_resp_valid && ibus_mem_owner_valid && ibus_mem_owner_ptw;
-    assign ibus_icache_mem_resp_data = ibus_mem_resp_data;
-    assign ibus_ptw_resp_data = ibus_mem_resp_data;
-    assign ibus_mem_resp_ready =
-        ibus_mem_owner_valid &&
-        (ibus_mem_owner_ptw ? ibus_ptw_resp_ready : ibus_icache_mem_resp_ready);
-
-    always @(posedge clk) begin
-        if (!rst_n) begin
-            ibus_mem_owner_valid <= 1'b0;
-            ibus_mem_owner_ptw <= 1'b0;
-            ibus_mem_resp_left <= 5'b0;
-        end else begin
-            if (ibus_mem_req_fire) begin
-                ibus_mem_owner_valid <= 1'b1;
-                ibus_mem_owner_ptw <= ibus_ptw_mem_grant;
-                ibus_mem_resp_left <= ibus_mem_req_beats;
-            end else if (ibus_mem_resp_fire && ibus_mem_owner_valid) begin
-                if (ibus_mem_resp_left <= 5'd1) begin
-                    ibus_mem_owner_valid <= 1'b0;
-                    ibus_mem_owner_ptw <= 1'b0;
-                    ibus_mem_resp_left <= 5'b0;
-                end else begin
-                    ibus_mem_resp_left <= ibus_mem_resp_left - 4'd1;
-                end
-            end
-        end
-    end
-
-    ICache #(
-        .LINE_BYTES(ICACHE_LINE_BYTES),
-        .LINE_COUNT(ICACHE_LINE_COUNT)
-    ) u_icache (
-        .clk(clk),
-        .rst_n(rst_n),
-        .maint_inv_req(icache_maint_inv_req),
-        .maint_inv_done(icache_maint_inv_done),
-        .cpu_req_valid(ibus_icache_req_valid),
-        .cpu_req_ready(ibus_icache_req_ready),
-        .cpu_req_addr(ibus_req_paddr_w),
-        .cpu_req_lookup_hit(ibus_icache_lookup_hit),
-        .cpu_req_lookup_uncached(ibus_icache_lookup_uncached),
-        .cpu_resp_valid(ibus_icache_resp_valid),
-        .cpu_resp_ready(ibus_icache_resp_ready),
-        .cpu_resp_rdata(ibus_icache_resp_data),
-        .pipe_req_valid(ibus_icache_pipe_req_valid),
-        .pipe_req_ready(ibus_icache_pipe_req_ready),
-        .pipe_req_paddr(ibus_icache_pipe_req_paddr),
-        .pipe_req_vaddr(ibus_icache_pipe_req_vaddr),
-        .pipe_req_pc(ibus_icache_pipe_req_pc),
-        .pipe_req_seq(ibus_icache_pipe_req_seq),
-        .pipe_req_epoch(ibus_icache_pipe_req_epoch),
-        .pipe_req_pred_taken(ibus_icache_pipe_req_pred_taken),
-        .pipe_req_pred_target(ibus_icache_pipe_req_pred_target),
-        .pipe_req_pred_btb_hit(ibus_icache_pipe_req_pred_btb_hit),
-        .pipe_req_pred_btb_is_cond(ibus_icache_pipe_req_pred_btb_is_cond),
-        .pipe_req_pred_bht_state(ibus_icache_pipe_req_pred_bht_state),
-        .pipe_req_pred_pht_idx(ibus_icache_pipe_req_pred_pht_idx),
-        .pipe_req_priv(ibus_icache_pipe_req_priv),
-        .pipe_req_exception_valid(ibus_icache_pipe_req_exception_valid),
-        .pipe_req_exception_cause(ibus_icache_pipe_req_exception_cause),
-        .pipe_req_exception_tval(ibus_icache_pipe_req_exception_tval),
-        .pipe_resp_valid(ibus_icache_pipe_resp_valid),
-        .pipe_resp_ready(ibus_icache_pipe_resp_ready),
-        .pipe_resp_instr(ibus_icache_pipe_resp_instr),
-        .pipe_resp_pc(ibus_icache_pipe_resp_pc),
-        .pipe_resp_seq(ibus_icache_pipe_resp_seq),
-        .pipe_resp_epoch(ibus_icache_pipe_resp_epoch),
-        .pipe_resp_pred_taken(ibus_icache_pipe_resp_pred_taken),
-        .pipe_resp_pred_target(ibus_icache_pipe_resp_pred_target),
-        .pipe_resp_pred_btb_hit(ibus_icache_pipe_resp_pred_btb_hit),
-        .pipe_resp_pred_btb_is_cond(ibus_icache_pipe_resp_pred_btb_is_cond),
-        .pipe_resp_pred_bht_state(ibus_icache_pipe_resp_pred_bht_state),
-        .pipe_resp_pred_pht_idx(ibus_icache_pipe_resp_pred_pht_idx),
-        .pipe_resp_exception_valid(ibus_icache_pipe_resp_exception_valid),
-        .pipe_resp_exception_cause(ibus_icache_pipe_resp_exception_cause),
-        .pipe_resp_exception_tval(ibus_icache_pipe_resp_exception_tval),
-        .pipe_resp_hit(ibus_icache_pipe_resp_hit),
-        .pipe_resp_miss(ibus_icache_pipe_resp_miss),
-        .lower_req_valid(ibus_icache_mem_req_valid),
-        .lower_req_ready(ibus_icache_mem_req_ready),
-        .lower_req_write(ibus_icache_mem_req_write),
-        .lower_req_addr(ibus_icache_mem_req_addr),
-        .lower_req_wdata(ibus_icache_mem_req_wdata),
-        .lower_req_wstrb(ibus_icache_mem_req_wstrb),
-        .lower_req_len(ibus_icache_mem_req_len),
-        .lower_resp_valid(ibus_icache_mem_resp_valid),
-        .lower_resp_ready(ibus_icache_mem_resp_ready),
-        .lower_resp_rdata(ibus_icache_mem_resp_data)
-`ifdef NPC_USE_DPI
-`ifdef NPC_CACHE_STAT
-        ,
-        .stat_access(icache_stat_access),
-        .stat_hit(icache_stat_hit),
-        .stat_miss(icache_stat_miss),
-        .stat_refill_req(icache_stat_refill_req),
-        .stat_refill_resp(icache_stat_refill_resp),
-        .stat_refill_bypass(icache_stat_refill_bypass),
-        .stat_req_wait_cycle(icache_stat_req_wait_cycle),
-        .stat_hit_resp_wait_cycle(icache_stat_hit_resp_wait_cycle),
-        .stat_miss_wait_cycle(icache_stat_miss_wait_cycle),
-        .stat_uncached_access(icache_stat_uncached_access),
-        .stat_pipe_req_valid_cycle(icache_pipe_req_valid_cycle),
-        .stat_pipe_req_ready_cycle(icache_pipe_req_ready_cycle),
-        .stat_pipe_req_fire_cycle(icache_pipe_req_fire_cycle),
-        .stat_pipe_req_valid_not_ready_cycle(icache_pipe_req_valid_not_ready_cycle),
-        .stat_pipe_resp_valid_cycle(icache_pipe_resp_valid_cycle),
-        .stat_pipe_resp_ready_cycle(icache_pipe_resp_ready_cycle),
-        .stat_pipe_resp_fire_cycle(icache_pipe_resp_fire_cycle),
-        .stat_pipe_data_valid_cycle(icache_pipe_data_valid_cycle),
-        .stat_pipe_resp_block_cycle(icache_pipe_resp_block_cycle),
-        .stat_pipe_ready_block_state_cycle(icache_pipe_ready_block_state_cycle),
-        .stat_pipe_ready_block_data_cycle(icache_pipe_ready_block_data_cycle),
-        .stat_pipe_ready_block_resp_cycle(icache_pipe_ready_block_resp_cycle),
-        .stat_pipe_ready_block_cpu_cycle(icache_pipe_ready_block_cpu_cycle),
-        .stat_pipe_ready_block_maint_cycle(icache_pipe_ready_block_maint_cycle),
-        .stat_pipe_state_idle_cycle(icache_pipe_state_idle_cycle),
-        .stat_pipe_state_refill_cycle(icache_pipe_state_refill_cycle),
-        .stat_pipe_state_uncached_cycle(icache_pipe_state_uncached_cycle),
-        .stat_pipe_hit_fire_cycle(icache_pipe_hit_fire_cycle),
-        .stat_pipe_miss_fire_cycle(icache_pipe_miss_fire_cycle),
-        .stat_pipe_refill_busy_cycle(icache_pipe_refill_busy_cycle),
-        .stat_pipe_resp_fifo_full_cycle(icache_pipe_resp_fifo_full_cycle)
-`endif
-`endif
-    );
-
-    DCache #(
-        .LINE_BYTES(DCACHE_LINE_BYTES),
-        .LINE_COUNT(DCACHE_LINE_COUNT)
-    ) u_dcache (
-        .clk(clk),
-        .rst_n(rst_n),
-        .maint_flush_req(dcache_maint_flush_req),
-        .maint_flush_done(dcache_maint_flush_done),
-        .cpu_req_valid(dbus_dcache_req_valid),
-        .cpu_req_ready(dbus_dcache_req_ready),
-        .cpu_req_write(dbus_dcache_req_write),
-        .cpu_req_addr(dbus_req_paddr),
-        .cpu_req_wdata(dbus_dcache_req_wdata),
-        .cpu_req_wstrb(dbus_dcache_req_wstrb),
-        .cpu_req_len(dbus_dcache_req_len),
-        .cpu_resp_valid(dbus_dcache_resp_valid),
-        .cpu_resp_ready(dbus_dcache_resp_ready),
-        .cpu_resp_rdata(dbus_dcache_resp_data),
-        .pipe_req_valid(dbus_pipe_req_valid),
-        .pipe_req_ready(dbus_pipe_req_ready),
-        .pipe_req_write(dbus_pipe_req_write),
-        .pipe_req_paddr(dbus_pipe_req_paddr),
-        .pipe_req_vaddr(dbus_pipe_req_vaddr),
-        .pipe_req_wdata(dbus_pipe_req_wdata),
-        .pipe_req_wstrb(dbus_pipe_req_wstrb),
-        .pipe_req_len(dbus_pipe_req_len),
-        .pipe_req_seq(dbus_pipe_req_seq),
-        .pipe_req_epoch(dbus_pipe_req_epoch),
-        .pipe_req_exception_valid(dbus_pipe_req_exception_valid),
-        .pipe_req_exception_cause(dbus_pipe_req_exception_cause),
-        .pipe_req_exception_tval(dbus_pipe_req_exception_tval),
-        .pipe_resp_valid(dbus_pipe_resp_valid),
-        .pipe_resp_ready(dbus_pipe_resp_ready),
-        .pipe_resp_rdata(dbus_pipe_resp_rdata),
-        .pipe_resp_vaddr(dbus_pipe_resp_vaddr),
-        .pipe_resp_seq(dbus_pipe_resp_seq),
-        .pipe_resp_epoch(dbus_pipe_resp_epoch),
-        .pipe_resp_exception_valid(dbus_pipe_resp_exception_valid),
-        .pipe_resp_exception_cause(dbus_pipe_resp_exception_cause),
-        .pipe_resp_exception_tval(dbus_pipe_resp_exception_tval),
-        .pipe_resp_hit(dbus_pipe_resp_hit),
-        .pipe_resp_miss(dbus_pipe_resp_miss),
-        .lower_req_valid(dbus_dcache_mem_req_valid),
-        .lower_req_ready(dbus_dcache_mem_req_ready),
-        .lower_req_write(dbus_dcache_mem_req_write),
-        .lower_req_addr(dbus_dcache_mem_req_addr),
-        .lower_req_wdata(dbus_dcache_mem_req_wdata),
-        .lower_req_wstrb(dbus_dcache_mem_req_wstrb),
-        .lower_req_len(dbus_dcache_mem_req_len),
-        .lower_resp_valid(dbus_dcache_mem_resp_valid),
-        .lower_resp_ready(dbus_dcache_mem_resp_ready),
-        .lower_resp_rdata(dbus_dcache_mem_resp_data)
-`ifdef NPC_USE_DPI
-`ifdef NPC_CACHE_STAT
-        ,
-        .stat_access(dcache_stat_access),
-        .stat_load_access(dcache_stat_load_access),
-        .stat_store_access(dcache_stat_store_access),
-        .stat_load_hit(dcache_stat_load_hit),
-        .stat_load_miss(dcache_stat_load_miss),
-        .stat_store_hit(dcache_stat_store_hit),
-        .stat_store_miss(dcache_stat_store_miss),
-        .stat_refill_req(dcache_stat_refill_req),
-        .stat_refill_resp(dcache_stat_refill_resp),
-        .stat_write_req(dcache_stat_write_req),
-        .stat_write_resp(dcache_stat_write_resp),
-        .stat_refill_ld_bypass(dcache_stat_refill_ld_bypass),
-        .stat_refill_store_merge(dcache_stat_refill_store_merge),
-        .stat_req_wait_cycle(dcache_stat_req_wait_cycle),
-        .stat_hit_resp_wait_cycle(dcache_stat_hit_resp_wait_cycle),
-        .stat_miss_wait_cycle(dcache_stat_miss_wait_cycle),
-        .stat_uncached_access(dcache_stat_uncached_access),
-        .stat_writeback_cycle(dcache_stat_writeback_cycle)
-`endif
-`endif
-    );
-
-    DCacheMmioMux u_dcache_mmio_mux (
-        .clk(clk),
-        .rst_n(rst_n),
-        .in_req_valid(dbus_dcache_mem_req_valid),
-        .in_req_ready(dbus_dcache_mem_req_ready),
-        .in_req_write(dbus_dcache_mem_req_write),
-        .in_req_addr(dbus_dcache_mem_req_addr),
-        .in_req_wdata(dbus_dcache_mem_req_wdata),
-        .in_req_wstrb(dbus_dcache_mem_req_wstrb),
-        .in_req_len(dbus_dcache_mem_req_len),
-        .in_resp_valid(dbus_dcache_mem_resp_valid),
-        .in_resp_ready(dbus_dcache_mem_resp_ready),
-        .in_resp_rdata(dbus_dcache_mem_resp_data),
-        .mem_req_valid(dbus_mem_req_valid),
-        .mem_req_ready(dbus_mem_req_ready),
-        .mem_req_write(dbus_mem_req_write),
-        .mem_req_addr(dbus_mem_req_addr),
-        .mem_req_wdata(dbus_mem_req_wdata),
-        .mem_req_wstrb(dbus_mem_req_wstrb),
-        .mem_req_len(dbus_mem_req_len),
-        .mem_resp_valid(dbus_mem_resp_valid),
-        .mem_resp_ready(dbus_mem_resp_ready),
-        .mem_resp_rdata(dbus_mem_resp_data),
-        .timer_req_valid(timer_req_valid),
-        .timer_req_ready(timer_req_ready),
-        .timer_req_write(timer_req_write),
-        .timer_req_addr(timer_req_addr),
-        .timer_req_wdata(timer_req_wdata),
-        .timer_req_wstrb(timer_req_wstrb),
-        .timer_req_len(timer_req_len),
-        .timer_resp_valid(timer_resp_valid),
-        .timer_resp_ready(timer_resp_ready),
-        .timer_resp_rdata(timer_resp_data)
-    );
-
-    AclintTimer #(
-        .CLK_HZ(TIMER_CLK_HZ),
-        .TIMEBASE_HZ(TIMEBASE_HZ)
-    ) u_aclint_timer (
-        .clk(clk),
-        .rst_n(rst_n),
-        .req_valid(timer_req_valid),
-        .req_ready(timer_req_ready),
-        .req_write(timer_req_write),
-        .req_addr(timer_req_addr),
-        .req_wdata(timer_req_wdata),
-        .req_wstrb(timer_req_wstrb),
-        .req_len(timer_req_len),
-        .resp_valid(timer_resp_valid),
-        .resp_ready(timer_resp_ready),
-        .resp_rdata(timer_resp_data),
-        .time_value(timer_time_value),
-        .timecmp_value(timer_timecmp_value),
-        .step_accum_value(timer_step_accum_value),
-        .mtip(timer_mtip)
+        .if_stall(if_stall),
+        .if_stat_bypass_direct(if_stat_bypass_direct),
+        .if_stat_drop_resp(if_stat_drop_resp),
+        .if_stat_fetch_room(if_stat_fetch_room),
+        .if_stat_fs_pop(if_stat_fs_pop),
+        .if_stat_fs_valid(if_stat_fs_valid),
+        .if_stat_queue_count(if_stat_queue_count),
+        .if_stat_queue_full(if_stat_queue_full),
+        .if_stat_req_fire(if_stat_req_fire),
+        .if_stat_resp_accept(if_stat_resp_accept),
+        .if_stat_resp_block(if_stat_resp_block),
+        .if_stat_resp_drop(if_stat_resp_drop),
+        .if_stat_resp_enq(if_stat_resp_enq),
+        .if_stat_resp_fire(if_stat_resp_fire),
+        .if_stat_waiting_resp(if_stat_waiting_resp),
+        .lsu_mmu_bridge_state_wait_cycle(lsu_mmu_bridge_state_wait_cycle),
+        .lsu_mmu_bypass_count(lsu_mmu_bypass_count),
+        .lsu_mmu_cache_req_wait_cycle(lsu_mmu_cache_req_wait_cycle),
+        .lsu_mmu_cache_resp_wait_cycle(lsu_mmu_cache_resp_wait_cycle),
+        .lsu_mmu_data_req_count(lsu_mmu_data_req_count),
+        .lsu_mmu_data_resp_count(lsu_mmu_data_resp_count),
+        .lsu_mmu_page_fault_count(lsu_mmu_page_fault_count),
+        .lsu_mmu_ptw_cycle_total(lsu_mmu_ptw_cycle_total),
+        .lsu_mmu_ptw_l0_read_total(lsu_mmu_ptw_l0_read_total),
+        .lsu_mmu_ptw_l1_read_total(lsu_mmu_ptw_l1_read_total),
+        .lsu_mmu_ptw_walk_done_total(lsu_mmu_ptw_walk_done_total),
+        .lsu_mmu_ptw_walk_fault_total(lsu_mmu_ptw_walk_fault_total),
+        .lsu_mmu_ptw_walk_start_total(lsu_mmu_ptw_walk_start_total),
+        .lsu_mmu_req_count(lsu_mmu_req_count),
+        .lsu_mmu_tlb_hit_count(lsu_mmu_tlb_hit_count),
+        .lsu_mmu_tlb_hit_to_cache_req_cycle(lsu_mmu_tlb_hit_to_cache_req_cycle),
+        .lsu_mmu_tlb_miss_count(lsu_mmu_tlb_miss_count),
+        .lsu_mmu_translate_count(lsu_mmu_translate_count),
+        .lsu_mmu_uncached_req_count(lsu_mmu_uncached_req_count),
+        .lsu_pipe_dcache_hit_count(lsu_pipe_dcache_hit_count),
+        .lsu_pipe_dcache_miss_count(lsu_pipe_dcache_miss_count),
+        .lsu_pipe_direct_cross_page_count(lsu_pipe_direct_cross_page_count),
+        .lsu_pipe_direct_fast_block_atomic_count(lsu_pipe_direct_fast_block_atomic_count),
+        .lsu_pipe_direct_fast_block_count(lsu_pipe_direct_fast_block_count),
+        .lsu_pipe_direct_fast_block_exception_count(lsu_pipe_direct_fast_block_exception_count),
+        .lsu_pipe_direct_fast_block_misaligned_count(lsu_pipe_direct_fast_block_misaligned_count),
+        .lsu_pipe_direct_fast_block_other_count(lsu_pipe_direct_fast_block_other_count),
+        .lsu_pipe_direct_fast_block_phase2_count(lsu_pipe_direct_fast_block_phase2_count),
+        .lsu_pipe_direct_non_dtlb_hit_count(lsu_pipe_direct_non_dtlb_hit_count),
+        .lsu_pipe_direct_other_count(lsu_pipe_direct_other_count),
+        .lsu_pipe_direct_perm_fault_count(lsu_pipe_direct_perm_fault_count),
+        .lsu_pipe_direct_uncached_count(lsu_pipe_direct_uncached_count),
+        .lsu_pipe_dtlb_hit_count(lsu_pipe_dtlb_hit_count),
+        .lsu_pipe_dtlb_miss_count(lsu_pipe_dtlb_miss_count),
+        .lsu_pipe_epoch_drop_count(lsu_pipe_epoch_drop_count),
+        .lsu_pipe_fault_count(lsu_pipe_fault_count),
+        .lsu_pipe_hit_latency_count(lsu_pipe_hit_latency_count),
+        .lsu_pipe_hit_latency_max(lsu_pipe_hit_latency_max),
+        .lsu_pipe_hit_latency_sum(lsu_pipe_hit_latency_sum),
+        .lsu_pipe_issue_count(lsu_pipe_issue_count),
+        .lsu_pipe_load_hit_count(lsu_pipe_load_hit_count),
+        .lsu_pipe_load_hit_latency_count(lsu_pipe_load_hit_latency_count),
+        .lsu_pipe_load_hit_latency_max(lsu_pipe_load_hit_latency_max),
+        .lsu_pipe_load_hit_latency_sum(lsu_pipe_load_hit_latency_sum),
+        .lsu_pipe_load_miss_replay_count(lsu_pipe_load_miss_replay_count),
+        .lsu_pipe_replay_count(lsu_pipe_replay_count),
+        .lsu_pipe_resp_count(lsu_pipe_resp_count),
+        .lsu_pipe_slow_direct_latency_count(lsu_pipe_slow_direct_latency_count),
+        .lsu_pipe_slow_direct_latency_max(lsu_pipe_slow_direct_latency_max),
+        .lsu_pipe_slow_direct_latency_sum(lsu_pipe_slow_direct_latency_sum),
+        .lsu_pipe_slow_fallback_count(lsu_pipe_slow_fallback_count),
+        .lsu_pipe_slow_fallback_latency_count(lsu_pipe_slow_fallback_latency_count),
+        .lsu_pipe_slow_fallback_latency_max(lsu_pipe_slow_fallback_latency_max),
+        .lsu_pipe_slow_fallback_latency_sum(lsu_pipe_slow_fallback_latency_sum),
+        .lsu_pipe_slow_replay_latency_count(lsu_pipe_slow_replay_latency_count),
+        .lsu_pipe_slow_replay_latency_max(lsu_pipe_slow_replay_latency_max),
+        .lsu_pipe_slow_replay_latency_sum(lsu_pipe_slow_replay_latency_sum),
+        .lsu_pipe_stall_cycle(lsu_pipe_stall_cycle),
+        .lsu_pipe_store_hit_count(lsu_pipe_store_hit_count),
+        .lsu_pipe_store_hit_latency_count(lsu_pipe_store_hit_latency_count),
+        .lsu_pipe_store_hit_latency_max(lsu_pipe_store_hit_latency_max),
+        .lsu_pipe_store_hit_latency_sum(lsu_pipe_store_hit_latency_sum),
+        .lsu_pipe_store_miss_replay_count(lsu_pipe_store_miss_replay_count),
+        .ms_allowin(ms_allowin),
+        .ms_csr_wen(ms_csr_wen),
+        .ms_datatoreg(ms_datatoreg),
+        .ms_fast_req_fire_trace(ms_fast_req_fire_trace),
+        .ms_fwd_valid(ms_fwd_valid),
+        .ms_slow_req_fire_trace(ms_slow_req_fire_trace),
+        .ms_slow_req_fwd_dep_fire_trace(ms_slow_req_fwd_dep_fire_trace),
+        .ms_slow_req_nonfwd_fire_trace(ms_slow_req_nonfwd_fire_trace),
+        .ms_stage_block(ms_stage_block),
+        .ms_stage_block_load(ms_stage_block_load),
+        .ms_stage_block_req_load(ms_stage_block_req_load),
+        .ms_stage_block_req_phase(ms_stage_block_req_phase),
+        .ms_stage_block_req_store(ms_stage_block_req_store),
+        .ms_stage_block_resp_load(ms_stage_block_resp_load),
+        .ms_stage_block_resp_phase(ms_stage_block_resp_phase),
+        .ms_stage_block_resp_store(ms_stage_block_resp_store),
+        .ms_stage_block_store(ms_stage_block_store),
+        .ms_stat_hidden_load(ms_stat_hidden_load),
+        .ms_stat_load_aligned(ms_stat_load_aligned),
+        .ms_stat_load_atomic(ms_stat_load_atomic),
+        .ms_stat_load_data_ready(ms_stat_load_data_ready),
+        .ms_stat_load_fault(ms_stat_load_fault),
+        .ms_stat_load_killed(ms_stat_load_killed),
+        .ms_stat_load_lsu_pending(ms_stat_load_lsu_pending),
+        .ms_stat_load_req_fire(ms_stat_load_req_fire),
+        .ms_stat_load_resp_fire(ms_stat_load_resp_fire),
+        .ms_stat_load_resp_valid(ms_stat_load_resp_valid),
+        .ms_stat_load_result_ready(ms_stat_load_result_ready),
+        .ms_stat_load_signext_data_ready(ms_stat_load_signext_data_ready),
+        .ms_stat_load_signext_ready(ms_stat_load_signext_ready),
+        .ms_stat_load_split_or_misaligned(ms_stat_load_split_or_misaligned),
+        .ms_stat_load_store_block(ms_stat_load_store_block),
+        .ms_stat_load_to_wb_valid(ms_stat_load_to_wb_valid),
+        .ms_stat_load_uncached(ms_stat_load_uncached),
+        .ms_stat_load_visible(ms_stat_load_visible),
+        .ms_stat_mreq_blocked_by_resp(ms_stat_mreq_blocked_by_resp),
+        .ms_stat_mreq_fault(ms_stat_mreq_fault),
+        .ms_stat_mreq_fire(ms_stat_mreq_fire),
+        .ms_stat_mreq_is_atomic(ms_stat_mreq_is_atomic),
+        .ms_stat_mreq_is_load(ms_stat_mreq_is_load),
+        .ms_stat_mreq_is_store(ms_stat_mreq_is_store),
+        .ms_stat_mreq_misaligned(ms_stat_mreq_misaligned),
+        .ms_stat_mreq_need_mem(ms_stat_mreq_need_mem),
+        .ms_stat_mreq_split(ms_stat_mreq_split),
+        .ms_stat_mreq_valid(ms_stat_mreq_valid),
+        .ms_stat_mresp_fault(ms_stat_mresp_fault),
+        .ms_stat_mresp_is_atomic(ms_stat_mresp_is_atomic),
+        .ms_stat_mresp_is_load(ms_stat_mresp_is_load),
+        .ms_stat_mresp_is_store(ms_stat_mresp_is_store),
+        .ms_stat_mresp_resp_fire(ms_stat_mresp_resp_fire),
+        .ms_stat_mresp_resp_valid(ms_stat_mresp_resp_valid),
+        .ms_stat_mresp_split(ms_stat_mresp_split),
+        .ms_stat_mresp_valid(ms_stat_mresp_valid),
+        .ms_stat_single_outstanding_wait(ms_stat_single_outstanding_wait),
+        .ms_stat_store_aligned(ms_stat_store_aligned),
+        .ms_stat_store_atomic(ms_stat_store_atomic),
+        .ms_stat_store_buffer_safe(ms_stat_store_buffer_safe),
+        .ms_stat_store_fault(ms_stat_store_fault),
+        .ms_stat_store_killed(ms_stat_store_killed),
+        .ms_stat_store_req_fire(ms_stat_store_req_fire),
+        .ms_stat_store_resp_fire(ms_stat_store_resp_fire),
+        .ms_stat_store_resp_valid(ms_stat_store_resp_valid),
+        .ms_stat_store_resp_wait(ms_stat_store_resp_wait),
+        .ms_stat_store_split_or_misaligned(ms_stat_store_split_or_misaligned),
+        .ms_stat_store_uncached(ms_stat_store_uncached),
+        .ms_stat_store_visible(ms_stat_store_visible),
+        .ms_stat_uncached_wait(ms_stat_uncached_wait),
+        .ms_stat_writeback_wait(ms_stat_writeback_wait),
+        .ms_to_ws_valid(ms_to_ws_valid),
+        .ms_valid(ms_valid),
+        .redirect_clear_valid(redirect_clear_valid),
+        .redirect_flush_valid(redirect_flush_valid),
+        .stat_exmem_skid_blocked_branch(stat_exmem_skid_blocked_branch),
+        .stat_exmem_skid_blocked_csr(stat_exmem_skid_blocked_csr),
+        .stat_exmem_skid_blocked_div(stat_exmem_skid_blocked_div),
+        .stat_exmem_skid_blocked_exception(stat_exmem_skid_blocked_exception),
+        .stat_exmem_skid_blocked_mem(stat_exmem_skid_blocked_mem),
+        .stat_exmem_skid_blocked_not_safe(stat_exmem_skid_blocked_not_safe),
+        .stat_exmem_skid_blocked_structural(stat_exmem_skid_blocked_structural),
+        .stat_exmem_skid_candidate(stat_exmem_skid_candidate),
+        .stat_exmem_skid_dequeue(stat_exmem_skid_dequeue),
+        .stat_exmem_skid_dequeue_after_mem_release(stat_exmem_skid_dequeue_after_mem_release),
+        .stat_exmem_skid_dequeue_causes_wb_valid(stat_exmem_skid_dequeue_causes_wb_valid),
+        .stat_exmem_skid_dequeue_commit_fire(stat_exmem_skid_dequeue_commit_fire),
+        .stat_exmem_skid_dequeue_fire(stat_exmem_skid_dequeue_fire),
+        .stat_exmem_skid_dequeue_same_cycle_mem_release(stat_exmem_skid_dequeue_same_cycle_mem_release),
+        .stat_exmem_skid_dequeue_to_mreq_fire(stat_exmem_skid_dequeue_to_mreq_fire),
+        .stat_exmem_skid_enqueue(stat_exmem_skid_enqueue),
+        .stat_exmem_skid_enqueue_fire(stat_exmem_skid_enqueue_fire),
+        .stat_exmem_skid_flush_drop(stat_exmem_skid_flush_drop),
+        .stat_exmem_skid_full_stall(stat_exmem_skid_full_stall),
+        .stat_exmem_skid_hold_cycles(stat_exmem_skid_hold_cycles),
+        .stat_exmem_skid_hold_mem_wait_cycles(stat_exmem_skid_hold_mem_wait_cycles),
+        .stat_exmem_skid_mem_release(stat_exmem_skid_mem_release),
+        .stat_exmem_skid_mem_wait(stat_exmem_skid_mem_wait),
+        .stat_exmem_skid_valid(stat_exmem_skid_valid),
+        .stop_clear_valid(stop_clear_valid),
+        .store_buffer_dequeue_count(store_buffer_dequeue_count),
+        .store_buffer_drain_req_count(store_buffer_drain_req_count),
+        .store_buffer_drain_resp_count(store_buffer_drain_resp_count),
+        .store_buffer_drain_wait_count(store_buffer_drain_wait_count),
+        .store_buffer_enqueue_count(store_buffer_enqueue_count),
+        .store_buffer_enqueue_full_count(store_buffer_enqueue_full_count),
+        .store_buffer_enqueue_occ0_count(store_buffer_enqueue_occ0_count),
+        .store_buffer_enqueue_occ1_count(store_buffer_enqueue_occ1_count),
+        .store_buffer_fence_drain_wait_count(store_buffer_fence_drain_wait_count),
+        .store_buffer_full_stall_count(store_buffer_full_stall_count),
+        .store_buffer_killed_store_block_count(store_buffer_killed_store_block_count),
+        .store_buffer_load_forward_count(store_buffer_load_forward_count),
+        .store_buffer_load_stall_buffer_nonempty_count(store_buffer_load_stall_buffer_nonempty_count),
+        .store_buffer_load_stall_conflict_count(store_buffer_load_stall_conflict_count),
+        .store_buffer_max_occupancy_count(store_buffer_max_occupancy_count),
+        .store_buffer_occupancy0_count(store_buffer_occupancy0_count),
+        .store_buffer_occupancy1_count(store_buffer_occupancy1_count),
+        .store_buffer_occupancy2_count(store_buffer_occupancy2_count),
+        .store_buffer_uncached_drain_wait_count(store_buffer_uncached_drain_wait_count),
+        .trap_redirect_valid(trap_redirect_valid),
+        .vm_flush_start(vm_flush_start),
+        .ws_allowin(ws_allowin),
+        .ws_csr_wen(ws_csr_wen),
+        .ws_stat_datatoreg(ws_stat_datatoreg),
+        .ws_stat_mem_op(ws_stat_mem_op),
+        .branch_stat_fetch_req_valid(branch_stat_fetch_req_valid),
+        .branch_stat_fetch_req_pc(branch_stat_fetch_req_pc),
+        .branch_stat_fetch_accept_valid(branch_stat_fetch_accept_valid),
+        .branch_stat_fetch_accept_pc(branch_stat_fetch_accept_pc),
+        .branch_stat_fetch_accept_instr(branch_stat_fetch_accept_instr),
+        .branch_stat_fetch_drop_valid(branch_stat_fetch_drop_valid),
+        .branch_stat_fetch_drop_redirect(branch_stat_fetch_drop_redirect),
+        .branch_stat_fetch_drop_pc(branch_stat_fetch_drop_pc),
+        .branch_stat_fetch_drop_instr(branch_stat_fetch_drop_instr),
+        .branch_stat_resolve_valid(branch_stat_resolve_valid),
+        .bpu_btb_lookup_count(bpu_btb_lookup_count),
+        .bpu_btb_hit_count(bpu_btb_hit_count),
+        .bpu_btb_miss_count(bpu_btb_miss_count),
+        .bpu_bht_pred_taken_count(bpu_bht_pred_taken_count),
+        .bpu_bht_pred_not_taken_count(bpu_bht_pred_not_taken_count),
+        .bpu_btb_conflict_count(bpu_btb_conflict_count),
+        .bpu_btb_update_count(bpu_btb_update_count),
+        .bpu_btb_replace_count(bpu_btb_replace_count),
+        .bpu_bht_lookup_count(bpu_bht_lookup_count),
+        .bpu_bht_update_count(bpu_bht_update_count),
+        .bpu_bht_weak_taken_count(bpu_bht_weak_taken_count),
+        .bpu_bht_weak_not_taken_count(bpu_bht_weak_not_taken_count),
+        .bpu_bht_strong_taken_count(bpu_bht_strong_taken_count),
+        .bpu_bht_strong_not_taken_count(bpu_bht_strong_not_taken_count),
+        .bpu_gshare_enable(BPU_GSHARE_ENABLE),
+        .bpu_bhr_bits(BPU_BHR_BITS),
+        .bpu_bhr_value(bpu_bhr_value)
     );
 
 `ifdef NPC_USE_DPI
+    // DPI simulation keeps external IBUS AXI inactive and uses SimPmemBridge
+    // as the top-owned instruction memory context.
     assign ibus_axi_awaddr = 32'b0;
     assign ibus_axi_awlen = 8'b0;
     assign ibus_axi_awsize = 3'b0;
@@ -3481,23 +3009,6 @@ module cpu_top(
     assign ibus_axi_arburst = 2'b0;
     assign ibus_axi_arvalid = 1'b0;
     assign ibus_axi_rready = 1'b0;
-
-    assign dbus_axi_awaddr = 32'b0;
-    assign dbus_axi_awlen = 8'b0;
-    assign dbus_axi_awsize = 3'b0;
-    assign dbus_axi_awburst = 2'b0;
-    assign dbus_axi_awvalid = 1'b0;
-    assign dbus_axi_wdata = 32'b0;
-    assign dbus_axi_wstrb = 4'b0;
-    assign dbus_axi_wlast = 1'b0;
-    assign dbus_axi_wvalid = 1'b0;
-    assign dbus_axi_bready = 1'b0;
-    assign dbus_axi_araddr = 32'b0;
-    assign dbus_axi_arlen = 8'b0;
-    assign dbus_axi_arsize = 3'b0;
-    assign dbus_axi_arburst = 2'b0;
-    assign dbus_axi_arvalid = 1'b0;
-    assign dbus_axi_rready = 1'b0;
 
     SimPmemBridge #(
         .CHANNEL(0),
@@ -3518,24 +3029,6 @@ module cpu_top(
         .resp_rdata(ibus_mem_resp_data)
     );
 
-    SimPmemBridge #(
-        .CHANNEL(1),
-        .BATCH_WORDS(DCACHE_LINE_WORDS),
-        .MEM_LATENCY(DPI_MEM_LATENCY)
-    ) dbus_bridge(
-        .clk(clk),
-        .rst_n(rst_n),
-        .req_valid(dbus_mem_req_valid),
-        .req_ready(dbus_mem_req_ready),
-        .req_write(dbus_mem_req_write),
-        .req_addr(dbus_mem_req_addr),
-        .req_wdata(dbus_mem_req_wdata),
-        .req_wstrb(dbus_mem_req_wstrb),
-        .req_len(dbus_mem_req_len),
-        .resp_valid(dbus_mem_resp_valid),
-        .resp_ready(dbus_mem_resp_ready),
-        .resp_rdata(dbus_mem_resp_data)
-    );
 `else
     AxiPmemBridge #(
         .BATCH_WORDS(ICACHE_LINE_WORDS)
@@ -3579,47 +3072,6 @@ module cpu_top(
         .m_axi_rlast(ibus_axi_rlast)
     );
 
-    AxiPmemBridge #(
-        .BATCH_WORDS(DCACHE_LINE_WORDS)
-    ) dbus_bridge(
-        .clk(clk),
-        .rst_n(rst_n),
-        .req_valid(dbus_mem_req_valid),
-        .req_ready(dbus_mem_req_ready),
-        .req_write(dbus_mem_req_write),
-        .req_addr(dbus_mem_req_addr),
-        .req_wdata(dbus_mem_req_wdata),
-        .req_wstrb(dbus_mem_req_wstrb),
-        .req_len(dbus_mem_req_len),
-        .resp_valid(dbus_mem_resp_valid),
-        .resp_ready(dbus_mem_resp_ready),
-        .resp_rdata(dbus_mem_resp_data),
-        .m_axi_awaddr(dbus_axi_awaddr),
-        .m_axi_awlen(dbus_axi_awlen),
-        .m_axi_awsize(dbus_axi_awsize),
-        .m_axi_awburst(dbus_axi_awburst),
-        .m_axi_awvalid(dbus_axi_awvalid),
-        .m_axi_awready(dbus_axi_awready),
-        .m_axi_wdata(dbus_axi_wdata),
-        .m_axi_wstrb(dbus_axi_wstrb),
-        .m_axi_wlast(dbus_axi_wlast),
-        .m_axi_wvalid(dbus_axi_wvalid),
-        .m_axi_wready(dbus_axi_wready),
-        .m_axi_bresp(dbus_axi_bresp),
-        .m_axi_bvalid(dbus_axi_bvalid),
-        .m_axi_bready(dbus_axi_bready),
-        .m_axi_araddr(dbus_axi_araddr),
-        .m_axi_arlen(dbus_axi_arlen),
-        .m_axi_arsize(dbus_axi_arsize),
-        .m_axi_arburst(dbus_axi_arburst),
-        .m_axi_arvalid(dbus_axi_arvalid),
-        .m_axi_arready(dbus_axi_arready),
-        .m_axi_rdata(dbus_axi_rdata),
-        .m_axi_rresp(dbus_axi_rresp),
-        .m_axi_rvalid(dbus_axi_rvalid),
-        .m_axi_rready(dbus_axi_rready),
-        .m_axi_rlast(dbus_axi_rlast)
-    );
 `endif
 
 `ifndef NPC_USE_DPI

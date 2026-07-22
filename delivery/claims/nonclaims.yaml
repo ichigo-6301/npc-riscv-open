@@ -82,19 +82,36 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "Sv32 CoreMark; approximate private project record; exact cycle, instruction and binary hashes unavailable",
+      "conditions": "Sv32 CoreMark; later optimized Linux/System checkpoint abf66cad; approximate private project record; exact cycle, instruction and binary hashes unavailable",
       "evidence_status": "private_reference_only",
       "historical_reference": {
-        "cpi_approx": 1.98,
-        "evidence_status": "provisional",
-        "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
+        "cpi_approx": 1.72,
+        "evidence_status": "private_fixed_checkpoint_provisional",
+        "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b"
       },
       "id": "linux_public_cpi_not_yet_claimed",
       "profile": "rv32ima_sv32_linux",
       "public": true,
-      "reason": "The value is approximate private documentation and has not been reproduced in the public headless flow",
+      "reason": "The value is an approximate private record from the later optimized checkpoint and has not been reproduced with the public binary/configuration flow",
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "statement": "Sv32 CoreMark CPI approximately 1.72 is a historical reference, not a publicly reproduced claim",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "Sv32 CoreMark; earlier checkpoint e3a1cc91; approximate historical comparison only; exact cycle, instruction and binary hashes unavailable",
+      "evidence_status": "private_reference_only",
+      "historical_reference": {
+        "cpi_approx": 1.98,
+        "evidence_status": "provisional_prior_checkpoint",
+        "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
+      },
+      "id": "linux_prior_checkpoint_cpi_not_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "profile_source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "public": true,
+      "reason": "The value belongs to the earlier frozen source checkpoint and is retained only to show the measured optimization delta",
       "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
-      "statement": "Sv32 CoreMark CPI approximately 1.98 is a historical reference, not a publicly reproduced claim",
+      "statement": "Sv32 CoreMark CPI approximately 1.98 is retained as a prior checkpoint reference, not a current public claim",
       "status": "not_claimed"
     },
     {
@@ -104,19 +121,8 @@
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
       "statement": "A complete Linux distribution boot is not claimed",
-      "status": "not_claimed"
-    },
-    {
-      "conditions": "It belongs to a different later source checkpoint and may not be merged across profile identities",
-      "evidence_status": "private_reference_only",
-      "id": "linux_later_cpi_not_claimed",
-      "profile": "rv32ima_sv32_linux",
-      "public": true,
-      "reason": "It belongs to a different later source checkpoint and may not be merged across profile identities",
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
-      "statement": "The later approximately 1.72 CoreMark result is not attributed to the frozen Linux source",
       "status": "not_claimed"
     },
     {
@@ -126,7 +132,7 @@
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "No source-matched implementation evidence has been selected for this profile",
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
       "statement": "Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed",
       "status": "not_claimed"
     },

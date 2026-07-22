@@ -2,11 +2,12 @@
   "allowlist_manifest": "provenance/source_allowlist.json",
   "allowlist_profile_key": "rv32ima_sv32_linux",
   "blob_hash_policy": "required_at_export",
-  "commit_sha": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+  "commit_sha": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
   "compatibility_notes": [
     "The exact per-file source, destination, Git blob, byte count, and SHA256 records live only in the canonical JSON allowlist.",
     "OpenSBI, Linux, NEMU, AM, DTB, and KVM payloads are external dependencies and are never source-exported by this set.",
-    "The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate verification targets."
+    "The source snapshot includes the later structural RTL layout (CSR, frontend, LSU, MMU, pipeline, statistic, and top subdirectories); this is a source refactor, not a change to the public wrapper ABI.",
+    "The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate validation gates."
   ],
   "destination_root": "rtl/profiles/rv32ima_sv32_linux",
   "groups": {
@@ -26,11 +27,18 @@
       "filelists": [],
       "includes": [
         "vsrc_new",
-        "vsrc_new/cpu_top"
+        "vsrc_new/cache",
+        "vsrc_new/csr",
+        "vsrc_new/frontend",
+        "vsrc_new/lsu",
+        "vsrc_new/mdu",
+        "vsrc_new/mmu",
+        "vsrc_new/pipeline",
+        "vsrc_new/stat",
+        "vsrc_new/top"
       ],
       "public_include_dirs": [
-        "rtl/profiles/rv32ima_sv32_linux",
-        "rtl/profiles/rv32ima_sv32_linux/cpu_top"
+        "rtl/profiles/rv32ima_sv32_linux"
       ],
       "roots": [
         "vsrc_new"
@@ -74,7 +82,7 @@
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
   "source_count": {
-    "rtl_files": 42
+    "rtl_files": 51
   },
   "source_root": "npc",
   "source_set_id": "rv32ima_sv32_linux"

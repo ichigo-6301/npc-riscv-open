@@ -71,7 +71,12 @@ Fetch/ITLB -> Decode -> Execute -> Memory/DTLB -> Writeback/Commit
   source observed through CSR `time/timeh`.
 - OpenSBI, Linux images, DTBs, and NEMU remain external inputs.
 
-Source identity: `e3a1cc91c4c00040f7180eec5e385326d9964893`.
+Source identity: `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`.
+
+This snapshot uses the later structured RTL layout, with CSR, frontend, LSU,
+MMU, pipeline, statistic, and top-glue directories separated explicitly. It
+is a source refactor that preserves the wrapper ABI and architectural boundary;
+the public build still compiles only this Profile's isolated filelist.
 
 ## `rv32im_ooo_4k`
 

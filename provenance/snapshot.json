@@ -2,5 +2,5 @@
   "project_id": "npc-riscv-open",
   "schema": "npc-riscv-open/snapshot-v1",
   "snapshot_id": "v0.1.0",
-  "source_allowlist_sha256": "fab71f8a0b8a9566e0410a359b1f512425198c40cff5d2b37bc3bf9dbbc3ffc0"
+  "source_allowlist_sha256": "21a62b2283ba9b03fa99f55ee706a5a43a06f9c56974d02612d3365a68ff2fef"
 }

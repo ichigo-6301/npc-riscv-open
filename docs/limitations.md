@@ -15,6 +15,8 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 - 一次构建只能选择一个 Profile；将多个 filelist 混合编译属于无效配置。
 - 为保持 source lock，导出的原生 RTL 不作格式化或去重。同名 module 只能
   在各自 source set 中使用。
+- Linux Profile 的公开 source snapshot 是后续结构化 RTL 布局；目录重排不应被
+  误解为三个 Profile 共用一套参数化 RTL，也不改变公开 wrapper 的功能契约。
 
 ## 系统与软件
 

@@ -50,7 +50,7 @@
       "S"
     ],
     "simulation_memory_binding": "dpi_behavioral",
-    "source_rtl_count": 42,
+    "source_rtl_count": 51,
     "store_buffer_entries": 2,
     "sv32": true
   },

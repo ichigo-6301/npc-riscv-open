@@ -35,12 +35,31 @@ Every value below is `provisional`, not a current public verified claim:
 | Profile | Cycles | Retired/committed instructions | CoreMark CPI | Conditions | Evidence / nonclaim |
 | --- | ---: | ---: | ---: | --- | --- |
 | `rv32im_single_perf` | 4,578,012 | 3,081,085 | 1.48 | RV32IM single issue, project-local Verilator/NEMU record; binary hash and full configuration not yet reproduced publicly | `single_public_cpi_not_yet_claimed` |
-| `rv32ima_sv32_linux` | — | — | ≈1.98 | S-mode Sv32 with ITLB/DTLB, hit pipelines, a 2-entry store buffer, and fast MUL; approximate private note only | `linux_public_cpi_not_yet_claimed` |
+| `rv32ima_sv32_linux` | — | — | ≈1.72 | Later optimized Linux/System source snapshot `abf66cad`; S-mode Sv32, ITLB/DTLB, hit pipelines, a 2-entry store buffer, fast MUL, DCache load-hit optimization, and bridge-aware LSU load bypass; approximate private record | `linux_public_cpi_not_yet_claimed` |
 | `rv32im_ooo_4k` | 2,718,684 | 3,081,080 | 0.882380204 | RV32IM, IF/LSU/memory=`2/3/2`, seed 1, Verilator + NEMU difftest | `ooo_coremark_cpi_not_yet_claimed` |
 
 CoreMark CPI is `cycles / retired instructions`. It is not CoreMark/MHz and
 cannot be converted without the CoreMark score, iteration count, compiler
 options, and implemented clock information.
+
+### Linux Profile checkpoint comparison
+
+The public Profile now locks the later optimized checkpoint
+`abf66cad0f9ad02efc8beb641d4005adeaeeae0b`, so the main historical table uses
+approximately `1.72`. The earlier
+`e3a1cc91c4c00040f7180eec5e385326d9964893` result of approximately `1.98` is
+retained as a prior-checkpoint comparison. These are different RTL snapshots;
+the older value must not be relabeled as a result of the current source.
+
+| Checkpoint | Source commit | Sv32 CoreMark CPI | Status |
+| --- | --- | ---: | --- |
+| Later optimized checkpoint | `abf66cad0f9ad02efc8beb641d4005adeaeeae0b` | ≈1.72 | `linux_public_cpi_not_yet_claimed` |
+| Earlier frozen checkpoint | `e3a1cc91c4c00040f7180eec5e385326d9964893` | ≈1.98 | `linux_prior_checkpoint_cpi_not_claimed` |
+
+Both rows are `provisional` historical simulation records: no public binary
+hash, complete fixed-run summary, or independent fresh-clone CoreMark run is
+available, so neither is a verified claim. CoreMark/MHz, implementation
+frequency, and area remain `—`/`not_claimed`.
 
 ## Historical multi-workload reference
 

@@ -1,4 +1,4 @@
 left,right,shared_module_names,shared_relative_paths,identical_blobs,different_blobs
-rv32im_single_perf,rv32ima_sv32_linux,29,29,13,16
+rv32im_single_perf,rv32ima_sv32_linux,29,12,8,4
 rv32im_single_perf,rv32im_ooo_4k,0,0,0,0
 rv32ima_sv32_linux,rv32im_ooo_4k,0,0,0,0

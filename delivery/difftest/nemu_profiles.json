@@ -43,8 +43,8 @@
       "enable_sv32": true,
       "isa": "rv32ima_sv32",
       "nemu_tree": "0e7a3d67aacd9a670155c9ab93030f015870040c",
-      "source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
-      "workbench_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
+      "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "workbench_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b"
     }
   },
   "project_id": "npc-riscv-open",

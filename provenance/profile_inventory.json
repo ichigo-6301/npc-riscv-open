@@ -1,12 +1,12 @@
 {
   "overlap": [
     {
-      "different_blobs": 16,
-      "identical_blobs": 13,
+      "different_blobs": 4,
+      "identical_blobs": 8,
       "left": "rv32im_single_perf",
       "right": "rv32ima_sv32_linux",
       "shared_module_names": 29,
-      "shared_relative_paths": 29
+      "shared_relative_paths": 12
     },
     {
       "different_blobs": 0,
@@ -283,7 +283,7 @@
       "issue_width": 1,
       "memory_binding": "behavioral_dpi",
       "microarchitecture": "single_issue_in_order_system",
-      "module_count": 42,
+      "module_count": 51,
       "modules": [
         "ALU",
         "ALUControl",
@@ -295,6 +295,10 @@
         "BranchStat",
         "CacheStat",
         "ContrGen",
+        "CpuCorePipeline",
+        "CpuDmemSubsystem",
+        "CpuFrontendSubsystem",
+        "CpuPerfMonitors",
         "CsrContrGen",
         "DCache",
         "DCacheMmioMux",
@@ -314,6 +318,11 @@
         "Reg",
         "RegisterFile",
         "SimPmemBridge",
+        "StatCpiAttribution",
+        "StatFrontendBreakdown",
+        "StatHazardAfterForwarding",
+        "StatMemCpi",
+        "StatStageLatencyBreakdown",
         "Sv32DCacheBridge",
         "Sv32FrontendPipe",
         "Sv32ICacheBridge",
@@ -331,8 +340,8 @@
       "native_top": "cpu_top",
       "profile_id": "rv32ima_sv32_linux",
       "public_top": "npc_public_sim_top",
-      "rtl_file_count": 42,
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893"
+      "rtl_file_count": 51,
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b"
     },
     {
       "abi": "ilp32",

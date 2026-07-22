@@ -7,10 +7,10 @@
       "source_sha256": "0f96c5e756a6fb99483ef384c217d384a7107d4b0dfbac66cfbed2e154ddbc2b"
     },
     {
-      "entry_count": 42,
+      "entry_count": 51,
       "profile_id": "rv32ima_sv32_linux",
-      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
-      "source_sha256": "741686ba9dd69f7ad379e80d9d6f684ffdcaeb383ed54d86541214d7daf6175e"
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "source_sha256": "0c6e724b7223430df63a3243180a28d9618f7322f3ab5ee096578f94462b3a0a"
     },
     {
       "entry_count": 62,

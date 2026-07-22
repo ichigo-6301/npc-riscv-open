@@ -256,27 +256,28 @@ module PipelineCPIStat (
     input commit_is_ebreak,
     input commit_illegal
 );
-    reg [63:0] cycle_count;
-    reg [63:0] commit_count;
-    reg [63:0] bubble_count;
-
-    reg [63:0] bucket_trap_flush;
-    reg [63:0] bucket_wb_block;
-    reg [63:0] bucket_mem_lsu_wait;
-    reg [63:0] bucket_dcache_wait;
-    reg [63:0] bucket_store_wait;
-    reg [63:0] bucket_load_use;
-    reg [63:0] bucket_raw_hazard;
-    reg [63:0] bucket_csr_special;
-    reg [63:0] bucket_id_stall;
-    reg [63:0] bucket_ex_stall;
-    reg [63:0] bucket_if_id_empty;
-    reg [63:0] bucket_frontend_wait;
-    reg [63:0] bucket_icache_fetch_wait;
-    reg [63:0] bucket_branch_recovery;
-    reg [63:0] bucket_resp_block;
-    reg [63:0] bucket_stage_latency;
-    reg [63:0] bucket_unknown;
+    wire [63:0] cycle_count;
+    wire [63:0] commit_count;
+    wire [63:0] bucket_trap_flush;
+    wire [63:0] bucket_wb_block;
+    wire [63:0] bucket_mem_lsu_wait;
+    wire [63:0] bucket_dcache_wait;
+    wire [63:0] bucket_store_wait;
+    wire [63:0] bucket_load_use;
+    wire [63:0] bucket_raw_hazard;
+    wire [63:0] bucket_csr_special;
+    wire [63:0] bucket_id_stall;
+    wire [63:0] bucket_ex_stall;
+    wire [63:0] bucket_if_id_empty;
+    wire [63:0] bucket_frontend_wait;
+    wire [63:0] bucket_icache_fetch_wait;
+    wire [63:0] bucket_branch_recovery;
+    wire [63:0] bucket_resp_block;
+    wire [63:0] bucket_stage_latency;
+    wire [63:0] bucket_unknown;
+    wire [63:0] cpi_attr_mismatch;
+    wire bucket_frontend_wait_fire;
+    wire bucket_stage_latency_fire;
 
     reg [63:0] occ_if;
     reg [63:0] occ_ifid;
@@ -300,26 +301,8 @@ module PipelineCPIStat (
     reg [63:0] frontend_icache_miss_wait_seen;
     reg [63:0] frontend_icache_refill_wait_seen;
     reg [63:0] frontend_itlb_miss_wait_seen;
-    reg [63:0] frontend_self_wait;
-    reg [63:0] frontend_backpressure_wait;
-    reg [63:0] frontend_ifid_queue_full_wait;
-    reg [63:0] frontend_id_not_ready_backpressure;
-    reg [63:0] frontend_ex_not_ready_backpressure;
-    reg [63:0] frontend_if_pipe_no_resp_wait;
-    reg [63:0] frontend_if_pipe_req_not_ready_wait;
-    reg [63:0] frontend_icache_miss_refill_wait;
-    reg [63:0] frontend_icache_req_wait;
-    reg [63:0] frontend_epoch_drop_recovery_wait;
-    reg [63:0] frontend_ptw_wait;
-    reg [63:0] frontend_unknown;
-
-    reg [63:0] mem_load_resp_wait;
-    reg [63:0] mem_store_resp_wait;
-    reg [63:0] mem_load_req_wait;
-    reg [63:0] mem_store_req_wait;
     reg [63:0] mem_store_wait;
     reg [63:0] mem_load_wait;
-    reg [63:0] mem_single_outstanding_wait;
     reg [63:0] prev_icache_req_wait_cycle;
     reg [63:0] prev_icache_miss_wait_cycle;
     reg [63:0] prev_dcache_miss_wait_cycle;
@@ -344,11 +327,6 @@ module PipelineCPIStat (
     reg [63:0] resp_block_wait_commit;
     reg [63:0] resp_block_if_stage_not_accepting;
     reg [63:0] resp_block_unknown;
-    reg [63:0] stage_latency_ifid_valid;
-    reg [63:0] stage_latency_id_valid;
-    reg [63:0] stage_latency_ex_valid;
-    reg [63:0] stage_latency_mem_valid;
-    reg [63:0] stage_latency_frontend_empty;
     reg [63:0] ifq_depth0_cycles;
     reg [63:0] ifq_depth1_cycles;
     reg [63:0] ifq_depth2_cycles;
@@ -719,6 +697,110 @@ module PipelineCPIStat (
         (ds_stat_rs1_match_hidden || ds_stat_rs2_match_hidden);
     wire match_wb_now = !match_ex_now && !match_ms_now && !match_hidden_now &&
         (ds_stat_rs1_match_ws || ds_stat_rs2_match_ws);
+
+    StatCpiAttribution u_stat_cpi_attribution (
+        .clk(clk),
+        .rst_n(rst_n),
+        .sample_en(!printed && !terminal_commit),
+        .real_commit(real_commit),
+        .trap_flush_now(trap_flush_now),
+        .wb_block_now(wb_block_now),
+        .store_wait_now(store_wait_now),
+        .dcache_wait_now(dcache_wait_now),
+        .mem_lsu_wait_now(mem_lsu_wait_now),
+        .load_use_now(load_use_now),
+        .raw_hazard_now(raw_hazard_now),
+        .csr_special_now(csr_special_now),
+        .id_stall_now(id_stall_now),
+        .ex_stall_now(ex_stall_now),
+        .if_id_empty_now(if_id_empty_now),
+        .frontend_wait_now(frontend_wait_now),
+        .icache_fetch_wait_now(icache_fetch_wait_now),
+        .branch_recovery_now(branch_recovery_now),
+        .icache_pipe_resp_block_now(icache_pipe_resp_block_now),
+        .stage_latency_now(stage_latency_now),
+        .cycle_count(cycle_count),
+        .commit_count(commit_count),
+        .bucket_trap_flush(bucket_trap_flush),
+        .bucket_wb_block(bucket_wb_block),
+        .bucket_mem_lsu_wait(bucket_mem_lsu_wait),
+        .bucket_dcache_wait(bucket_dcache_wait),
+        .bucket_store_wait(bucket_store_wait),
+        .bucket_load_use(bucket_load_use),
+        .bucket_raw_hazard(bucket_raw_hazard),
+        .bucket_csr_special(bucket_csr_special),
+        .bucket_id_stall(bucket_id_stall),
+        .bucket_ex_stall(bucket_ex_stall),
+        .bucket_if_id_empty(bucket_if_id_empty),
+        .bucket_frontend_wait(bucket_frontend_wait),
+        .bucket_icache_fetch_wait(bucket_icache_fetch_wait),
+        .bucket_branch_recovery(bucket_branch_recovery),
+        .bucket_resp_block(bucket_resp_block),
+        .bucket_stage_latency(bucket_stage_latency),
+        .bucket_unknown(bucket_unknown),
+        .cpi_attr_mismatch(cpi_attr_mismatch),
+        .bucket_frontend_wait_fire(bucket_frontend_wait_fire),
+        .bucket_stage_latency_fire(bucket_stage_latency_fire)
+    );
+    StatFrontendBreakdown u_stat_frontend_breakdown (
+        .clk(clk),
+        .rst_n(rst_n),
+        .sample_en(!printed && !terminal_commit),
+        .real_commit(real_commit),
+        .bucket_frontend_wait(bucket_frontend_wait),
+        .bucket_frontend_wait_fire(bucket_frontend_wait_fire),
+        .epoch_recovery_now(epoch_recovery_now),
+        .ptw_wait_now(ptw_wait_now),
+        .icache_miss_delta(icache_miss_delta),
+        .icache_req_delta(icache_req_delta),
+        .ifid_queue_full_now(ifid_queue_full_now),
+        .id_not_ready_now(id_not_ready_now),
+        .ex_not_ready_now(ex_not_ready_now),
+        .if_pipe_req_not_ready_now(if_pipe_req_not_ready_now),
+        .if_pipe_no_resp_now(if_pipe_no_resp_now),
+        .frontend_self_wait_now(frontend_self_wait_now),
+        .frontend_backpressure_like_now(frontend_backpressure_like_now),
+        .ibus_req_valid(ibus_req_valid),
+        .ibus_req_ready(ibus_req_ready)
+    );
+    StatMemCpi u_stat_mem_cpi (
+        .clk(clk),
+        .rst_n(rst_n),
+        .sample_en(!printed && !terminal_commit),
+        .bucket_mem_lsu_wait(bucket_mem_lsu_wait),
+        .dcache_req_wait_cycle(dcache_req_wait_cycle),
+        .dcache_hit_resp_wait_cycle(dcache_hit_resp_wait_cycle),
+        .dcache_miss_wait_cycle(dcache_miss_wait_cycle),
+        .dcache_writeback_cycle(dcache_writeback_cycle),
+        .ms_stage_block_req_load(ms_stage_block_req_load),
+        .ms_stage_block_req_store(ms_stage_block_req_store),
+        .ms_stage_block_resp_load(ms_stage_block_resp_load),
+        .ms_stage_block_resp_store(ms_stage_block_resp_store),
+        .ms_stage_block_resp_phase(ms_stage_block_resp_phase)
+    );
+    StatHazardAfterForwarding u_stat_hazard_after_forwarding (
+        .raw_alu_ex(raw_alu_ex),
+        .raw_alu_mem(raw_alu_mem),
+        .raw_load_mem(raw_load_mem),
+        .raw_load_wb(raw_load_wb),
+        .raw_muldiv(raw_muldiv),
+        .load_lsu_pending_cycles(fwd_load_miss_not_bypassable),
+        .load_hit_no_forward_wait(load_pending_load_hit_no_forward_wait)
+    );
+    StatStageLatencyBreakdown u_stat_stage_latency_breakdown (
+        .clk(clk),
+        .rst_n(rst_n),
+        .sample_en(!printed && !terminal_commit && !real_commit),
+        .bucket_stage_latency(bucket_stage_latency),
+        .bucket_stage_latency_fire(bucket_stage_latency_fire),
+        .ms_valid(ms_valid),
+        .ms_to_ws_valid(ms_to_ws_valid),
+        .es_valid(es_valid),
+        .es_to_ms_valid(es_to_ms_valid),
+        .ds_to_es_valid(ds_to_es_valid),
+        .fs_to_ds_valid(fs_to_ds_valid),
+        .if_stat_fs_valid(if_stat_fs_valid)
+    );
     wire ex_is_load_now = (es_datatoreg == 2'b01);
     wire ex_is_csr_now = (es_datatoreg == 2'b10) || (es_csr_wen != 2'b00);
     wire ex_is_store_or_mem_order_now = (es_mem_wr != 2'b00) || es_atomic_en;
@@ -1066,11 +1148,6 @@ module PipelineCPIStat (
     endtask
 
     task print_stats;
-        reg [63:0] bubble_sum;
-        reg [63:0] frontend_sum;
-        reg [63:0] frontend_mismatch;
-        reg [63:0] bubble_expected;
-        reg [63:0] mismatch;
         reg [63:0] branch_perfect_cycles;
         reg [63:0] ifq_block_sum;
         reg [63:0] ifq_block_mismatch;
@@ -1147,25 +1224,6 @@ module PipelineCPIStat (
         reg [63:0] exmem_skid_eff_mismatch_nogain;
         reg [63:0] exmem_skid_eff_mismatch;
         begin
-            bubble_sum =
-                bucket_trap_flush + bucket_wb_block + bucket_mem_lsu_wait +
-                bucket_dcache_wait + bucket_store_wait + bucket_load_use +
-                bucket_raw_hazard + bucket_csr_special + bucket_id_stall +
-                bucket_ex_stall + bucket_if_id_empty + bucket_frontend_wait +
-                bucket_icache_fetch_wait + bucket_branch_recovery +
-                bucket_resp_block + bucket_stage_latency + bucket_unknown;
-            bubble_expected = cycle_count - commit_count;
-            mismatch = (bubble_sum >= bubble_expected) ?
-                (bubble_sum - bubble_expected) : (bubble_expected - bubble_sum);
-            frontend_sum =
-                frontend_self_wait + frontend_backpressure_wait +
-                frontend_ifid_queue_full_wait + frontend_id_not_ready_backpressure +
-                frontend_ex_not_ready_backpressure + frontend_if_pipe_no_resp_wait +
-                frontend_if_pipe_req_not_ready_wait + frontend_icache_miss_refill_wait +
-                frontend_icache_req_wait + frontend_epoch_drop_recovery_wait +
-                frontend_ptw_wait + frontend_unknown;
-            frontend_mismatch = (frontend_sum >= bucket_frontend_wait) ?
-                (frontend_sum - bucket_frontend_wait) : (bucket_frontend_wait - frontend_sum);
             ifq_block_sum =
                 ifq_block_full_no_pop + ifq_block_full_with_pop_same_cycle +
                 ifq_block_full_id_ready + ifq_block_full_id_not_ready +
@@ -1451,24 +1509,7 @@ module PipelineCPIStat (
                 exmem_skid_eff_mismatch_enqueue +
                 exmem_skid_eff_mismatch_nogain;
 
-            $display("[CPIAttribution] cycles=%0d commit=%0d bubble=%0d CPI_ideal_commit=1.00",
-                cycle_count, commit_count, bubble_expected);
-            print_cpi_line("CPIAttribution", "CPI_total", cycle_count);
-            $display("[CPIAttribution] exclusive_bubbles trap_flush=%0d wb_block=%0d mem_lsu_wait=%0d dcache_wait=%0d store_wait=%0d load_use=%0d raw_hazard=%0d csr_or_special=%0d id_stage_stall=%0d ex_stage_stall=%0d if_id_empty=%0d frontend_wait=%0d icache_fetch_wait=%0d branch_recovery=%0d resp_block=%0d stage_latency=%0d unknown=%0d sum=%0d mismatch=%0d",
-                bucket_trap_flush, bucket_wb_block, bucket_mem_lsu_wait,
-                bucket_dcache_wait, bucket_store_wait, bucket_load_use,
-                bucket_raw_hazard, bucket_csr_special, bucket_id_stall,
-                bucket_ex_stall, bucket_if_id_empty, bucket_frontend_wait,
-                bucket_icache_fetch_wait, bucket_branch_recovery,
-                bucket_resp_block, bucket_stage_latency, bucket_unknown,
-                bubble_sum, mismatch);
-            print_cpi_line("CPIAttribution", "redirect_contrib", bucket_trap_flush + bucket_branch_recovery);
-            print_cpi_line("CPIAttribution", "frontend_wait_contrib", bucket_frontend_wait + bucket_icache_fetch_wait);
-            print_cpi_line("CPIAttribution", "mem_lsu_wait_contrib", bucket_mem_lsu_wait + bucket_dcache_wait + bucket_store_wait);
-            print_cpi_line("CPIAttribution", "hazard_contrib", bucket_load_use + bucket_raw_hazard + bucket_csr_special);
-            print_cpi_line("CPIAttribution", "resp_block_contrib", bucket_resp_block);
-            print_cpi_line("CPIAttribution", "stage_latency_contrib", bucket_stage_latency);
-            print_cpi_line("CPIAttribution", "unknown_contrib", bucket_unknown);
+            u_stat_cpi_attribution.print_stats();
             $display("[PipeOcc] IF=%0d IFID=%0d ID=%0d EX=%0d MEM=%0d WB=%0d COMMIT=%0d",
                 occ_if, occ_ifid, occ_id, occ_ex, occ_mem, occ_wb, occ_commit);
             $display("[PipeReady] if_ready=%0d ifid_ready=%0d id_ready=%0d ex_ready=%0d mem_ready=%0d wb_ready=%0d",
@@ -1477,13 +1518,7 @@ module PipelineCPIStat (
                 stall_if_by_ifid_full, stall_ifid_by_id_not_ready,
                 stall_id_by_ex_not_ready, stall_ex_by_mem_not_ready,
                 stall_mem_by_wb_not_ready, stall_mem_by_dbus, stall_wb);
-            $display("[FrontendBreakdown] frontend_wait=%0d self_wait=%0d backpressure_wait=%0d ifid_full=%0d id_not_ready=%0d ex_mem_wb_backpressure=%0d no_resp=%0d req_not_ready=%0d icache_miss=%0d icache_req_wait=%0d epoch_recovery=%0d ptw=%0d unknown=%0d sum=%0d mismatch=%0d",
-                bucket_frontend_wait, frontend_self_wait, frontend_backpressure_wait,
-                frontend_ifid_queue_full_wait, frontend_id_not_ready_backpressure,
-                frontend_ex_not_ready_backpressure, frontend_if_pipe_no_resp_wait,
-                frontend_if_pipe_req_not_ready_wait, frontend_icache_miss_refill_wait,
-                frontend_icache_req_wait, frontend_epoch_drop_recovery_wait,
-                frontend_ptw_wait, frontend_unknown, frontend_sum, frontend_mismatch);
+            u_stat_frontend_breakdown.print_stats();
             $display("[RespBlockBreakdown] resp_block=%0d if_queue_full=%0d id_not_ready=%0d epoch_drop=%0d fifo_full=%0d resp_wait_commit=%0d if_stage_not_accepting=%0d unknown=%0d sum=%0d mismatch=%0d",
                 resp_block_total, resp_block_if_queue_full,
                 resp_block_id_not_ready, resp_block_epoch_drop,
@@ -1507,10 +1542,7 @@ module PipelineCPIStat (
                       resp_block_epoch_drop + resp_block_fifo_full +
                       resp_block_wait_commit + resp_block_if_stage_not_accepting +
                       resp_block_unknown) - resp_block_total));
-            $display("[StageLatencyBreakdown] stage_latency=%0d ifid_valid=%0d id_valid=%0d ex_valid=%0d mem_valid=%0d frontend_empty=%0d",
-                bucket_stage_latency, stage_latency_ifid_valid,
-                stage_latency_id_valid, stage_latency_ex_valid,
-                stage_latency_mem_valid, stage_latency_frontend_empty);
+            u_stat_stage_latency_breakdown.print_stats();
             $display("[IFQueueStat] depth0=%0d depth1=%0d depth2=%0d full=%0d empty=%0d push_attempt=%0d push_fire=%0d push_block=%0d pop_attempt=%0d pop_fire=%0d pop_block=%0d entry0_valid=%0d entry1_valid=%0d both_valid=%0d single_valid=%0d",
                 ifq_depth0_cycles, ifq_depth1_cycles, ifq_depth2_cycles,
                 ifq_full_cycles, ifq_empty_cycles, ifq_push_attempt,
@@ -1565,10 +1597,7 @@ module PipelineCPIStat (
                 raw_alu_ex, raw_alu_mem, raw_alu_wb, raw_load_mem,
                 raw_load_wb, raw_csr, raw_muldiv, raw_hidden, raw_unknown,
                 raw_sum, raw_mismatch);
-            $display("[HazardAfterForwarding] raw_alu_ex=%0d raw_alu_mem=%0d raw_load_mem=%0d raw_load_wb=%0d raw_muldiv=%0d load_lsu_pending_cycles=%0d load_hit_no_forward_wait=%0d",
-                raw_alu_ex, raw_alu_mem, raw_load_mem, raw_load_wb,
-                raw_muldiv, fwd_load_miss_not_bypassable,
-                load_pending_load_hit_no_forward_wait);
+            u_stat_hazard_after_forwarding.print_stats();
             $display("[MDUBreakdown] fast_mul_enable=%0d fast_mul_latency=%0d effective_fast_mul_latency=%0d mul_total=%0d mul_fast_count=%0d mul_old_count=%0d mul_wait_cycles=%0d mul_consumer_stall=%0d mul_avg_latency=%0d mul_max_latency=%0d mulh_total=%0d mulh_wait_cycles=%0d div_total=%0d div_wait_cycles=%0d div_avg_latency=%0d div_max_latency=%0d rem_total=%0d rem_wait_cycles=%0d mdu_busy_cycles=%0d mdu_result_ready_cycles=%0d mdu_consumer_wait_cycles=%0d raw_muldiv=%0d mdu_unknown=%0d mdu_mismatch=%0d",
 `ifdef NPC_FAST_MUL
                 1,
@@ -1630,12 +1659,7 @@ module PipelineCPIStat (
                 frontend_itlb_miss_wait_seen, frontend_backpressure,
                 if_pipe_stall_cycle, if_pipe_epoch_drop_count,
                 if_pipe_icache_miss_count);
-            $display("[MemCPI] dcache_load_miss_wait=%0d dcache_store_miss_wait=%0d uncached_wait=%0d store_response_wait=%0d load_response_wait=%0d slow_fallback_wait=%0d mem_single_outstanding_wait=%0d req_load_wait=%0d req_store_wait=%0d cache_req_wait_total=%0d cache_hit_resp_wait_total=%0d cache_miss_wait_total=%0d writeback_wait_total=%0d",
-                64'd0, 64'd0, 64'd0, mem_store_resp_wait, mem_load_resp_wait,
-                bucket_mem_lsu_wait, mem_single_outstanding_wait,
-                mem_load_req_wait, mem_store_req_wait,
-                dcache_req_wait_cycle, dcache_hit_resp_wait_cycle,
-                dcache_miss_wait_cycle, dcache_writeback_cycle);
+            u_stat_mem_cpi.print_stats();
             $display("[MemBackendBreakdown] load_response_wait=%0d store_response_wait=%0d store_miss_wait=%0d store_write_resp_wait=%0d dcache_miss_wait=%0d dcache_req_wait=%0d single_outstanding_wait=%0d uncached_wait=%0d writeback_wait=%0d other=%0d total=%0d mismatch=%0d",
                 mem_backend_load_response_wait, mem_backend_store_response_wait,
                 mem_backend_store_miss_wait, mem_backend_store_write_resp_wait,
@@ -1868,7 +1892,7 @@ module PipelineCPIStat (
             $display("[PostFastMulCPI] mem_lsu_wait=%0d dcache_wait=%0d store_wait=%0d load_use=%0d raw_hazard=%0d frontend_wait=%0d stage_latency=%0d unknown=%0d mismatch=%0d",
                 bucket_mem_lsu_wait, bucket_dcache_wait, bucket_store_wait,
                 bucket_load_use, bucket_raw_hazard, bucket_frontend_wait,
-                bucket_stage_latency, bucket_unknown, mismatch);
+                bucket_stage_latency, bucket_unknown, cpi_attr_mismatch);
             $display("[StoreBufferCapacity] entries=%0d effective_entries=%0d max_occupancy=%0d occupancy0_cycles=%0d occupancy1_cycles=%0d occupancy2_cycles=%0d full_stall=%0d enqueue_when_occupancy0=%0d enqueue_when_occupancy1=%0d enqueue_when_full=%0d",
 `ifdef NPC_STORE_BUFFER_ENTRIES
                 `NPC_STORE_BUFFER_ENTRIES,
@@ -1898,26 +1922,6 @@ module PipelineCPIStat (
 
     always @(posedge clk) begin
         if (!rst_n) begin
-            cycle_count <= 64'd0;
-            commit_count <= 64'd0;
-            bubble_count <= 64'd0;
-            bucket_trap_flush <= 64'd0;
-            bucket_wb_block <= 64'd0;
-            bucket_mem_lsu_wait <= 64'd0;
-            bucket_dcache_wait <= 64'd0;
-            bucket_store_wait <= 64'd0;
-            bucket_load_use <= 64'd0;
-            bucket_raw_hazard <= 64'd0;
-            bucket_csr_special <= 64'd0;
-            bucket_id_stall <= 64'd0;
-            bucket_ex_stall <= 64'd0;
-            bucket_if_id_empty <= 64'd0;
-            bucket_frontend_wait <= 64'd0;
-            bucket_icache_fetch_wait <= 64'd0;
-            bucket_branch_recovery <= 64'd0;
-            bucket_resp_block <= 64'd0;
-            bucket_stage_latency <= 64'd0;
-            bucket_unknown <= 64'd0;
             occ_if <= 64'd0;
             occ_ifid <= 64'd0;
             occ_id <= 64'd0;
@@ -1938,25 +1942,8 @@ module PipelineCPIStat (
             frontend_icache_miss_wait_seen <= 64'd0;
             frontend_icache_refill_wait_seen <= 64'd0;
             frontend_itlb_miss_wait_seen <= 64'd0;
-            frontend_self_wait <= 64'd0;
-            frontend_backpressure_wait <= 64'd0;
-            frontend_ifid_queue_full_wait <= 64'd0;
-            frontend_id_not_ready_backpressure <= 64'd0;
-            frontend_ex_not_ready_backpressure <= 64'd0;
-            frontend_if_pipe_no_resp_wait <= 64'd0;
-            frontend_if_pipe_req_not_ready_wait <= 64'd0;
-            frontend_icache_miss_refill_wait <= 64'd0;
-            frontend_icache_req_wait <= 64'd0;
-            frontend_epoch_drop_recovery_wait <= 64'd0;
-            frontend_ptw_wait <= 64'd0;
-            frontend_unknown <= 64'd0;
-            mem_load_resp_wait <= 64'd0;
-            mem_store_resp_wait <= 64'd0;
-            mem_load_req_wait <= 64'd0;
-            mem_store_req_wait <= 64'd0;
             mem_store_wait <= 64'd0;
             mem_load_wait <= 64'd0;
-            mem_single_outstanding_wait <= 64'd0;
             prev_icache_req_wait_cycle <= 64'd0;
             prev_icache_miss_wait_cycle <= 64'd0;
             prev_dcache_miss_wait_cycle <= 64'd0;
@@ -1981,11 +1968,6 @@ module PipelineCPIStat (
             resp_block_wait_commit <= 64'd0;
             resp_block_if_stage_not_accepting <= 64'd0;
             resp_block_unknown <= 64'd0;
-            stage_latency_ifid_valid <= 64'd0;
-            stage_latency_id_valid <= 64'd0;
-            stage_latency_ex_valid <= 64'd0;
-            stage_latency_mem_valid <= 64'd0;
-            stage_latency_frontend_empty <= 64'd0;
             ifq_depth0_cycles <= 64'd0;
             ifq_depth1_cycles <= 64'd0;
             ifq_depth2_cycles <= 64'd0;
@@ -2313,7 +2295,6 @@ module PipelineCPIStat (
             print_stats();
             printed <= 1'b1;
         end else if (!printed) begin
-            cycle_count <= cycle_count + 64'd1;
             prev_exmem_skid_enqueue <= stat_exmem_skid_enqueue_fire;
             prev_icache_req_wait_cycle <= icache_req_wait_cycle;
             prev_icache_miss_wait_cycle <= icache_miss_wait_cycle;
@@ -2527,13 +2508,8 @@ module PipelineCPIStat (
                 frontend_icache_refill_wait_seen <= frontend_icache_refill_wait_seen + 64'd1;
             end
 
-            if (ms_stage_block_req_load) mem_load_req_wait <= mem_load_req_wait + 64'd1;
-            if (ms_stage_block_req_store) mem_store_req_wait <= mem_store_req_wait + 64'd1;
-            if (ms_stage_block_resp_load) mem_load_resp_wait <= mem_load_resp_wait + 64'd1;
-            if (ms_stage_block_resp_store) mem_store_resp_wait <= mem_store_resp_wait + 64'd1;
             if (ms_stage_block_load) mem_load_wait <= mem_load_wait + 64'd1;
             if (ms_stage_block_store) mem_store_wait <= mem_store_wait + 64'd1;
-            if (ms_stage_block_resp_phase) mem_single_outstanding_wait <= mem_single_outstanding_wait + 64'd1;
             if (ms_stat_mreq_valid && ms_stat_mreq_is_load && ms_stat_mreq_need_mem) begin
                 lrp_load_req_total <= lrp_load_req_total + 64'd1;
             end
@@ -3139,81 +3115,7 @@ module PipelineCPIStat (
             end
 
             if (real_commit) begin
-                commit_count <= commit_count + 64'd1;
                 occ_commit <= occ_commit + 64'd1;
-            end else begin
-                bubble_count <= bubble_count + 64'd1;
-                if (trap_flush_now) begin
-                    bucket_trap_flush <= bucket_trap_flush + 64'd1;
-                end else if (wb_block_now) begin
-                    bucket_wb_block <= bucket_wb_block + 64'd1;
-                end else if (store_wait_now) begin
-                    bucket_store_wait <= bucket_store_wait + 64'd1;
-                end else if (dcache_wait_now) begin
-                    bucket_dcache_wait <= bucket_dcache_wait + 64'd1;
-                end else if (mem_lsu_wait_now) begin
-                    bucket_mem_lsu_wait <= bucket_mem_lsu_wait + 64'd1;
-                end else if (load_use_now) begin
-                    bucket_load_use <= bucket_load_use + 64'd1;
-                end else if (raw_hazard_now) begin
-                    bucket_raw_hazard <= bucket_raw_hazard + 64'd1;
-                end else if (csr_special_now) begin
-                    bucket_csr_special <= bucket_csr_special + 64'd1;
-                end else if (id_stall_now) begin
-                    bucket_id_stall <= bucket_id_stall + 64'd1;
-                end else if (ex_stall_now) begin
-                    bucket_ex_stall <= bucket_ex_stall + 64'd1;
-                end else if (if_id_empty_now) begin
-                    bucket_if_id_empty <= bucket_if_id_empty + 64'd1;
-                end else if (frontend_wait_now) begin
-                    bucket_frontend_wait <= bucket_frontend_wait + 64'd1;
-                    if (epoch_recovery_now) begin
-                        frontend_epoch_drop_recovery_wait <= frontend_epoch_drop_recovery_wait + 64'd1;
-                    end else if (ptw_wait_now) begin
-                        frontend_ptw_wait <= frontend_ptw_wait + 64'd1;
-                    end else if (icache_miss_delta) begin
-                        frontend_icache_miss_refill_wait <= frontend_icache_miss_refill_wait + 64'd1;
-                    end else if (icache_req_delta || (ibus_req_valid && !ibus_req_ready)) begin
-                        frontend_icache_req_wait <= frontend_icache_req_wait + 64'd1;
-                    end else if (ifid_queue_full_now) begin
-                        frontend_ifid_queue_full_wait <= frontend_ifid_queue_full_wait + 64'd1;
-                    end else if (id_not_ready_now) begin
-                        frontend_id_not_ready_backpressure <= frontend_id_not_ready_backpressure + 64'd1;
-                    end else if (ex_not_ready_now) begin
-                        frontend_ex_not_ready_backpressure <= frontend_ex_not_ready_backpressure + 64'd1;
-                    end else if (if_pipe_req_not_ready_now) begin
-                        frontend_if_pipe_req_not_ready_wait <= frontend_if_pipe_req_not_ready_wait + 64'd1;
-                    end else if (if_pipe_no_resp_now) begin
-                        frontend_if_pipe_no_resp_wait <= frontend_if_pipe_no_resp_wait + 64'd1;
-                    end else if (frontend_self_wait_now) begin
-                        frontend_self_wait <= frontend_self_wait + 64'd1;
-                    end else if (frontend_backpressure_like_now) begin
-                        frontend_backpressure_wait <= frontend_backpressure_wait + 64'd1;
-                    end else begin
-                        frontend_unknown <= frontend_unknown + 64'd1;
-                    end
-                end else if (icache_fetch_wait_now) begin
-                    bucket_icache_fetch_wait <= bucket_icache_fetch_wait + 64'd1;
-                end else if (branch_recovery_now) begin
-                    bucket_branch_recovery <= bucket_branch_recovery + 64'd1;
-                end else if (icache_pipe_resp_block_now) begin
-                    bucket_resp_block <= bucket_resp_block + 64'd1;
-                end else if (stage_latency_now) begin
-                    bucket_stage_latency <= bucket_stage_latency + 64'd1;
-                    if (ms_valid || ms_to_ws_valid) begin
-                        stage_latency_mem_valid <= stage_latency_mem_valid + 64'd1;
-                    end else if (es_valid || es_to_ms_valid) begin
-                        stage_latency_ex_valid <= stage_latency_ex_valid + 64'd1;
-                    end else if (ds_to_es_valid) begin
-                        stage_latency_id_valid <= stage_latency_id_valid + 64'd1;
-                    end else if (fs_to_ds_valid || if_stat_fs_valid) begin
-                        stage_latency_ifid_valid <= stage_latency_ifid_valid + 64'd1;
-                    end else begin
-                        stage_latency_frontend_empty <= stage_latency_frontend_empty + 64'd1;
-                    end
-                end else begin
-                    bucket_unknown <= bucket_unknown + 64'd1;
-                end
             end
 
         end

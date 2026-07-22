@@ -32,11 +32,27 @@ PPA 数据，因此不会填入此表。
 | Profile | Cycles | Retired/committed instructions | CoreMark CPI | 条件摘要 | Evidence / nonclaim |
 | --- | ---: | ---: | ---: | --- | --- |
 | `rv32im_single_perf` | 4,578,012 | 3,081,085 | 1.48 | RV32IM 单发射，项目内 Verilator/NEMU 记录；公开流程尚未复现 binary hash 和完整配置 | `single_public_cpi_not_yet_claimed` |
-| `rv32ima_sv32_linux` | — | — | ≈1.98 | S-mode Sv32，ITLB/DTLB、hit pipeline、2-entry store buffer、fast MUL；仅有近似私有记录 | `linux_public_cpi_not_yet_claimed` |
+| `rv32ima_sv32_linux` | — | — | ≈1.72 | 后续优化的 Linux/System source snapshot `abf66cad`；S-mode Sv32、ITLB/DTLB、hit pipeline、2-entry store buffer、fast MUL、DCache load-hit 优化和 bridge-aware LSU load bypass；近似私有记录 | `linux_public_cpi_not_yet_claimed` |
 | `rv32im_ooo_4k` | 2,718,684 | 3,081,080 | 0.882380204 | RV32IM，IF/LSU/memory=`2/3/2`，seed 1，Verilator + NEMU difftest | `ooo_coremark_cpi_not_yet_claimed` |
 
 CoreMark CPI 是 `cycles / retired instructions`。它不是 CoreMark/MHz，不能在
 缺少 CoreMark score、迭代数、编译选项和时钟实现数据时换算为后者。
+
+### Linux Profile checkpoint 对照
+
+公开 Profile 当前锁定后续优化 checkpoint `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`，
+因此历史主表使用约 `1.72`。较早的 `e3a1cc91c4c00040f7180eec5e385326d9964893`
+约 `1.98` 仍保留为前一 checkpoint 对照；两者不是同一份 RTL，不能把旧数字
+当作当前 source 的结果。
+
+| Checkpoint | Source commit | Sv32 CoreMark CPI | 状态 |
+| --- | --- | ---: | --- |
+| 后续优化 checkpoint | `abf66cad0f9ad02efc8beb641d4005adeaeeae0b` | ≈1.72 | `linux_public_cpi_not_yet_claimed` |
+| 前一冻结 checkpoint | `e3a1cc91c4c00040f7180eec5e385326d9964893` | ≈1.98 | `linux_prior_checkpoint_cpi_not_claimed` |
+
+两行都属于 `provisional` 历史仿真记录，没有公开 binary hash、完整固定运行
+摘要或独立 fresh-clone CoreMark 复现，因此不升级为 verified claim。CoreMark/MHz、
+实现频率和面积继续保持 `—`/`not_claimed`。
 
 ## 历史多 workload 参考
 
