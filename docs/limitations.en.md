@@ -24,8 +24,9 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 - The project is a CPU plus a headless Verilator runtime, not a complete
   synthesizable SoC.
 - NVBoard, VGA, PS2, keyboard, GPIO, FPGA projects, and board tops are absent.
-- AXI UARTLite, AXI Timer, and AXI INTC currently exist only as NEMU/AM
-  reference-platform device models, not RTL peripherals in the public wrapper.
+- AXI UARTLite and AXI Timer have deterministic Verilator `runtime-only`
+  models but are not synthesizable RTL peripherals; AXI INTC remains NEMU/AM
+  `reference-only`.
 - The Linux Profile contains RTL `AclintTimer`, but OpenSBI, a Linux kernel,
   DTB, root filesystem, and complete board memory map are not bundled.
 - The bounded Linux image covers machine-mode RV32IMA/LRSC/CSR/trap behavior;
@@ -35,8 +36,8 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 
 ## Simulation and difftest
 
-- Public DPI sparse PMEM, legacy RTC, serial TX, and tohost are
-  simulation-only services, not silicon memory or peripheral models.
+- Public DPI sparse PMEM, legacy RTC, serial TX, AXI Timer, UARTLite, and tohost
+  are simulation-only services, not silicon memory or peripheral models.
 - Latency settings describe clocked simulation transport, not SRAM access
   time, AXI QoS, or cache-hit timing.
 - Difftest is off by default. The local adapter is a bounded
@@ -51,19 +52,20 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 
 ## Performance, frequency, and area
 
-- The public headless runtime has now completed profile-matched CoreMark runs for
-  all three Profiles using external, unbundled binaries, with cycles/commit/CPI
-  recorded. These rows remain `provisional_external_input`, not verified claims.
-- Profile-matched CoreMark difftest is not fully accepted: Single/Linux MMIO
-  accesses exceed the `device=false` contract, and OoO has an early GPR mismatch.
-  A runtime PASS therefore does not replace an architecture-level difftest PASS.
-- The private rerun of the later Linux checkpoint is CPI `1.725978726`
-  (approximately `1.72`), while the current public filelist with
-  `WRITE_ALLOCATE=1` is `1.742774400`; these are different configurations and
-  must not be combined.
-- OoO `0.912836351` is a weighted CPI for seven finite workloads, not a
-  universal CPI guarantee and not a replacement for CoreMark CPI
-  `0.882380204`.
+- Single/Linux hash-locked CoreMark marker accounting, self-check, and NEMU
+  difftest pass. The verified scope is only the fixed binary, configuration,
+  and simulation conditions; it excludes absolute CoreMark score, frequency,
+  and silicon performance.
+- OoO CoreMark self-check and marker accounting pass, but reference ordering for
+  a dual-retire MMIO packet is ambiguous. Its timed CPI `0.879973757` remains
+  provisional (`ooo_public_coremark_runtime_provisional`).
+- Linux private/public timed intervals now match exactly at CPI `1.725375105`.
+  The `WRITE_ALLOCATE=1` whole CPI `1.742798498` is dominated by pre-marker
+  overhead and is not an approximately one-percent CoreMark-loop difference
+  (`linux_write_allocate_coremark_speedup_not_claimed`).
+- OoO `0.912836351` is an instruction-weighted aggregate CPI for seven finite
+  workloads, not a universal CPI guarantee and not a replacement for current
+  timed CoreMark CPI.
 - The Single approximately 704 MHz value is arithmetic inference from a
   negative-WNS 1 ns DC stress run, not 700 MHz closure, maximum frequency,
   P&R, or silicon performance.

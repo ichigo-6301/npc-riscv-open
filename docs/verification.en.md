@@ -16,7 +16,7 @@ and zero protocol errors.
 | Bounded smoke/regression | checked-in small programs pass on the headless runtime | `verified` |
 | Local NEMU difftest | Profile-matched PC/instruction/GPR commit check | bounded PASS; overall `partial` |
 | Complete OpenSBI/Linux | firmware, Sv32 page tables, interrupts, and devices | `not_claimed` |
-| Performance benchmarks | public reproduction of fixed external CoreMark/workload inputs | `provisional` |
+| Performance benchmarks | hash-locked CoreMark marker accounting and difftest | Single/Linux `verified`; OoO `provisional` |
 | ASIC/PPA | synthesis, P&R, STA, power, and signoff | `not_claimed` |
 
 No functional coverage database is available; `coverage_status` is
@@ -58,25 +58,26 @@ faults, OpenSBI startup, or a Linux kernel.
 | Profile / image | Cycles | Commit packets | Result |
 | --- | ---: | ---: | --- |
 | `rv32im_single_perf/smoke.hex` | 269 | 27 | `PUBLIC_SIM_PASS` |
-| `rv32ima_sv32_linux/smoke.hex` | 162 | 27 | `PUBLIC_SIM_PASS` |
-| `rv32ima_sv32_linux/arch_smoke.hex` | 80 | 15 | `PUBLIC_SIM_PASS` |
+| `rv32ima_sv32_linux/smoke.hex` | 150 | 27 | `PUBLIC_SIM_PASS` |
+| `rv32ima_sv32_linux/arch_smoke.hex` | 77 | 15 | `PUBLIC_SIM_PASS` |
 | `rv32im_ooo_4k/smoke.hex` | 107 | 26 (lane 0: 21 + lane 1: 5) | `PUBLIC_SIM_PASS` |
 
 These cycle counts establish deterministic source-set, wrapper, DPI transport,
 and runner behavior only. They are not CoreMark, Linux boot, CPI, frequency,
 or area results.
 
-## External CoreMark runtime results
+## Hash-locked CoreMark results
 
 The public runner emits `PUBLIC_SIM_PASS cycles=... commit=... commit2=...` at
-termination. All three Profiles have now reached a normal ebreak with their
-CoreMark images in the headless runtime; Single/OoO show a CoreMark PASS marker,
-while Linux has no visible marker because AXI UARTLite/AXI Timer are not modeled
-by the public runtime. The inputs are not bundled and profile-matched difftest is
-not fully accepted, so the state is `provisional_external_input`. Exact input
-hashes, latency, CPI calculation, and difftest boundaries are recorded in
-[CoreMark runtime evidence](evidence/coremark_reproduction.en.md); the result is
-not presented as an architecture-level verified claim.
+termination. All three Profiles pass the CoreMark self-check, close the
+start/stop marker interval, reach a good trap, and satisfy the watchdog. The
+public runtime now provides deterministic AXI Timer/UARTLite behavior. Single
+and Linux pass Profile-matched NEMU difftest, so their timed CPI, whole CPI, and
+CoreMark/MHz are `verified`. OoO self-check and accounting pass, but a
+dual-retire MMIO packet cannot use the single-retire skip-and-sync rule without
+ordering ambiguity, so it remains `provisional`. Exact input/config hashes,
+counter partitions, and protocol boundaries are in
+[CoreMark measurement evidence](evidence/coremark_reproduction.en.md).
 
 ## Local strict difftest
 
@@ -94,8 +95,10 @@ ignores only untouched sentinels; every committed register write must still
 match. Single-issue Profiles reset GPRs to zero and compare all entries.
 
 The overall state remains `partial`: NEMU source and `.so` files are external
-local artifacts, and the ABI does not compare devices, timer ticks, interrupt
-timing, or arbitrary MMIO side effects.
+local artifacts, and the ABI does not compare cycle-exact device state, timer
+ticks, interrupt timing, or arbitrary MMIO side effects. Single/Linux CoreMark
+uses deterministic skip-and-sync only for exact known Timer/UART MMIO; unknown
+addresses and side effects fail.
 
 ## Fresh-clone requirements
 
@@ -103,7 +106,9 @@ For the target commit in a native-Linux temporary directory:
 
 1. run `verify-checksums`, `docs-check`, source closure, and hygiene;
 2. run lint, smoke, and regression for all three Profiles;
-3. run bounded difftest when local NEMU is supplied;
+3. run bounded difftest when local NEMU is supplied; when hash-locked CoreMark
+   inputs are also supplied, run Single/Linux `coremark-difftest` and OoO
+   `coremark`;
 4. check every source-set SHA256;
 5. confirm that the worktree remains clean after testing.
 

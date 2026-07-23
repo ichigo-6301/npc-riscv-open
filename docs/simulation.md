@@ -115,6 +115,23 @@ library。`make difftest` 会验证 sidecar hash、Profile、reset vector 和 im
 退休。它不验证完整 Linux device/MMIO/interrupt 等价，详见
 [SoC 集成](soc-integration.md)。
 
+## CoreMark
+
+CoreMark 使用 hash-locked manifest，同时要求 binary 与 ELF：
+
+```sh
+make rv32im_single_perf_defconfig
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark.elf \
+make coremark-difftest
+```
+
+`make coremark` 默认不启用 difftest；`make coremark-difftest` 使用选中 Profile
+的本地 adapter。runner 校验输入 hash 和 start/stop marker，并输出 timed、
+whole、pre/post 计数及 CoreMark/MHz JSON。OoO 当前只使用 `make coremark`，因为
+双退休 MMIO packet 的 reference 顺序仍有歧义。详见
+[CoreMark 计量证据](evidence/coremark_reproduction.md)。
+
 ## 输出与 Git clean
 
 构建、trace、local NEMU 和用户镜像输出应位于 Git 忽略路径。运行后使用：

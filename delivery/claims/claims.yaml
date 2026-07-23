@@ -1,7 +1,114 @@
 {
-  "claims": [],
+  "claims": [
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, 10 iterations, one context",
+      "caveat": "This is the retirement-marker interval for the fixed external binary; it is not an absolute CoreMark score, frequency, physical-implementation, or silicon claim",
+      "configuration": "source f76de57479b798aca7468f999c386bb4cb5fce02; binary 601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742; config f397f1899ed896023c81f2a16e9eb9523eb2599a5539b923c7132ae69881528e; IF/LSU/memory=2/2/2; seed=1; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "single_public_coremark_timed_cpi",
+      "metric": "timed_CPI",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The hash-locked 10-iteration CoreMark interval completes at CPI 1.484920431 on the rv32im_single_perf headless Verilator profile",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "cycles_per_retired_instruction",
+      "value": 1.484920431
+    },
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, 10 iterations, one context",
+      "caveat": "Cycle-normalized CoreMark/MHz uses iterations times one million divided by timed cycles; no implemented clock frequency or absolute CoreMark score is claimed",
+      "configuration": "source f76de57479b798aca7468f999c386bb4cb5fce02; binary 601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742; timed cycles=4542529; config f397f1899ed896023c81f2a16e9eb9523eb2599a5539b923c7132ae69881528e; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "single_public_coremark_per_mhz",
+      "metric": "CoreMark_per_MHz",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The same fixed CoreMark interval provides 2.201416876 CoreMark/MHz when normalized by simulated cycles",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "iterations_per_million_cycles",
+      "value": 2.201416876
+    },
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, complete image from reset to ebreak",
+      "caveat": "Whole-program CPI includes initialization, MMIO timing, text output, and termination outside the measured CoreMark interval",
+      "configuration": "source f76de57479b798aca7468f999c386bb4cb5fce02; 4578065 cycles; 3081085 retired instructions; config f397f1899ed896023c81f2a16e9eb9523eb2599a5539b923c7132ae69881528e; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "single_public_coremark_whole_cpi",
+      "metric": "whole_program_CPI",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The complete canonical CoreMark image, including startup and output, completes at whole-program CPI 1.485861312",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "cycles_per_retired_instruction",
+      "value": 1.485861312
+    },
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, Sv32 S-mode, 10 iterations, one context",
+      "caveat": "This is the retirement-marker interval for the fixed external binary; it does not claim complete Linux boot, frequency, physical implementation, or silicon performance",
+      "configuration": "source abf66cad0f9ad02efc8beb641d4005adeaeeae0b; binary 50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5; config 82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea; WRITE_ALLOCATE=0; IF/LSU/memory=0/0/0; seed=1; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "linux_public_coremark_timed_cpi",
+      "metric": "timed_CPI",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "statement": "The hash-locked 10-iteration Sv32 CoreMark interval completes at CPI 1.725375105 on the rv32ima_sv32_linux headless Verilator profile",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "cycles_per_retired_instruction",
+      "value": 1.725375105
+    },
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, Sv32 S-mode, 10 iterations, one context",
+      "caveat": "Cycle-normalized CoreMark/MHz uses iterations times one million divided by timed cycles; no implemented clock frequency or absolute CoreMark score is claimed",
+      "configuration": "source abf66cad0f9ad02efc8beb641d4005adeaeeae0b; binary 50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5; timed cycles=5278164; config 82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "linux_public_coremark_per_mhz",
+      "metric": "CoreMark_per_MHz",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "statement": "The same fixed Sv32 CoreMark interval provides 1.894598197 CoreMark/MHz when normalized by simulated cycles",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "iterations_per_million_cycles",
+      "value": 1.894598197
+    },
+    {
+      "benchmark": "AM CoreMark commit 034e6c6b5902709546fa74ad70e3a3238ecee576, complete image from reset to ebreak",
+      "caveat": "Whole-program CPI includes page-table setup, initialization, deterministic Timer/UART MMIO, text output, and termination outside the measured CoreMark interval",
+      "configuration": "source abf66cad0f9ad02efc8beb641d4005adeaeeae0b; 5613603 cycles; 3252481 retired instructions; WRITE_ALLOCATE=0; config 82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea; difftest=pass",
+      "evidence": [
+        "coremark_public_current"
+      ],
+      "id": "linux_public_coremark_whole_cpi",
+      "metric": "whole_program_CPI",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "statement": "The complete canonical Sv32 CoreMark image, including startup and output, completes at whole-program CPI 1.725944902",
+      "status": "verified",
+      "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
+      "unit": "cycles_per_retired_instruction",
+      "value": 1.725944902
+    }
+  ],
   "kind": "claims",
-  "project_id": "npc-riscv-open",
-  "schema_version": "1.0.0",
-  "snapshot_id": "v0.1.0"
+  "schema_version": "1.0.0"
 }

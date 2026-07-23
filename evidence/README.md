@@ -18,11 +18,14 @@ Values derived from private notes, remembered results, incomplete logs, or a
 different host flow remain `provisional`. Future targets are `planned`; metrics
 that the project intentionally does not assert are `not_claimed`.
 
-CoreMark CPI, CoreMark/MHz, multi-workload weighted CPI, clock frequency, cell
-area, physical area, and power are distinct metrics. They must not be merged or
-compared without matching workload, source, configuration, memory model, tool,
-and implementation conditions.
+CoreMark timed CPI, whole-program CPI, CoreMark/MHz, instruction-weighted
+multi-workload aggregate CPI, clock frequency, cell area, physical area, and
+power are distinct metrics. They must not be merged or compared without
+matching workload, source, configuration, memory model, tool, and
+implementation conditions.
 
-The current performance page lists historical references only to make known
-data and gaps visible. The public reproduction cells remain empty until this
-directory contains the required evidence.
+`performance/coremark.json` is the bounded numeric source for the current
+CoreMark table and Linux parity result. Single/Linux records are verified under
+their fixed external-input contracts; the OoO record carries its own
+provisional difftest boundary. Frequency, area, power, and absolute CoreMark
+score remain empty until separate evidence satisfies this policy.

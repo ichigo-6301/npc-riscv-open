@@ -22,8 +22,8 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 
 - 工程是 CPU + headless Verilator runtime，不是完整可综合 SoC。
 - NVBoard、VGA、PS2、keyboard、GPIO、FPGA project 和板级 top 均不包含。
-- AXI UARTLite、AXI Timer 和 AXI INTC 当前仅是 NEMU/AM reference platform
-  的设备模型，不是公开 wrapper 中的 RTL 外设。
+- AXI UARTLite 和 AXI Timer 有 deterministic Verilator `runtime-only` 模型，
+  但不是可综合 RTL 外设；AXI INTC 仍为 NEMU/AM `reference-only`。
 - Linux Profile 内部包含 `AclintTimer`，但仓库不携带 OpenSBI、Linux kernel、
   DTB、rootfs 或完整板级 memory map。
 - 当前 bounded Linux image 只覆盖 machine-mode RV32IMA/LRSC/CSR/trap，不能
@@ -33,8 +33,8 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 
 ## 仿真与 difftest
 
-- 公共 DPI sparse PMEM、legacy RTC、serial TX 和 tohost 是 simulation-only
-  服务，不是硅上 memory 或 peripheral 模型。
+- 公共 DPI sparse PMEM、legacy RTC、serial TX、AXI Timer、UARTLite 和 tohost
+  是 simulation-only 服务，不是硅上 memory 或 peripheral 模型。
 - latency 参数描述时钟化仿真 transport，不是 SRAM access time、AXI QoS 或
   cache hit timing。
 - 默认 difftest 关闭。本地 adapter 只做 bounded PC/instruction/GPR commit
@@ -47,17 +47,17 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 
 ## 性能、频率与面积
 
-- 公开 headless runtime 已使用外部、未打包的 profile-matched CoreMark binary
-  跑通三个 Profile，并记录 cycles/commit/CPI；这些行仍是
-  `provisional_external_input`，不是 verified claim。
-- 公开 CoreMark 的 profile-matched difftest 目前未全部接受：Single/Linux 的
-  MMIO 访问超出 `device=false` 合同，OoO 在早期 commit 出现 GPR mismatch；
-  因此 runtime PASS 不能替代架构级 difftest PASS。
-- Linux 后续优化 checkpoint 的私有重跑为 CPI `1.725978726`（约 `1.72`），
-  当前公开 filelist 的 `WRITE_ALLOCATE=1` 运行是 `1.742774400`；两者配置不同，
-  不能合并成一个数字。
-- OoO 的 `0.912836351` 是有限七 workload 的 weighted CPI，不是通用 CPI
-  保证，也不能替代 CoreMark CPI `0.882380204`。
+- Single/Linux 的 hash-locked CoreMark marker 计量、self-check 和 NEMU difftest
+  已通过；verified 范围仅限固定 binary、config 和仿真条件，不包含绝对
+  CoreMark score、频率或硅后性能。
+- OoO CoreMark self-check 和 marker 计数通过，但双退休 MMIO packet 的 reference
+  顺序有歧义；其 timed CPI `0.879973757` 仍为 provisional
+  （`ooo_public_coremark_runtime_provisional`）。
+- Linux 私有/公开 timed 区间已精确同步为 CPI `1.725375105`。`WRITE_ALLOCATE=1`
+  的 whole CPI `1.742798498` 主要由 start marker 前开销造成，不能表述为
+  CoreMark 主循环约 1% 的差异（`linux_write_allocate_coremark_speedup_not_claimed`）。
+- OoO 的 `0.912836351` 是有限七项工作负载的 instruction-weighted aggregate
+  CPI，不是通用 CPI 保证，也不能替代当前 CoreMark timed CPI。
 - Single 的约 704 MHz 是 1 ns DC stress 出现负 WNS 后的算术推算，不是
   700 MHz closure、最大频率、P&R 或 silicon 结果。
 - Single 的 `184926.124968` 是该历史 DC 配置下的 library area 数值，不是

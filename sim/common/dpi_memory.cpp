@@ -22,6 +22,21 @@ constexpr unsigned kPairCapacity = 8;
 constexpr uint32_t kRtcLow = 0xa0000048u;
 constexpr uint32_t kRtcHigh = 0xa000004cu;
 constexpr uint32_t kSerialPort = 0xa00003f8u;
+constexpr uint32_t kAxiTimerBase = 0xa0000000u;
+constexpr uint32_t kAxiTimerSize = 0x20u;
+constexpr uint32_t kAxiTimerTcsr0 = 0x00u;
+constexpr uint32_t kAxiTimerTlr0 = 0x04u;
+constexpr uint32_t kAxiTimerTcr0 = 0x08u;
+constexpr uint32_t kAxiTimerTcsr1 = 0x10u;
+constexpr uint32_t kAxiTimerTlr1 = 0x14u;
+constexpr uint32_t kAxiTimerTcr1 = 0x18u;
+constexpr uint32_t kAxiTimerLoad = 0x20u;
+constexpr uint32_t kAxiTimerEnable = 0x80u;
+constexpr uint32_t kUartLiteBase = 0xa0010000u;
+constexpr uint32_t kUartLiteSize = 0x10u;
+constexpr uint32_t kUartLiteTx = 0x04u;
+constexpr uint32_t kUartLiteStatus = 0x08u;
+constexpr uint32_t kUartLiteTxEmpty = 0x04u;
 
 enum HaltReason : int {
   kHaltNone = 0,
@@ -82,6 +97,11 @@ int g_halt_reason = kHaltNone;
 uint32_t g_halt_pc = 0;
 uint32_t g_halt_instr = 0;
 bool g_protocol_error = false;
+uint32_t g_axi_tcsr0 = 0;
+uint32_t g_axi_tcsr1 = 0;
+uint32_t g_axi_tlr0 = 0;
+uint32_t g_axi_tlr1 = 0;
+uint64_t g_axi_counter = 0;
 
 uint32_t env_u32(const char *name, uint32_t fallback) {
   const char *s = std::getenv(name);
@@ -144,8 +164,56 @@ void write_pmem(uint32_t addr, int len, uint32_t value) {
   }
 }
 
+bool in_mmio_window(uint32_t addr, uint32_t base, uint32_t size) {
+  return addr >= base && addr < base + size;
+}
+
+uint32_t read_axi_timer(uint32_t addr) {
+  switch (addr - kAxiTimerBase) {
+    case kAxiTimerTcsr0: return g_axi_tcsr0;
+    case kAxiTimerTlr0: return g_axi_tlr0;
+    case kAxiTimerTcr0: return static_cast<uint32_t>(g_axi_counter);
+    case kAxiTimerTcsr1: return g_axi_tcsr1;
+    case kAxiTimerTlr1: return g_axi_tlr1;
+    case kAxiTimerTcr1: return static_cast<uint32_t>(g_axi_counter >> 32);
+    default: return 0;
+  }
+}
+
+void write_axi_timer(uint32_t addr, uint32_t value) {
+  switch (addr - kAxiTimerBase) {
+    case kAxiTimerTcsr0:
+      g_axi_tcsr0 = value & ~kAxiTimerLoad;
+      if ((value & kAxiTimerLoad) != 0) {
+        g_axi_counter = (g_axi_counter & 0xffffffff00000000ull) | g_axi_tlr0;
+      }
+      return;
+    case kAxiTimerTlr0:
+      g_axi_tlr0 = value;
+      return;
+    case kAxiTimerTcsr1:
+      g_axi_tcsr1 = value & ~kAxiTimerLoad;
+      if ((value & kAxiTimerLoad) != 0) {
+        g_axi_counter = (uint64_t(g_axi_tlr1) << 32) |
+                        (g_axi_counter & 0xffffffffull);
+      }
+      return;
+    case kAxiTimerTlr1:
+      g_axi_tlr1 = value;
+      return;
+    default:
+      return;
+  }
+}
+
 uint32_t read_access(uint32_t addr, int len) {
   if (in_pmem(addr, len)) return read_pmem(addr, len);
+  if (in_mmio_window(addr, kAxiTimerBase, kAxiTimerSize)) {
+    return read_axi_timer(addr);
+  }
+  if (in_mmio_window(addr, kUartLiteBase, kUartLiteSize)) {
+    return addr - kUartLiteBase == kUartLiteStatus ? kUartLiteTxEmpty : 0;
+  }
   if (addr == kRtcLow) return static_cast<uint32_t>(g_tick);
   if (addr == kRtcHigh) return static_cast<uint32_t>(g_tick >> 32);
   return 0;
@@ -161,6 +229,17 @@ void write_access(uint32_t addr, int len, uint32_t value) {
   }
   if (in_pmem(addr, len)) {
     write_pmem(addr, len, value);
+    return;
+  }
+  if (in_mmio_window(addr, kAxiTimerBase, kAxiTimerSize)) {
+    if (len == 4) write_axi_timer(addr, value);
+    return;
+  }
+  if (in_mmio_window(addr, kUartLiteBase, kUartLiteSize)) {
+    if (addr - kUartLiteBase == kUartLiteTx && (len == 1 || len == 4)) {
+      std::putchar(static_cast<int>(value & 0xffu));
+      std::fflush(stdout);
+    }
     return;
   }
   if (addr == kSerialPort && (len == 1 || len == 4)) {
@@ -222,6 +301,11 @@ extern "C" void npc_mem_reset(void) {
   g_halt_pc = 0;
   g_halt_instr = 0;
   g_protocol_error = false;
+  g_axi_tcsr0 = 0;
+  g_axi_tcsr1 = 0;
+  g_axi_tlr0 = 0;
+  g_axi_tlr1 = 0;
+  g_axi_counter = 0;
   if (!g_explicit_config) {
     g_memory_latency = env_u32("NPC_PUBLIC_MEM_LATENCY", 1);
     g_channel_latency[0] =
@@ -235,7 +319,10 @@ extern "C" void npc_mem_reset(void) {
   if (g_limit <= g_base) protocol_fail("memory limit must exceed base");
 }
 
-extern "C" void npc_mem_tick(void) { ++g_tick; }
+extern "C" void npc_mem_tick(void) {
+  ++g_tick;
+  if ((g_axi_tcsr0 & kAxiTimerEnable) != 0) ++g_axi_counter;
+}
 
 extern "C" int npc_mem_load(const char *path) {
   if (!path || !*path) return 0;

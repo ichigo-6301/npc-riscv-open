@@ -33,6 +33,7 @@ PROFILE_FILELISTS = {
     profile: "filelists/{}.f".format(profile) for profile in PROFILE_SYMBOLS
 }
 NEMU_BUNDLE_METADATA = "delivery/difftest/nemu_profiles.json"
+COREMARK_MANIFEST = "delivery/benchmarks/coremark.json"
 WRAPPER_TOP = "npc_public_sim_top"
 ALLOWED_CONFIG_KEYS = {
     *PROFILE_SYMBOLS.values(),
@@ -369,6 +370,7 @@ def validate_compile_contract(info: Mapping[str, Any]) -> None:
             "NPC_STORE_BUFFER_ENTRIES=2", "NPC_FAST_MUL",
             "NPC_FAST_MUL_LATENCY=2", "NPC_HAS_MMU=1", "NPC_HAS_ITLB=1",
             "NPC_HAS_DTLB=1", "NPC_ITLB_ENTRIES=16", "NPC_DTLB_ENTRIES=16",
+            "NPC_DCACHE_WRITE_ALLOCATE=0",
         },
         "rv32im_ooo_4k": {
             "NPC_USE_DPI", "NPC_M_EXTENSION", "NPC_DPI_MEM_LATENCY=2",
@@ -994,6 +996,31 @@ def run_sim(root: Path, config: Mapping[str, str], info: Mapping[str, Any], imag
     run_command(command, root, runtime_environment(config, reference_so), dry_run=False)
 
 
+def run_coremark(root: Path, config: Mapping[str, str], info: Mapping[str, Any],
+                 reference_so: str = "") -> None:
+    image = os.environ.get("NPC_OPEN_COREMARK_IMAGE", "")
+    elf = os.environ.get("NPC_OPEN_COREMARK_ELF", "")
+    if not image or not elf:
+        raise FlowError(
+            "CoreMark requires NPC_OPEN_COREMARK_IMAGE and NPC_OPEN_COREMARK_ELF"
+        )
+    for label, raw in (("CoreMark image", image), ("CoreMark ELF", elf)):
+        if not Path(raw).is_file():
+            raise FlowError("{} does not exist: {}".format(label, raw))
+    manifest = root / COREMARK_MANIFEST
+    if not manifest.is_file():
+        raise FlowError("missing hash-locked CoreMark manifest: {}".format(COREMARK_MANIFEST))
+    command = runner_command(root, config, info, image, False, reference_so=reference_so)
+    suffix = "-difftest" if reference_so else ""
+    command.extend([
+        "--benchmark-manifest", str(manifest),
+        "--benchmark-elf", elf,
+        "--json-summary",
+        "build/performance/{}/coremark{}.json".format(info["profile"], suffix),
+    ])
+    run_command(command, root, runtime_environment(config, reference_so), dry_run=False)
+
+
 def lint(root: Path, info: Mapping[str, Any], dry_run: bool) -> None:
     check_source_closure(root, info)
     tool = os.environ.get("VERILATOR", "verilator")
@@ -1130,6 +1157,20 @@ def dispatch(root: Path, config_path: Path, args: argparse.Namespace) -> None:
         image = image_argument(config, fallback=fallback)
         run_sim(root, config, info, image, False, reference_so=reference_so)
         return
+    if args.command in ("coremark", "coremark-difftest"):
+        reference_so = ""
+        if args.command == "coremark-difftest":
+            reference_so = (
+                os.environ.get("NPC_OPEN_REFERENCE_SO", "")
+                or config.get("CONFIG_NPC_REFERENCE_SO", "")
+                or default_reference_adapter(root, str(info["profile"]))
+            )
+            if not reference_so or not Path(reference_so).is_file():
+                raise FlowError(
+                    "coremark-difftest requires a prepared profile-matched adapter"
+                )
+        run_coremark(root, config, info, reference_so)
+        return
     if args.command == "opensbi-smoke":
         if info["profile"] != "rv32ima_sv32_linux":
             raise FlowError("opensbi-smoke is only defined for rv32ima_sv32_linux")
@@ -1161,6 +1202,8 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("smoke")
     subparsers.add_parser("regression")
     subparsers.add_parser("difftest")
+    subparsers.add_parser("coremark")
+    subparsers.add_parser("coremark-difftest")
     prepare = subparsers.add_parser("difftest-prepare")
     prepare.add_argument("--profile", dest="prepare_profile", default="all",
                          choices=("rv32im_single_perf", "rv32ima_sv32_linux",

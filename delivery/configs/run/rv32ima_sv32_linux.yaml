@@ -3,6 +3,7 @@
   "constraints": {
     "a_extension": true,
     "architectural_overrides_allowed": false,
+    "dcache_write_allocate": false,
     "dpi_memory_latency_cycles": 0,
     "fast_mul_latency_cycles": 2,
     "ftrace": false,
@@ -14,6 +15,7 @@
     "nvboard": false,
     "pmemtrace": false,
     "reset_vector": "0x80000000",
+    "runtime_device_model": "deterministic_axi_timer_uartlite_v1",
     "store_buffer_entries": 2,
     "sv32": true,
     "trace_default": false,
@@ -39,6 +41,7 @@
   "run_id": "rv32ima_sv32_linux_smoke",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
+  "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
   "stages": [
     "config_check",
     "source_closure",

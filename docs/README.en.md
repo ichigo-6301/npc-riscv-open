@@ -11,9 +11,9 @@ conditions.
 
 | Profile | Architecture | Current public validation state |
 | --- | --- | --- |
-| `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, lint, and bounded smoke/regression verified; historical CoreMark/PPA provisional |
-| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | bounded architecture tests verified; full OpenSBI/Linux and synthesis not claimed |
-| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure, lint, and bounded dual-width smoke/regression verified; historical performance provisional |
+| `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, regression, and hash-locked CoreMark+difftest verified |
+| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | bounded architecture tests and hash-locked CoreMark+difftest verified; complete Linux not claimed |
+| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure and dual-width regression verified; CoreMark provisional at the dual-retire MMIO difftest boundary |
 
 The three RTL sets are not one parameterized implementation. One build compiles
 one source set, while the public wrappers normalize only commit, halt, and

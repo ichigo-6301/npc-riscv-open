@@ -1,0 +1,58 @@
+{
+  "benchmark": "coremark",
+  "contexts": 1,
+  "iterations": 10,
+  "schema": "npc-riscv-open/coremark-benchmark-v1",
+  "source": {
+    "am_kernels_commit": "034e6c6b5902709546fa74ad70e3a3238ecee576",
+    "am_kernels_repository": "https://github.com/NJU-ProjectN/am-kernels.git",
+    "am_kernels_tree": "68b00f06363e32a159ebaa49aad83b6b248a6796",
+    "am_platform_tree": "bd14e31e7d46040bed801983482696f1b069cd99",
+    "am_platform_workbench_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+    "benchmark_patch": "coremark_iterations_10.patch",
+    "benchmark_patch_sha256": "586abb219713ac368b5e2d79289ce67a133af334346908328628f69d8e86279d",
+    "compiler": "riscv64-linux-gnu-gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0",
+    "compiler_flags": "-std=gnu11 -O2 -Wall -Werror -fno-builtin -fno-stack-protector -fno-pic -march=rv32im_zicsr -mabi=ilp32 -static -fdata-sections -ffunction-sections"
+  },
+  "variants": {
+    "rv32im_m": {
+      "arch": "riscv32-M-npc",
+      "binary_sha256": "601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742",
+      "elf_sha256": "0dec53590bd873d2fb4b0055e7f62bfc041eefad686b843e2eb2f867f8a615e3",
+      "image_base": "0x80000000",
+      "markers": {
+        "start": {
+          "instr": "0x38a7a223",
+          "pc": "0x800015dc"
+        },
+        "stop": {
+          "instr": "0x34a7a623",
+          "pc": "0x80001618"
+        }
+      },
+      "profiles": [
+        "rv32im_single_perf",
+        "rv32im_ooo_4k"
+      ]
+    },
+    "rv32ima_sv32": {
+      "arch": "riscv32s-M-fpga",
+      "binary_sha256": "50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5",
+      "elf_sha256": "6aee51c5ea8084fde549169fc3f4360f2e5705057356fc824a2c55943d36bab2",
+      "image_base": "0x80000000",
+      "markers": {
+        "start": {
+          "instr": "0x7ca7a023",
+          "pc": "0x80001788"
+        },
+        "stop": {
+          "instr": "0x78a7a423",
+          "pc": "0x800017c4"
+        }
+      },
+      "profiles": [
+        "rv32ima_sv32_linux"
+      ]
+    }
+  }
+}

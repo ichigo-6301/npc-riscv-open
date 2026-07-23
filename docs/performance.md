@@ -2,101 +2,100 @@
 
 [English](performance.en.md)
 
-本页借鉴处理器项目常用的 Profile 对比形式，但严格区分仿真 CPI、
-CoreMark/MHz、综合频率和面积。不同指标不能相互推导，也不能跨 Profile、
-commit、binary 或 memory model 合并。
+本页把 CoreMark 定时区间、完整程序 CPI、CoreMark/MHz、有限 workload 聚合和
+物理实现指标分开。所有当前数字来自
+[`evidence/performance/coremark.json`](../evidence/performance/coremark.json)；
+`make performance-check` 会校验公式、输入 hash、claim 和中英文页面的一致性。
 
-## 证据状态
+## 指标定义
 
-- `verified`：本仓库的固定输入和配置可复现，并有公开 evidence ID。
-- `provisional`：来自固定私有 commit 的历史记录，但尚未由当前公开流程独立
-  复现全部输入和条件。
-- `not_claimed`：当前明确不作结论。
-- `—`：尚无满足对应栏位要求的数据。
+```text
+timed CPI       = stop_commit_cycle - start_commit_cycle
+                  ---------------------------------------
+                  stop_commit_ordinal - start_commit_ordinal
 
-## 当前公开复现
+whole CPI       = reset-to-ebreak cycles / retired instructions
 
-这些是使用仓库外部、未打包 CoreMark binary 的当前 headless runtime 结果，状态为
-`provisional_external_input`，不是架构 verified claim。计数器来自 runner 的
-`PUBLIC_SIM_PASS`：单发射使用 `commit`，OoO 使用 `commit + commit2`。
+CoreMark/MHz    = iterations * 1,000,000 / timed cycles  # evidence:coremark_public_current
+```
 
-| Profile | CoreMark CPI | CoreMark/MHz | 七 workload weighted CPI | 闭合频率 | 面积 | 状态/证据 |
+本轮固定 `ITERATIONS=10`、单 context。CoreMark/MHz 是每百万仿真周期完成的
+iteration 数；它不是 host 输出的 `Marks`，也不是有真实工作频率后的绝对
+CoreMark score。后者目前为 `—`。
+
+## 当前 CoreMark 结果
+
+| Profile | Timed cycles / instructions | Timed CPI | CoreMark/MHz | Whole cycles / instructions | Whole CPI | 状态 |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| `rv32im_single_perf` | 1.486003063 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:single_public_coremark_runtime_provisional` |
-| `rv32ima_sv32_linux` | 1.742774400 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:linux_public_coremark_runtime_provisional` |
-| `rv32im_ooo_4k` | 0.882378295 | — | — | — | — | `evidence:coremark_public_runtime` / `nonclaim:ooo_public_coremark_runtime_provisional` |
+| `rv32im_single_perf` | 4,542,529 / 3,059,106 | 1.484920431 | 2.201416876 | 4,578,065 / 3,081,085 | 1.485861312 | `verified`，difftest PASS；`evidence:coremark_public_current` |
+| `rv32ima_sv32_linux` | 5,278,164 / 3,059,140 | 1.725375105 | 1.894598197 | 5,613,603 / 3,252,481 | 1.725944902 | `verified`，difftest PASS；`evidence:coremark_public_current` |
+| `rv32im_ooo_4k` | 2,691,933 / 3,059,106 | 0.879973757 | 3.714802709 | 2,718,727 / 3,081,116 | 0.882383851 | `provisional`，self-check PASS、双退休 MMIO difftest 歧义；`evidence:coremark_public_current` / `nonclaim:ooo_public_coremark_runtime_provisional` |
 
-Single/OoO 使用 M-mode binary，Linux 使用 S-mode Sv32 binary；三者的 binary
-hash、source commit、latency、完整命令和停机输出见[CoreMark 运行证据](evidence/coremark_reproduction.md)。
-由于 binary 未进入仓库，表中数字仍是 provisional；CoreMark/MHz、七 workload
-weighted CPI、频率和面积不能由这些 CPI 推导，继续保持 `—`。
-Linux 当前行是该 CoreMark image 的 cycles/commit CPI；由于公开 runtime 尚未建模
-AXI UARTLite/AXI Timer，日志没有可见 CoreMark marker，不能把它升级为 benchmark
-PASS 或 verified claim。
+Single/OoO 使用同一 hash-locked M-mode binary，Linux 使用 hash-locked Sv32
+S-mode binary。三行均完成 CoreMark self-check、marker 闭合、good trap 和
+watchdog；Single/Linux 还通过 Profile 匹配的 NEMU difftest。OoO 没有把歧义
+的双退休 MMIO packet 强行 skip，因此仍是 provisional。
 
-## 历史 CoreMark CPI 参考
+| Profile | Binary SHA256 | Config SHA256 | IF/LSU/memory latency | Evidence |
+| --- | --- | --- | --- | --- |
+| `rv32im_single_perf` | `601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742` | `f397f1899ed896023c81f2a16e9eb9523eb2599a5539b923c7132ae69881528e` | `2/2/2` | `evidence:coremark_public_current` |
+| `rv32ima_sv32_linux` | `50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5` | `82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea` | `0/0/0` | `evidence:coremark_public_current` |
+| `rv32im_ooo_4k` | `601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742` | `b72d4c86e1c7e12bc110d15d298748942b08f8502c7563b491f187f1397ae24f` | `2/3/2` | `evidence:coremark_public_current` |
 
-以下数据均为 `provisional`，不是当前公开 verified claim：
+## Linux 私有/公开同步
 
-| Profile | Cycles | Retired/committed instructions | CoreMark CPI | 条件摘要 | Evidence / nonclaim |
-| --- | ---: | ---: | ---: | --- | --- |
-| `rv32im_single_perf` | 4,578,012 | 3,081,085 | 1.48 | RV32IM 单发射，项目内 Verilator/NEMU 记录；公开运行已得到相近但不同的 external-input row | `nonclaim:single_public_cpi_not_yet_claimed` |
-| `rv32ima_sv32_linux` | 5,613,732 | 3,252,492 | 1.725978726 (≈1.72) | 后续优化 source snapshot `abf66cad`；私有固定配置 `NPC_DCACHE_WRITE_ALLOCATE=0`，S-mode Sv32、ITLB/DTLB、hit pipeline、2-entry store buffer、fast MUL 和 LSU load bypass | `evidence:linux_checkpoint_rerun` / `nonclaim:linux_public_cpi_not_yet_claimed` |
-| `rv32im_ooo_4k` | 2,718,684 | 3,081,080 | 0.882380204 | RV32IM，IF/LSU/memory=`2/3/2`，seed 1，Verilator + NEMU difftest | `ooo_coremark_cpi_not_yet_claimed` |
+公开 Profile 与私有历史都锁定 RTL commit
+`abf66cad0f9ad02efc8beb641d4005adeaeeae0b`，并统一
+`NPC_DCACHE_WRITE_ALLOCATE=0`。同一 canonical Sv32 binary 在两套 harness 中的
+CoreMark marker 区间完全一致：
 
-CoreMark CPI 是 `cycles / retired instructions`。它不是 CoreMark/MHz，不能在
-缺少 CoreMark score、迭代数、编译选项和时钟实现数据时换算为后者。
+| Harness | Pre cycles / instructions | Timed cycles / instructions | Post cycles / instructions | Whole cycles / instructions | Evidence |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 私有 NPC + measurement-only observer | 313,889 / 184,284 | 5,278,164 / 3,059,140 | 21,426 / 9,025 | 5,613,479 / 3,252,449 | `evidence:coremark_public_current` |
+| 公开 headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
-### Linux Profile checkpoint 对照
+两边 timed CPI 都是 1.725375105（`evidence:coremark_public_current`）。Whole-program
+差异由旧 harness 的 reset/计数索引和结束 UART/terminal 边界解释，不是 RTL 或
+CoreMark 主循环差异。因此当前公开 Linux 数字已经与性能较好的 checkpoint 同步。
 
-公开 Profile 当前锁定后续优化 checkpoint `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`，
-因此历史主表使用私有重跑得到的 `1.725978726`（约 `1.72`）。较早的 `e3a1cc91c4c00040f7180eec5e385326d9964893`
-约 `1.98` 仍保留为前一 checkpoint 对照；两者不是同一份 RTL，不能把旧数字
-当作当前 source 的结果。
+### WRITE_ALLOCATE 诊断
 
-| Checkpoint | Source commit | Sv32 CoreMark CPI | 状态 |
-| --- | --- | ---: | --- |
-| 后续优化 checkpoint | `abf66cad0f9ad02efc8beb641d4005adeaeeae0b` | 1.725978726 (≈1.72) | `evidence:linux_checkpoint_rerun` / `nonclaim:linux_public_cpi_not_yet_claimed` |
-| 前一冻结 checkpoint | `e3a1cc91c4c00040f7180eec5e385326d9964893` | ≈1.98 | `linux_prior_checkpoint_cpi_not_claimed` |
+| 设置 | Pre cycles | Timed cycles | Timed CPI | Whole cycles | Whole CPI | Evidence |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `WRITE_ALLOCATE=0` | 313,878 | 5,278,164 | 1.725375105 | 5,613,603 | 1.725944902 | `evidence:coremark_public_current` |
+| `WRITE_ALLOCATE=1` | 368,877 | 5,277,919 | 1.725295018 | 5,668,419 | 1.742798498 | `evidence:coremark_public_current` / `nonclaim:linux_write_allocate_coremark_speedup_not_claimed` |
 
-后续 checkpoint 行已有私有精确重跑的 binary/config/log hash，但 binary 和完整
-构建树未进入公开仓库，仍是 `provisional`，不升级为 verified claim。当前公开
-Linux row 使用 `WRITE_ALLOCATE=1`，因此 CPI `1.742774400` 与历史 `1.725978726`
-不应混写。CoreMark/MHz、实现频率和面积继续保持 `—`/`not_claimed`。
+开启 write allocation 使 whole-program 增加 54,816 cycles（`evidence:coremark_public_current`），其中 start marker 前
+增加 54,999 cycles；timed 区间反而少 245 cycles（`evidence:coremark_public_current`）
+（`evidence:coremark_public_current`）。所以旧 `1.7428` 对 `1.7259` 的差异主要是
+启动边界，不代表 CoreMark 主体获得约 1% 加速。
 
-## 历史多 workload 参考
+## 七项工作负载指令加权聚合 CPI
 
-| Profile | Workloads | Total cycles | Total retired instructions | Weighted CPI | Evidence / nonclaim |
-| --- | --- | ---: | ---: | ---: | --- |
-| `rv32im_ooo_4k` | CoreMark、matrix-mul、crc32、quick-sort、load-store、Dhrystone、microbench | 5,157,299 | 5,649,752 | 0.912836351 | `ooo_public_cpi_not_yet_claimed` |
+历史 OoO 套件包含 CoreMark、matrix-mul、crc32、quick-sort、load-store、
+Dhrystone、microbench：
 
-该 weighted CPI 使用总周期除以总退休指令，仅描述这一组有限 workload。
-其中 CoreMark CPI 是 `0.882380204`（`ooo_coremark_cpi_not_yet_claimed`），不能用
-weighted CPI 替代；它也不表示所有程序 CPI 都小于 1。
+```text
+instruction-weighted aggregate CPI = 5,157,299 / 5,649,752 = 0.912836351  # evidence:coremark_public_current
+```
 
-## 历史综合参考
+定义是所有 workload 的总 cycles 除以总 retired instructions，不是七个 CPI 的
+算术平均，也不是 CoreMark score。精确外部 workload 集尚未由当前公开入口完整
+复跑，因此保持 `provisional`（`nonclaim:ooo_public_cpi_not_yet_claimed`）。
 
-| Profile | Tool / target | Setup result | 频率描述 | Cell area | 状态与限制 |
-| --- | --- | --- | --- | ---: | --- |
-| `rv32im_single_perf` | Design Compiler，1.000 ns stress，Nangate45-family library setup | WNS ≈ -0.42 ns，TNS ≈ -4606.87 ns | 算术推算约 704 MHz；1 GHz 未闭合 | 184926.124968 library units | `provisional`; `single_700mhz_closure_not_claimed`; `single_dc_area_not_claimed` |
+Linux 较早 checkpoint `e3a1cc91c4c00040f7180eec5e385326d9964893` 只有约
+CoreMark CPI 1.98 的历史记录（`nonclaim:linux_prior_checkpoint_cpi_not_claimed`）；
+它不是当前 `abf66cad` Profile 的结果。
+
+## 实现数据
+
+| Profile | 绝对 CoreMark score | 闭合频率 | 面积 | 功耗 | 状态 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `rv32im_single_perf` | — | — | — | — | `not_claimed` |
 | `rv32ima_sv32_linux` | — | — | — | — | `not_claimed` |
 | `rv32im_ooo_4k` | — | — | — | — | `not_claimed` |
 
-约 704 MHz 来自 `1 / (1.000 ns + 0.42 ns)` 的历史估算（`single_700mhz_closure_not_claimed`），
-不是闭合的最大频率。area 是该 DC run 的 library cell-area 数值
-（`single_dc_area_not_claimed`），没有公开的 P&R、布线后寄生参数、SRAM signoff、
-功耗、IO、OCV/MMMC 或硅后相关性。它也不能与另一个 memory binding 或工具设置的
-面积直接比较。
-
-## 后续填表条件
-
-新增数据前必须记录：
-
-1. Profile ID、source commit 和配置 hash；
-2. benchmark binary/ELF hash、编译选项和退休指令定义；
-3. simulator、reference model、latency、seed 和 trace/difftest 状态；
-4. 对频率与面积记录技术库、PVT、memory binding、约束、WNS/TNS 和工具版本；
-5. 可读的公开 evidence ID 与 fresh-clone 复现命令。
-
-未满足这些条件的栏位继续保持 `—`。另见[CoreMark 运行证据](evidence/coremark_reproduction.md)、[证据规则](../evidence/README.md)
-和[限制说明](limitations.md)。
+仿真 CPI 或 CoreMark/MHz 不能推出闭合频率、面积或功耗。历史 DC stress 数据仍
+保留在 machine-readable nonclaims 中，但不填入当前实现结果表。另见
+[CoreMark 证据](evidence/coremark_reproduction.md)、[验证说明](verification.md)和
+[限制说明](limitations.md)。

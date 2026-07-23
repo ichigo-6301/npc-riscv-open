@@ -2,39 +2,87 @@
 
 [中文](README.md)
 
-NPC RISC-V Open contains three purpose-built RISC-V RTL source sets and one
-shared, headless Verilator environment. The default configuration is
-`rv32im_ooo_4k`. No NVBoard, display, keyboard, or other board user interface
-is required.
+This repository contains three independently locked RISC-V RTL source sets and
+one shared, command-line Verilator environment. The default Profile is
+`rv32im_ooo_4k`. NVBoard, display, keyboard, and other board UI components are
+not required.
 
-Each RTL set is locked to an independent source commit. They share the
-configuration entry points, headless wrappers, simulation runtime, and commit
-packet ABI, but they are not one parameterized RTL implementation. Each build
-selects exactly one Profile filelist.
+The three RTL sets are not one parameterized implementation. Each build selects
+one source set and connects it through a Profile-specific headless wrapper to a
+common memory/runtime, commit-packet ABI, and optional NEMU difftest interface.
 
-## Highlights
+## Three Profiles
 
-- A five-stage, single-issue RV32IM core for bare-metal and performance work.
-- A five-stage RV32IMA M/S-mode and Sv32 core with TLBs, a store buffer, and an
-  ACLINT timer.
-- A dual-issue, dual-commit RV32IM out-of-order core with a 64-entry PRF,
-  ROB8, IQ8, and two branch checkpoints.
-- A shared command-line Verilator runtime. Profile-matched local NEMU difftest
-  is optional and disabled by default.
-- Source, configuration, test, and historical measurement identities remain
-  Profile-scoped and commit-locked.
-
-## Profile comparison
-
-| Profile | ISA / privilege | Microarchitecture | Instruction and data structures | Primary use |
+| Profile | ISA / privilege | Microarchitecture | Memory and prediction structures | Primary use |
 | --- | --- | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM / M | 5-stage, single issue and commit | 4 KiB 2-way I-cache + 4 KiB 2-way D-cache; 128-entry BTB/PHT | Bare-metal, CoreMark, and in-order pipeline study |
-| `rv32ima_sv32_linux` | RV32IMA / M+S, Sv32 | 5-stage, single issue and commit | 4 KiB 2-way I/D caches; 16-entry ITLB/DTLB; 2-entry store buffer; ACLINT | OpenSBI, Sv32, and operating-system integration |
-| `rv32im_ooo_4k` | RV32IM / M | Dual dispatch/issue/complete/commit OoO core | 4 KiB instruction-pair storage; 4 KiB physically tagged word cache | Dual-width out-of-order throughput study |
+| `rv32im_single_perf` | RV32IM / M | 5-stage, single issue and commit | 4 KiB 2-way I/D caches; 128-entry BTB/PHT | Bare-metal performance and in-order pipeline study |
+| `rv32ima_sv32_linux` | RV32IMA / M+S, Sv32 | 5-stage, single issue and commit | 4 KiB 2-way I/D caches; 16-entry ITLB/DTLB; 2-entry store buffer; ACLINT | OpenSBI, virtual memory, and system-software integration |
+| `rv32im_ooo_4k` | RV32IM / M | Dual dispatch/issue/complete/commit OoO; 64 PRF, ROB8, IQ8, 2 checkpoints | 4 KiB instruction-pair storage; 4 KiB physically tagged word cache | Dual-width out-of-order throughput study |
 
-The `rv32im_ooo_4k` instruction-pair storage is a 64-bit pair-oriented
-frontend structure, not a conventional set-associative I-cache. See
-[Architecture](docs/architecture.en.md) for the full comparison.
+The OoO instruction-pair storage is a 64-bit pair-oriented frontend structure,
+not a conventional set-associative I-cache. See [Architecture](docs/architecture.en.md)
+for the detailed comparison.
+
+```mermaid
+flowchart LR
+  S1["rv32im_single_perf RTL"] --> W1["single wrapper"]
+  S2["rv32ima_sv32_linux RTL"] --> W2["Sv32 wrapper"]
+  S3["rv32im_ooo_4k RTL"] --> W3["OoO wrapper"]
+  W1 --> ABI["common commit / halt / debug ABI"]
+  W2 --> ABI
+  W3 --> ABI
+  ABI --> SIM["shared Verilator runtime"]
+  SIM --> MEM["PMEM + deterministic MMIO"]
+  SIM -. "optional" .-> REF["Profile-matched NEMU"]
+```
+
+## Pipeline concepts
+
+```mermaid
+flowchart LR
+  subgraph P1["Single Perf: 5-stage in-order"]
+    A1["IF"] --> A2["ID"] --> A3["EX"] --> A4["MEM"] --> A5["WB"]
+  end
+  subgraph P2["Linux/Sv32: translated 5-stage in-order"]
+    B1["IF + ITLB"] --> B2["ID"] --> B3["EX"] --> B4["MEM + DTLB"] --> B5["WB"]
+  end
+  subgraph P3["OoO 4K: dual-width out-of-order"]
+    C1["Fetch pair"] --> C2["Decode"] --> C3["Rename / Dispatch"] --> C4["Issue"] --> C5["Execute / Complete"] --> C6["Commit"]
+  end
+```
+
+## Current performance
+
+CoreMark uses a fixed AM/CoreMark commit, `ITERATIONS=10`, one context, and
+hash-locked M-mode/Sv32 binaries. `timed CPI` covers only the retirement marker
+interval; `whole CPI` also includes startup, MMIO output, and termination.
+`CoreMark/MHz` is iterations per million simulated cycles. It needs no clock
+assumption and is not an absolute CoreMark score.
+
+| Profile | CoreMark timed CPI | CoreMark/MHz | Whole-program CPI | Evidence state |
+| --- | ---: | ---: | ---: | --- |
+| `rv32im_single_perf` | 1.484920431 | 2.201416876 | 1.485861312 | `verified`, NEMU difftest PASS |
+| `rv32ima_sv32_linux` | 1.725375105 | 1.894598197 | 1.725944902 | `verified`, private/public timed interval identical, NEMU difftest PASS |
+| `rv32im_ooo_4k` | 0.879973757 | 3.714802709 | 0.882383851 | `provisional`, self-check PASS; dual-retire MMIO difftest ambiguity unresolved |
+
+No closed frequency, area, power, or silicon data is currently available. The
+absolute CoreMark score also remains `—`. Binary/config hashes, counter
+partitions, and commands are in [Performance](docs/performance.en.md) and the
+[CoreMark evidence](docs/evidence/coremark_reproduction.en.md).
+
+The OoO Profile also has one historical **instruction-weighted seven-workload
+aggregate CPI**:
+
+```text
+aggregate CPI = sum(workload cycles) / sum(workload retired instructions)
+              = 5,157,299 / 5,649,752
+              = 0.912836351
+```
+
+The set is CoreMark, matrix-mul, crc32, quick-sort, load-store, Dhrystone, and
+microbench. This is neither the arithmetic mean of seven CPI values nor a
+CoreMark score. The complete external input set has not yet been rerun through
+the current public flow, so this row remains `provisional`.
 
 ## Quick start
 
@@ -63,41 +111,37 @@ Run a user-supplied image with:
 NPC_OPEN_IMAGE=/path/to/program.bin make sim
 ```
 
-The default configuration does not need NEMU. A strict local run can prepare
-the reference model matching the selected Profile:
+NEMU is disabled by default. A strict local run can prepare a reference adapter
+matching the selected Profile:
 
 ```sh
 make difftest-prepare NPC_NEMU_SOURCE_REPO=/path/to/ysyx-workbench
 make difftest
 ```
 
-Generated reference libraries, logs, waves, and build directories are ignored
-by Git. See [Simulation](docs/simulation.en.md) and
-[Verification](docs/verification.en.md) for details.
+CoreMark binaries and ELFs are not tracked. After obtaining inputs matching the
+manifest hashes, run:
 
-## Architecture, performance, and SoC integration
+```sh
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark.elf \
+make coremark
+```
 
-- [Architecture](docs/architecture.en.md): pipelines, predictors, memory
-  structures, and interfaces for all three Profiles.
-- [Performance and implementation data](docs/performance.en.md): a public
-  reproduction table and explicitly provisional historical references.
-- [SoC integration](docs/soc-integration.en.md): boundaries between the public
-  DPI runtime, Linux RTL timer, and NEMU/AM reference devices.
+## SoC and verification boundary
 
-The current public flow covers source closure, Verilator lint, bounded smoke,
-and regression; external CoreMark binaries can also be run by the headless
-runner to obtain cycles/commit/CPI. Because the binaries are not bundled and
-profile-matched difftest is not fully accepted, these performance rows remain
-`provisional`; they are not maximum-frequency, physical-implementation, or
-silicon claims.
+| Capability | Current state |
+| --- | --- |
+| Sparse PMEM, Legacy RTC/serial, AXI Timer, UARTLite | Verilator `runtime-only` |
+| Linux ACLINT `mtime/mtimecmp` | Linux Profile `RTL-integrated` |
+| AXI INTC | NEMU/AM `reference-only` |
+| Profile source closure, lint, bounded smoke/regression | `verified` |
+| Complete Linux kernel boot | `not_claimed` |
+| ASIC/PPA, FPGA, and silicon results | `not_claimed` |
 
-## Project boundary
-
-NEMU, AM, OpenSBI, Linux, PDKs, Liberty files, SRAM macros, EDA databases, and
-board projects are not bundled. The MIT license covers only the self-owned RTL,
-wrappers, scripts, and documentation explicitly present here. Users obtain
-third-party components separately under their respective licenses.
-
-See the [documentation index](docs/README.en.md),
-[limitations](docs/limitations.en.md), [evidence policy](evidence/README.md),
-and [NOTICE](NOTICE).
+Continue with [Simulation](docs/simulation.en.md),
+[Verification](docs/verification.en.md), [SoC integration](docs/soc-integration.en.md),
+[Limitations](docs/limitations.en.md), and the [documentation index](docs/README.en.md).
+NEMU, AM, OpenSBI, Linux, PDKs, standard-cell libraries, SRAM macros, EDA
+databases, and board projects are not bundled; each external component retains
+its own license.

@@ -14,11 +14,18 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
 import sys
 from typing import Iterable, Sequence
+
+
+COMMON_DIR = Path(__file__).resolve().parent
+if str(COMMON_DIR) not in sys.path:
+    sys.path.insert(0, str(COMMON_DIR))
+from benchmark_contract import load_contract, sha256_file
 
 
 def _repo_root() -> Path:
@@ -147,6 +154,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--memory-latency", type=int, default=None,
                         help="DPI fallback memory latency in cycles (0 allowed)")
     parser.add_argument("--difftest-so", type=Path)
+    parser.add_argument("--benchmark-manifest", type=Path)
+    parser.add_argument("--benchmark-elf", type=Path)
     parser.add_argument("--vcd", type=Path)
     parser.add_argument("--trace", action="store_true")
     parser.add_argument("--verbose", action="store_true")
@@ -157,6 +166,41 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("extra", nargs=argparse.REMAINDER,
                         help="arguments passed to the generated simulator after --")
     return parser
+
+
+def _parse_kv_line(line: str) -> dict[str, object]:
+    fields: dict[str, object] = {}
+    for token in line.strip().split()[1:]:
+        if "=" not in token:
+            continue
+        key, value = token.split("=", 1)
+        if re.fullmatch(r"-?\d+", value):
+            fields[key] = int(value)
+        elif re.fullmatch(r"-?\d+\.\d+", value):
+            fields[key] = float(value)
+        else:
+            fields[key] = value
+    return fields
+
+
+def _run_streaming(command: Sequence[str], root: Path, env: dict[str, str]) -> tuple[int, dict[str, object]]:
+    records: dict[str, object] = {"benchmark_episodes": []}
+    process = subprocess.Popen(
+        list(command), cwd=root, env=env, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    assert process.stdout is not None
+    for line in process.stdout:
+        print(line, end="", flush=True)
+        if line.startswith("PUBLIC_BENCHMARK_EPISODE "):
+            episodes = records["benchmark_episodes"]
+            assert isinstance(episodes, list)
+            episodes.append(_parse_kv_line(line))
+        elif line.startswith("PUBLIC_BENCHMARK "):
+            records["benchmark"] = _parse_kv_line(line)
+        elif line.startswith("PUBLIC_SIM_PASS ") or line.startswith("PUBLIC_SIM_FAIL "):
+            records["simulation"] = _parse_kv_line(line)
+    return process.wait(), records
 
 
 def _default_filelist(root: Path, profile: str) -> Path:
@@ -186,6 +230,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not filelist.is_file():
         raise FileNotFoundError(filelist)
     options, sources = _read_filelist(filelist, root)
+    benchmark = None
+    if bool(args.benchmark_manifest) != bool(args.benchmark_elf):
+        raise ValueError("--benchmark-manifest and --benchmark-elf must be used together")
+    if args.benchmark_manifest:
+        if not args.image:
+            raise ValueError("a benchmark run requires --image")
+        manifest = args.benchmark_manifest.resolve()
+        _assert_public_path(manifest, root)
+        image = args.image.resolve()
+        elf = args.benchmark_elf.resolve()
+        for path in (manifest, image, elf):
+            if not path.is_file():
+                raise FileNotFoundError(path)
+        benchmark = load_contract(manifest, args.profile, image, elf)
     wrapper_include = root / "rtl" / "wrappers"
     if wrapper_include.is_dir():
         include_flag = "-I" + str(wrapper_include.resolve())
@@ -209,7 +267,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             source.relative_to(root).as_posix(),
             hashlib.sha256(source.read_bytes()).hexdigest(),
         ])
-    for common_source in (main_cpp, dpi_cpp, common.parent / "include/profile_abi.hpp"):
+    for common_source in (
+        main_cpp,
+        dpi_cpp,
+        common.parent / "include/profile_abi.hpp",
+        common.parent / "include/benchmark_tracker.hpp",
+    ):
         signature_parts.extend([
             common_source.relative_to(common.parent.parent).as_posix(),
             hashlib.sha256(common_source.read_bytes()).hexdigest(),
@@ -246,6 +309,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not diff.is_file():
             raise FileNotFoundError(diff)
         run_command.extend(["--difftest-so", str(diff)])
+    else:
+        diff = None
+    config_parts = [
+        source_hash,
+        args.profile,
+        str(args.seed),
+        str(args.reset_cycles),
+        str(args.ifetch_latency),
+        str(args.lsu_latency),
+        str(args.memory_latency),
+        benchmark["image_sha256"] if benchmark else "no-benchmark",
+        benchmark["elf_sha256"] if benchmark else "no-elf",
+        benchmark["manifest_sha256"] if benchmark else "no-manifest",
+        sha256_file(diff) if diff else "no-difftest",
+    ]
+    config_hash = hashlib.sha256("\0".join(config_parts).encode("utf-8")).hexdigest()
+    if benchmark:
+        start = benchmark["start"]
+        stop = benchmark["stop"]
+        run_command.extend([
+            "--benchmark-name", str(benchmark["name"]),
+            "--benchmark-variant", str(benchmark["variant"]),
+            "--benchmark-iterations", str(benchmark["iterations"]),
+            "--benchmark-start-pc", hex(start["pc"]),
+            "--benchmark-start-instr", hex(start["instr"]),
+            "--benchmark-stop-pc", hex(stop["pc"]),
+            "--benchmark-stop-instr", hex(stop["instr"]),
+            "--benchmark-image-sha256", str(benchmark["image_sha256"]),
+            "--benchmark-config-sha256", config_hash,
+        ])
     if args.verbose:
         run_command.append("--verbose")
     env = os.environ.copy()
@@ -270,6 +363,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "memory_latency": args.memory_latency,
         "itrace": env.get("NPC_OPEN_ITRACE") == "1",
         "itrace_path": env.get("NPC_OPEN_ITRACE_PATH", ""),
+        "config_sha256": config_hash,
+        "benchmark_contract": benchmark,
     }
     if args.dry_run:
         print(json.dumps(summary, indent=2))
@@ -299,17 +394,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         print(f"[public] build profile={args.profile} signature={source_hash} sources={len(sources)}")
     subprocess.run(command, cwd=root, env=env, check=True)
-    if args.json_summary:
-        args.json_summary.parent.mkdir(parents=True, exist_ok=True)
-        args.json_summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     if args.build_only:
+        if args.json_summary:
+            args.json_summary.parent.mkdir(parents=True, exist_ok=True)
+            args.json_summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         return 0
     if args.verbose:
         print("[public]", " ".join(shlex.quote(x) for x in run_command))
     else:
         print(f"[public] run profile={args.profile} image={args.image or '<none>'}")
-    completed = subprocess.run(run_command + list(args.extra), cwd=root, env=env)
-    return completed.returncode
+    returncode, run_records = _run_streaming(run_command + list(args.extra), root, env)
+    summary["run"] = run_records
+    summary["returncode"] = returncode
+    if args.json_summary:
+        args.json_summary.parent.mkdir(parents=True, exist_ok=True)
+        args.json_summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    return returncode
 
 
 if __name__ == "__main__":

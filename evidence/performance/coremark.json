@@ -1,0 +1,173 @@
+{
+  "benchmark_manifest_sha256": "d03f12046d34af83a2487db8594d62ad8b762c256bb6de38d66c0bab4e6f53d0",
+  "commands": {
+    "rv32im_ooo_4k": "make rv32im_ooo_4k_defconfig && NPC_OPEN_COREMARK_IMAGE=<hash-matched-bin> NPC_OPEN_COREMARK_ELF=<hash-matched-elf> make coremark",
+    "rv32im_single_perf": "make rv32im_single_perf_defconfig && NPC_OPEN_COREMARK_IMAGE=<hash-matched-bin> NPC_OPEN_COREMARK_ELF=<hash-matched-elf> make coremark-difftest",
+    "rv32ima_sv32_linux": "make rv32ima_sv32_linux_defconfig && NPC_OPEN_COREMARK_IMAGE=<hash-matched-bin> NPC_OPEN_COREMARK_ELF=<hash-matched-elf> make coremark-difftest"
+  },
+  "generated_at": "2026-07-23T07:30:43Z",
+  "generated_from_workbench_commit": "7d30cf086c857fae6cbace0dd52b4bd3dd6319cb",
+  "measurement": {
+    "contexts": 1,
+    "coremark_per_mhz_formula": "iterations * 1000000 / timed_cycles",
+    "iterations": 10,
+    "timed_cpi_formula": "timed_cycles / timed_instructions",
+    "timer_ratio_hz": 200000000,
+    "whole_cpi_formula": "whole_cycles / whole_instructions"
+  },
+  "runs": {
+    "rv32im_ooo_4k": {
+      "binary_sha256": "601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742",
+      "config_sha256": "b72d4c86e1c7e12bc110d15d298748942b08f8502c7563b491f187f1397ae24f",
+      "difftest": "not_run_dual_retire_mmio_ambiguity",
+      "elf_sha256": "0dec53590bd873d2fb4b0055e7f62bfc041eefad686b843e2eb2f867f8a615e3",
+      "ifetch_lsu_memory_latency": [
+        2,
+        3,
+        2
+      ],
+      "post_cycles": 11540,
+      "post_instructions": 7834,
+      "pre_cycles": 15254,
+      "pre_instructions": 14176,
+      "raw_summary_sha256": "f055e61f6c5bf8eebf2608881970a8108754737524876766964a556a8715f343",
+      "seed": 1,
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "status": "provisional",
+      "status_reason": "CoreMark self-check and marker accounting pass, but the authorized single-retire MMIO difftest skip cannot resolve a dual-retire MMIO packet unambiguously",
+      "timed_cpi": 0.879973757,
+      "timed_cycles": 2691933,
+      "timed_instructions": 3059106,
+      "coremark_per_mhz": 3.714802709,
+      "whole_cpi": 0.882383851,
+      "whole_cycles": 2718727,
+      "whole_instructions": 3081116
+    },
+    "rv32im_single_perf": {
+      "binary_sha256": "601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742",
+      "config_sha256": "f397f1899ed896023c81f2a16e9eb9523eb2599a5539b923c7132ae69881528e",
+      "difftest": "pass",
+      "difftest_mmio_skips": 466,
+      "elf_sha256": "0dec53590bd873d2fb4b0055e7f62bfc041eefad686b843e2eb2f867f8a615e3",
+      "ifetch_lsu_memory_latency": [
+        2,
+        2,
+        2
+      ],
+      "post_cycles": 14266,
+      "post_instructions": 7803,
+      "pre_cycles": 21270,
+      "pre_instructions": 14176,
+      "raw_summary_sha256": "d9fdb224c1c2038eca41cb48f524341fead4f6b55cf7ef781b63157a2dcbd7c4",
+      "seed": 1,
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "status": "verified",
+      "status_reason": "CoreMark self-check, marker accounting, good trap, watchdog and profile-matched NEMU difftest pass",
+      "timed_cpi": 1.484920431,
+      "timed_cycles": 4542529,
+      "timed_instructions": 3059106,
+      "coremark_per_mhz": 2.201416876,
+      "whole_cpi": 1.485861312,
+      "whole_cycles": 4578065,
+      "whole_instructions": 3081085
+    },
+    "rv32ima_sv32_linux": {
+      "binary_sha256": "50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5",
+      "config_sha256": "82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea",
+      "difftest": "pass",
+      "difftest_mmio_skips": 932,
+      "elf_sha256": "6aee51c5ea8084fde549169fc3f4360f2e5705057356fc824a2c55943d36bab2",
+      "ifetch_lsu_memory_latency": [
+        0,
+        0,
+        0
+      ],
+      "post_cycles": 21561,
+      "post_instructions": 9057,
+      "pre_cycles": 313878,
+      "pre_instructions": 184284,
+      "raw_summary_sha256": "843648c6d29c0015a963478b6adc8ae5d614f98cfb1a1e360048cb664c42c945",
+      "seed": 1,
+      "source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+      "status": "verified",
+      "status_reason": "CoreMark self-check, marker accounting, good trap, watchdog and profile-matched NEMU difftest pass",
+      "timed_cpi": 1.725375105,
+      "timed_cycles": 5278164,
+      "timed_instructions": 3059140,
+      "coremark_per_mhz": 1.894598197,
+      "whole_cpi": 1.725944902,
+      "whole_cycles": 5613603,
+      "whole_instructions": 3252481
+    }
+  },
+  "linux_parity": {
+    "binary_sha256": "50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5",
+    "observer_patch_sha256": "d3bd6c500dac32403eb6fa7f1fd92933cc4269e844231992f9cd98fdd5515623",
+    "private_post_cycles": 21426,
+    "private_post_instructions": 9025,
+    "private_pre_cycles": 313889,
+    "private_pre_instructions": 184284,
+    "private_source_commit": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+    "private_timed_cycles": 5278164,
+    "private_timed_instructions": 3059140,
+    "private_whole_cycles": 5613479,
+    "private_whole_instructions": 3252449,
+    "public_post_cycles": 21561,
+    "public_post_instructions": 9057,
+    "public_pre_cycles": 313878,
+    "public_pre_instructions": 184284,
+    "public_timed_cycles": 5278164,
+    "public_timed_instructions": 3059140,
+    "public_whole_cycles": 5613603,
+    "public_whole_instructions": 3252481,
+    "status": "verified",
+    "timed_cpi": 1.725375105,
+    "timed_match": true
+  },
+  "linux_write_allocate_diagnostic": {
+    "conclusion": "The whole-program delta is almost entirely before the timed CoreMark marker and does not represent a one-percent CoreMark-loop improvement",
+    "write_allocate_0": {
+      "pre_cycles": 313878,
+      "timed_cpi": 1.725375105,
+      "timed_cycles": 5278164,
+      "whole_cpi": 1.725944902,
+      "whole_cycles": 5613603
+    },
+    "write_allocate_1": {
+      "pre_cycles": 368877,
+      "timed_cpi": 1.725295018,
+      "timed_cycles": 5277919,
+      "whole_cpi": 1.742798498,
+      "whole_cycles": 5668419
+    }
+  },
+  "historical_references": {
+    "linux_prior_checkpoint": {
+      "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "status": "provisional",
+      "whole_cpi_approx": 1.98
+    },
+    "ooo_instruction_weighted_seven_workload_aggregate": {
+      "aggregate_cpi": 0.912836351,
+      "retired_instructions": 5649752,
+      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "status": "provisional",
+      "total_cycles": 5157299,
+      "workloads": [
+        "CoreMark",
+        "matrix-mul",
+        "crc32",
+        "quick-sort",
+        "load-store",
+        "Dhrystone",
+        "microbench"
+      ]
+    }
+  },
+  "schema": "npc-riscv-open/coremark-evidence-v1",
+  "tools": {
+    "compiler": "riscv64-linux-gnu-gcc 11.4.0",
+    "reference": "profile-locked NEMU adapters from delivery/difftest/nemu_profiles.json",
+    "simulator": "Verilator 5.008"
+  }
+}

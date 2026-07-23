@@ -20,7 +20,7 @@ FLOWCTL := $(PYTHON) "$(ROOT)/flows/scripts/flowctl.py" --root "$(ROOT)" --confi
 .PHONY: help defconfig rv32im_single_perf_defconfig rv32ima_sv32_linux_defconfig \
         rv32im_ooo_4k_defconfig menuconfig showconfig config-check source-check \
         public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
-        opensbi-smoke runtime-tests docs-check verify-checksums ci
+        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check verify-checksums ci
 
 help:
 	@printf '%s\n' \
@@ -35,6 +35,8 @@ help:
 	  '  make smoke / regression                 Run bounded public tests' \
 	  '  make difftest-prepare                   Build ignored profile-matched NEMU adapters' \
 	  '  make difftest                            Run strict difftest using the local adapter' \
+	  '  make coremark / coremark-difftest         Run hash-locked external CoreMark inputs' \
+	  '  make performance-check                    Validate tracked performance evidence' \
 	  '  make runtime-tests                       Run dependency-free control-plane tests' \
 	  '  make docs-check                           Validate bilingual docs and metric references' \
 	  '  make verify-checksums                     Verify the exported SHA256 manifest' \
@@ -93,6 +95,15 @@ difftest:
 difftest-prepare:
 	@$(FLOWCTL) difftest-prepare $(DIFFTEST_PREPARE_ARGS)
 
+coremark:
+	@$(FLOWCTL) coremark
+
+coremark-difftest:
+	@$(FLOWCTL) coremark-difftest
+
+performance-check:
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_performance.py" --root "$(ROOT)"
+
 opensbi-smoke:
 	@$(FLOWCTL) opensbi-smoke
 
@@ -101,6 +112,7 @@ runtime-tests:
 
 docs-check:
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_docs.py" --root "$(ROOT)"
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_performance.py" --root "$(ROOT)"
 
 verify-checksums:
 	@cd "$(ROOT)" && sha256sum --check SHA256SUMS

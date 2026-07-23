@@ -64,6 +64,7 @@
     "include_files": 2,
     "rtl_files": 60
   },
+  "source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "source_root": ".",
   "source_set_id": "rv32im_ooo_4k"
 }

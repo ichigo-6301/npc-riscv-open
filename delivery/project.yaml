@@ -1,7 +1,13 @@
 {
+  "capabilities": [
+    "headless_verilator",
+    "profile_matched_difftest"
+  ],
   "default_branch": "main",
   "default_profile": "rv32im_ooo_4k",
-  "kind": "public_project",
+  "kind": "project",
+  "license_status": "declared",
+  "multi_profile": true,
   "name": "NPC RISC-V Processor Family",
   "profile_ids": [
     "rv32im_single_perf",
@@ -9,6 +15,7 @@
     "rv32im_ooo_4k"
   ],
   "project_id": "npc-riscv-open",
+  "project_kind": "cpu_family",
   "public_contract": {
     "difftest_default": false,
     "native_rtl_preserved": true,
@@ -16,7 +23,10 @@
     "one_source_set_per_build": true,
     "shared_headless_verilator_runtime": true
   },
-  "repository": "https://github.com/ichigo-6301/npc-riscv-open.git",
+  "repository": {
+    "default_branch": "main",
+    "remote": "https://github.com/ichigo-6301/npc-riscv-open.git"
+  },
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0"
 }

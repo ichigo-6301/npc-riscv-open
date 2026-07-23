@@ -53,6 +53,14 @@ constexpr uint32_t kResetVector = 0x80000000u;
 constexpr uint32_t kPmemLimit = 0x90000000u;
 constexpr uint32_t kEbreak = 0x00100073u;
 constexpr size_t kOpaqueCpuStateBytes = 4096;
+constexpr uint32_t kAxiTimerBase = 0xa0000000u;
+constexpr uint32_t kAxiTimerSize = 0x20u;
+constexpr uint32_t kRtcBase = 0xa0000048u;
+constexpr uint32_t kRtcSize = 8u;
+constexpr uint32_t kSerialBase = 0xa00003f8u;
+constexpr uint32_t kSerialSize = 4u;
+constexpr uint32_t kUartLiteBase = 0xa0010000u;
+constexpr uint32_t kUartLiteSize = 0x10u;
 
 using RefMemcpy = void (*)(uint32_t, void *, size_t, bool);
 using RefRegcpy = void (*)(void *, bool);
@@ -69,13 +77,14 @@ struct Reference {
   bool ready = false;
   uint64_t next_ordinal = 1;
   bool slot0_pending = false;
-  // The frozen OoO debug shadow deliberately seeds untouched registers with
-  // their index as a bring-up sentinel.  Track architectural writes so the
-  // adapter does not mistake that debug-only sentinel for a committed value;
-  // every written register is still checked exactly.
+  // The frozen OoO debug shadow deliberately seeds registers with their index
+  // as a bring-up sentinel.  The reference must start from the same state:
+  // software may legally observe an otherwise unspecified reset value before
+  // writing that register, so merely suppressing comparisons is insufficient.
   std::array<bool, 32> initialized{};
   std::filesystem::path module_dir;
   std::string image_path;
+  uint64_t mmio_skips = 0;
 };
 
 Reference g_ref;
@@ -125,6 +134,57 @@ uint32_t state_word(size_t index) {
   if (offset + sizeof(value) > g_ref.state.size()) return 0;
   std::memcpy(&value, g_ref.state.data() + offset, sizeof(value));
   return value;
+}
+
+void set_state_word(size_t index, uint32_t value) {
+  const size_t offset = index * sizeof(value);
+  if (offset + sizeof(value) <= g_ref.state.size()) {
+    std::memcpy(g_ref.state.data() + offset, &value, sizeof(value));
+  }
+}
+
+int32_t sign_extend_12(uint32_t value) {
+  return static_cast<int32_t>(value << 20) >> 20;
+}
+
+bool known_mmio_address(uint32_t address) {
+  const auto in_range = [address](uint32_t base, uint32_t size) {
+    return address >= base && address < base + size;
+  };
+  return in_range(kAxiTimerBase, kAxiTimerSize) ||
+         in_range(kRtcBase, kRtcSize) ||
+         in_range(kSerialBase, kSerialSize) ||
+         in_range(kUartLiteBase, kUartLiteSize);
+}
+
+bool decode_known_mmio(uint32_t instr, uint32_t *address) {
+  const uint32_t opcode = instr & 0x7fu;
+  const uint32_t rs1 = (instr >> 15) & 0x1fu;
+  int32_t immediate = 0;
+  if (opcode == 0x03u) {
+    immediate = static_cast<int32_t>(instr) >> 20;
+  } else if (opcode == 0x23u) {
+    const uint32_t raw = ((instr >> 7) & 0x1fu) |
+                         (((instr >> 25) & 0x7fu) << 5);
+    immediate = sign_extend_12(raw);
+  } else {
+    return false;
+  }
+  const uint32_t effective = state_word(rs1) + static_cast<uint32_t>(immediate);
+  if (!known_mmio_address(effective)) return false;
+  if (address) *address = effective;
+  return true;
+}
+
+bool single_issue_profile() {
+  const std::string profile(NPC_NEMU_PROFILE_ID);
+  return profile == "rv32im_single_perf" || profile == "rv32ima_sv32_linux";
+}
+
+void sync_reference_from_dut(uint32_t next_pc, const uint32_t gpr[32]) {
+  for (size_t i = 0; i < 32; ++i) set_state_word(i, gpr[i]);
+  set_state_word(32, next_pc);
+  g_ref.regcpy(g_ref.state.data(), kToRef != 0);
 }
 
 bool load_word(uint32_t address, uint32_t word) {
@@ -296,6 +356,24 @@ bool step_reference(uint64_t ordinal, uint32_t slot, uint32_t pc,
     return true;
   }
 
+  uint32_t mmio_address = 0;
+  if (single_issue_profile() && decode_known_mmio(instr, &mmio_address)) {
+    if (slot != 0 || !architectural_state_valid) {
+      report("mmio", "known MMIO commit lacks an unambiguous architectural state");
+      return false;
+    }
+    sync_reference_from_dut(next_pc, gpr);
+    ++g_ref.mmio_skips;
+    g_ref.slot0_pending = false;
+    if (debug) {
+      std::fprintf(stderr,
+                   "[nemu-difftest] mmio-skip ordinal=%llu pc=0x%08x "
+                   "addr=0x%08x\n",
+                   static_cast<unsigned long long>(ordinal), pc, mmio_address);
+    }
+    return true;
+  }
+
   g_ref.exec(1);
   g_ref.state.fill(0);
   g_ref.regcpy(g_ref.state.data(), false);
@@ -326,6 +404,11 @@ std::filesystem::path module_directory() {
 }
 
 void close_reference() {
+  if (g_ref.ready) {
+    std::printf("PUBLIC_DIFFTEST_SUMMARY profile=%s mmio_skips=%llu\n",
+                NPC_NEMU_PROFILE_ID,
+                static_cast<unsigned long long>(g_ref.mmio_skips));
+  }
   g_ref.ready = false;
   if (g_ref.handle) dlclose(g_ref.handle);
   g_ref = Reference{};
@@ -395,9 +478,15 @@ int initialize(uint32_t abi_version, const char *profile_id,
   std::filesystem::remove(g_ref.module_dir / "dtrace.log", remove_error);
 
   g_ref.state.fill(0);
-  g_ref.initialized.fill(NPC_NEMU_DEBUG_SENTINEL ? false : true);
-  g_ref.initialized[0] = true;
   g_ref.regcpy(g_ref.state.data(), false);
+  if (NPC_NEMU_DEBUG_SENTINEL) {
+    for (size_t index = 1; index < 32; ++index) {
+      set_state_word(index, static_cast<uint32_t>(index));
+    }
+    set_state_word(32, kResetVector);
+    g_ref.regcpy(g_ref.state.data(), kToRef != 0);
+  }
+  g_ref.initialized.fill(true);
   if (state_word(32) != kResetVector) {
     report("init", "raw NEMU reset PC does not match 0x80000000");
     close_reference();

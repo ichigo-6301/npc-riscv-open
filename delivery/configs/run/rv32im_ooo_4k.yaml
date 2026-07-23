@@ -32,6 +32,7 @@
   "run_id": "rv32im_ooo_4k_smoke",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
+  "source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "stages": [
     "config_check",
     "source_closure",

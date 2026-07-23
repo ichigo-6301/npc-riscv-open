@@ -15,7 +15,7 @@
 | Bounded smoke/regression | 仓库内固定小程序在纯 Verilator runtime 上通过 | `verified` |
 | 本地 NEMU difftest | Profile 匹配的 PC/instruction/GPR commit check | bounded PASS；总体 `partial` |
 | 完整 OpenSBI/Linux | firmware、Sv32 page table、interrupt 和设备路径 | `not_claimed` |
-| 性能 benchmark | 固定外部 CoreMark/多 workload 的公开复现 | `provisional` |
+| 性能 benchmark | hash-locked CoreMark marker 计量与 difftest | Single/Linux `verified`；OoO `provisional` |
 | ASIC/PPA | synthesis、P&R、STA、power、signoff | `not_claimed` |
 
 没有功能覆盖率数据库；`coverage_status` 为 `not_available`。测试条目数量不能
@@ -57,22 +57,22 @@ OpenSBI 启动或 Linux kernel。
 | Profile / image | Cycles | Commit packets | 结果 |
 | --- | ---: | ---: | --- |
 | `rv32im_single_perf/smoke.hex` | 269 | 27 | `PUBLIC_SIM_PASS` |
-| `rv32ima_sv32_linux/smoke.hex` | 162 | 27 | `PUBLIC_SIM_PASS` |
-| `rv32ima_sv32_linux/arch_smoke.hex` | 80 | 15 | `PUBLIC_SIM_PASS` |
+| `rv32ima_sv32_linux/smoke.hex` | 150 | 27 | `PUBLIC_SIM_PASS` |
+| `rv32ima_sv32_linux/arch_smoke.hex` | 77 | 15 | `PUBLIC_SIM_PASS` |
 | `rv32im_ooo_4k/smoke.hex` | 107 | 26（lane0 21 + lane1 5） | `PUBLIC_SIM_PASS` |
 
 这些周期数只确认 source set、wrapper、DPI transport 和 runner 的确定性。
 它们不是 CoreMark、Linux boot、CPI、频率或面积结果。
 
-## 外部 CoreMark runtime 结果
+## Hash-locked CoreMark 结果
 
 公开 runner 会在结束时输出 `PUBLIC_SIM_PASS cycles=... commit=... commit2=...`。
-当前三个 Profile 的 CoreMark image 均已由 headless runtime 到达正常 ebreak；
-Single/OoO 有 CoreMark PASS marker，Linux 因 AXI UARTLite/AXI Timer 未在公开
-runtime 建模而没有可见 marker。它们使用仓库外部 binary，且 profile-matched
-difftest 尚未全部接受，因此状态为 `provisional_external_input`。精确 binary
-hash、latency、CPI 计算和 difftest 失败边界见[CoreMark 运行证据](evidence/coremark_reproduction.md)，
-不把该结果误写成架构级 verified claim。
+当前三个 Profile 都通过 CoreMark self-check、start/stop marker 闭合、good trap
+和 watchdog。公开 runtime 已提供 deterministic AXI Timer/UARTLite；Single 与
+Linux 通过 Profile 匹配的 NEMU difftest，因此其 timed CPI、whole CPI 和
+CoreMark/MHz 标为 `verified`。OoO self-check 和计数通过，但双退休 MMIO packet
+无法使用单退休 skip-and-sync 而不引入顺序歧义，因此保持 `provisional`。精确
+binary/config hash、计数分区和协议边界见[CoreMark 计量证据](evidence/coremark_reproduction.md)。
 
 ## 本地 strict difftest
 
@@ -89,7 +89,9 @@ sentinel，所有 committed register write 仍需一致。单发射 Profile 的 
 复位为零并逐项比较。
 
 该结果仍标为 `partial`，因为 NEMU source/`.so` 是外部本地产物，且当前 ABI
-不比较 device、timer tick、interrupt timing 或任意 MMIO side effect。
+不比较 device cycle-exact 状态、timer tick、interrupt timing 或任意 MMIO side
+effect。Single/Linux CoreMark 仅对精确匹配的已知 Timer/UART MMIO 使用
+deterministic skip-and-sync；未知地址和副作用直接失败。
 
 ## Fresh-clone 要求
 
@@ -97,7 +99,8 @@ sentinel，所有 committed register write 仍需一致。单发射 Profile 的 
 
 1. `verify-checksums`、`docs-check`、source closure 和 hygiene；
 2. 三 Profile lint、smoke 与 regression；
-3. 若提供本地 NEMU，运行 bounded difftest；
+3. 若提供本地 NEMU，运行 bounded difftest；若同时提供 hash-locked CoreMark
+   输入，运行 Single/Linux `coremark-difftest` 和 OoO `coremark`；
 4. 检查所有 source-set SHA256；
 5. 确认运行后的 Git worktree 保持 clean。
 

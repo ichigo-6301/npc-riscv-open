@@ -29,23 +29,24 @@
 | Legacy serial TX | `runtime-only` | `runtime-only` | `runtime-only` | 写 `0xA00003F8` 输出字符 |
 | Legacy RTC | `runtime-only` | `runtime-only` | `runtime-only` | `0xA0000048/4C` 返回仿真 tick |
 | ACLINT `mtime/mtimecmp` + MTIP | `not integrated` | `RTL-integrated` | `not integrated` | Linux Profile 的 `AclintTimer` |
-| AXI Timer | `reference-only` | `reference-only` | `reference-only` | NEMU/AM FPGA-compatible layout |
-| AXI UARTLite | `reference-only` | `reference-only` | `reference-only` | NEMU/AM FPGA-compatible layout |
+| AXI Timer | `runtime-only` | `runtime-only` | `runtime-only` | deterministic C++ model；NEMU/AM 另有 reference model |
+| AXI UARTLite | `runtime-only` | `runtime-only` | `runtime-only` | deterministic C++ TX/status；NEMU/AM 另有 reference model |
 | AXI INTC | `reference-only` | `reference-only` | `reference-only` | NEMU reference device，当前一条 UART interrupt input |
 | tohost stop/pass | `runtime-only` | `runtime-only` | `runtime-only` | 仅在运行时显式配置地址后生效 |
 | 板级显示、键盘、GPIO | `not integrated` | `not integrated` | `not integrated` | NVBoard 和板级 top 不在工程中 |
 
-`reference-only` 表示有可参考的软件/模型地址布局，不表示 CPU wrapper 已经
-实例化了该 AXI IP，也不表示通过了 RTL 级中断或驱动验证。
+`runtime-only` 不表示 CPU wrapper 实例化了可综合 AXI IP。Timer/UARTLite 的
+公开实现只是 CoreMark 和 bounded 软件所需的确定性仿真语义；NEMU/AM 中仍有
+独立的 `reference-only` 设备模型，当前不声明二者 cycle-exact 等价。
 
 ## 地址空间
 
 | 地址范围 | 名称 | 关键寄存器 | 当前归属 |
 | --- | --- | --- | --- |
-| `0xA0000000..0xA000001F` | AXI Timer | TCSR0 `+0x00`、TLR0 `+0x04`、TCR0 `+0x08`、TCSR1 `+0x10`、TLR1 `+0x14`、TCR1 `+0x18` | NEMU/AM `reference-only` |
+| `0xA0000000..0xA000001F` | AXI Timer | TCSR0 `+0x00`、TLR0 `+0x04`、TCR0 `+0x08`、TCSR1 `+0x10`、TLR1 `+0x14`、TCR1 `+0x18` | 公开 DPI `runtime-only`；NEMU/AM `reference-only` |
 | `0xA0000048..0xA000004F` | Legacy RTC | low `+0x0`、high `+0x4` | 公共 DPI `runtime-only` |
 | `0xA00003F8` | Legacy serial TX | low byte | 公共 DPI `runtime-only` |
-| `0xA0010000..0xA001000F` | AXI UARTLite | RX `+0x0`、TX `+0x4`、status `+0x8`、control `+0xC` | NEMU/AM `reference-only` |
+| `0xA0010000..0xA001000F` | AXI UARTLite | RX `+0x0`、TX `+0x4`、status `+0x8`、control `+0xC` | 公开 DPI `runtime-only`；NEMU `reference-only` |
 | `0xA0020000..0xA0020007` | ACLINT `mtime` | 64-bit low/high word | Linux RTL；NEMU 也有 reference model |
 | `0xA0030000..0xA0030007` | ACLINT `mtimecmp` | 64-bit low/high word | Linux RTL；NEMU 也有 reference model |
 | `0xA0040000..0xA0040FFF` | AXI INTC | ISR/IPR/IER/IAR/SIE/CIE/IVR/MER 位于 `+0x00..0x1C` | NEMU `reference-only` |
@@ -85,9 +86,11 @@ DTB 和软件 header，并重新运行系统级验证。不要把 DPI C++ 服务
 
 ## Difftest 边界
 
-当前本地 NEMU adapter 是 bounded GPR/PC/commit checker。它不验证 UART、
-AXI Timer、ACLINT tick 的 cycle-exact 等价、AXI INTC、完整 interrupt timing
-或任意 MMIO side effect。不同 timer 模型也不声明 cycle-exact 等价。
+当前本地 NEMU adapter 是 bounded GPR/PC/commit checker。单退休 Profile 对
+精确匹配的 Legacy RTC、AXI Timer 和 UARTLite load/store 做 deterministic
+skip-and-sync；未知 MMIO、PMEM 副作用或双退休歧义会失败。它不验证设备
+cycle-exact 等价、ACLINT tick、AXI INTC、完整 interrupt timing 或任意 MMIO
+side effect。
 
 另见[架构说明](architecture.md)、[验证说明](verification.md)和
 [限制说明](limitations.md)。

@@ -252,7 +252,7 @@
           "NPC_FAST_MUL_LATENCY=2",
           "NPC_DCACHE_HIT_OPT",
           "NPC_DCACHE_WRITE_BACK=1",
-          "NPC_DCACHE_WRITE_ALLOCATE=1",
+          "NPC_DCACHE_WRITE_ALLOCATE=0",
           "NPC_HAS_MMU=1",
           "NPC_HAS_ITLB=1",
           "NPC_HAS_DTLB=1",

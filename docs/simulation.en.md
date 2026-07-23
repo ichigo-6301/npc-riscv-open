@@ -121,6 +121,24 @@ The current adapter checks PC, instruction, and GPR state on every commit,
 including two commits in an OoO cycle. It does not validate complete Linux
 device/MMIO/interrupt equivalence; see [SoC integration](soc-integration.en.md).
 
+## CoreMark
+
+CoreMark uses a hash-locked manifest and requires both a binary and an ELF:
+
+```sh
+make rv32im_single_perf_defconfig
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark.elf \
+make coremark-difftest
+```
+
+`make coremark` leaves difftest off; `make coremark-difftest` uses the selected
+Profile's local adapter. The runner validates input hashes and start/stop
+markers, then reports timed, whole, pre/post, and CoreMark/MHz JSON counters.
+OoO currently uses `make coremark` because reference ordering for a dual-retire
+MMIO packet remains ambiguous. See
+[CoreMark measurement evidence](evidence/coremark_reproduction.en.md).
+
 ## Output and Git cleanliness
 
 Builds, traces, local NEMU files, and user outputs should stay in ignored

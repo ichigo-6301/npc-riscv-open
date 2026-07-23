@@ -7,8 +7,9 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "21a62b2283ba9b03fa99f55ee706a5a43a06f9c56974d02612d3365a68ff2fef",
+      "sha256": "251b01c4dcb59d113df348d8a625fde1c03941decba781205495022d00240d1a",
       "snapshot_id": "v0.1.0",
+      "source_ref": "b368453640841f55eccd8b99f2e756cef9a91bc2",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -22,6 +23,7 @@
       "public": true,
       "sha256": "27239d81e11a112193039bcde7087efe9b28e71aa531d84c41aa1ab52dec2bb4",
       "snapshot_id": "v0.1.0",
+      "source_ref": "b368453640841f55eccd8b99f2e756cef9a91bc2",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -33,47 +35,49 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "e2843a74bd86f05646ce70734f438652ce5526833ece3a36bd08fdcb9b7ea47a",
+      "sha256": "0bfa84fd7a91f9dad763876ce24775943bfa5f091679b0fa8e5ab0c17037701b",
       "snapshot_id": "v0.1.0",
+      "source_ref": "b368453640841f55eccd8b99f2e756cef9a91bc2",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
     },
     {
       "claims": [
-        "single_public_coremark_runtime_provisional",
-        "linux_public_coremark_runtime_provisional",
-        "ooo_public_coremark_runtime_provisional"
+        "single_public_coremark_timed_cpi",
+        "single_public_coremark_per_mhz",
+        "single_public_coremark_whole_cpi",
+        "linux_public_coremark_timed_cpi",
+        "linux_public_coremark_per_mhz",
+        "linux_public_coremark_whole_cpi"
       ],
-      "id": "coremark_public_runtime",
+      "id": "coremark_public_current",
+      "path": "../evidence/performance/coremark.json",
+      "profile": "all",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "601a9869d215cd13a5c346a22ea4eb1b932452e29726dd5cb63d4955f47273b4",
+      "snapshot_id": "v0.1.0",
+      "source_ref": "7d30cf086c857fae6cbace0dd52b4bd3dd6319cb",
+      "status": "partial",
+      "tool": "hash-locked CoreMark marker accounting with headless Verilator and profile-matched NEMU where unambiguous",
+      "type": "public_performance_summary"
+    },
+    {
+      "claims": [],
+      "id": "coremark_reproduction_guide",
       "path": "../docs/evidence/coremark_reproduction.md",
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "eeb8e004a9f56516c122a7040d54214527d19fd840d29196826928ade715d33d",
+      "sha256": "b3e592c1a34b84e0a8a0a1d62704c8bbe5b903abdf98a6f38e949a0ef39781aa",
       "snapshot_id": "v0.1.0",
-      "status": "provisional",
-      "tool": "public headless Verilator runtime with external CoreMark inputs",
-      "type": "public_performance_summary"
-    },
-    {
-      "claims": [
-        "linux_public_cpi_not_yet_claimed"
-      ],
-      "id": "linux_checkpoint_rerun",
-      "path": "../docs/evidence/coremark_reproduction.md",
-      "profile": "rv32ima_sv32_linux",
-      "project_id": "npc-riscv-open",
-      "public": true,
-      "sha256": "eeb8e004a9f56516c122a7040d54214527d19fd840d29196826928ade715d33d",
-      "snapshot_id": "v0.1.0",
-      "status": "provisional",
-      "tool": "private fixed-checkpoint rerun summary",
+      "source_ref": "b368453640841f55eccd8b99f2e756cef9a91bc2",
+      "status": "verified",
+      "tool": "public CoreMark reproduction procedure",
       "type": "public_performance_summary"
     }
   ],
   "kind": "evidence_manifest",
-  "project_id": "npc-riscv-open",
-  "schema_version": "1.0.0",
-  "snapshot_id": "v0.1.0"
+  "schema_version": "1.0.0"
 }

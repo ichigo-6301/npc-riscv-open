@@ -10,9 +10,9 @@
 
 | Profile | 架构定位 | 当前公开验证状态 |
 | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM 五级顺序单发射 | source closure、lint、bounded smoke/regression 已验证；历史 CoreMark/PPA 为 provisional |
-| `rv32ima_sv32_linux` | RV32IMA M/S + Sv32 五级顺序单发射 | bounded 架构测试已验证；完整 OpenSBI/Linux 和综合未声明 |
-| `rv32im_ooo_4k` | RV32IM 双发射、双退休 OoO | source closure、lint、bounded 双宽 smoke/regression 已验证；历史性能为 provisional |
+| `rv32im_single_perf` | RV32IM 五级顺序单发射 | source closure、回归与 hash-locked CoreMark+difftest 已验证 |
+| `rv32ima_sv32_linux` | RV32IMA M/S + Sv32 五级顺序单发射 | bounded 架构测试与 hash-locked CoreMark+difftest 已验证；完整 Linux 未声明 |
+| `rv32im_ooo_4k` | RV32IM 双发射、双退休 OoO | source closure、双宽回归已验证；CoreMark 因双退休 MMIO difftest 边界为 provisional |
 
 三套 RTL 不是同一套参数化实现。构建系统每次只编译一个 source set，公共
 wrapper 只统一 commit、halt 和 debug 观测接口。

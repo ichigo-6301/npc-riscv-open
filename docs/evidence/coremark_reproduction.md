@@ -1,95 +1,101 @@
-# CoreMark 公开运行证据
+# CoreMark 计量与复现证据
 
-本记录只描述可审计的 headless Verilator 运行，不把结果升级为
-`verified` claim。CoreMark 输入和编译树是仓库外部文件，未随项目快照提交；
-因此状态为 `provisional_external_input`。
+[English](coremark_reproduction.en.md)
 
-## 固定条件
+本页说明当前 headless Verilator CoreMark 的输入身份、定时边界、结果状态与复现
+方法。机器可读的唯一数字源是
+[`evidence/performance/coremark.json`](../../evidence/performance/coremark.json)，
+输入合同是
+[`delivery/benchmarks/coremark.json`](../../delivery/benchmarks/coremark.json)。
 
-- public source snapshot：`25cce067d41b37151c45acd8a3069c445dbcb7b5`；文档更新不改变
-  三个 RTL source-set 的 hash。
-- Profile source commits：Single `f76de57479b798aca7468f999c386bb4cb5fce02`，
-  Linux `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`，OoO
-  `99fcc2be539eabb078c0d73b26a7ef2c00071391`。
-- runner：`sim/common/verilator_runner.py`；Verilator `5.008`；seed `1`；
-  watchdog `10000000`；VCD、itrace、mtrace、ftrace 和 pmemtrace 均关闭。
-- CoreMark/AM source commit：`034e6c6b5902709546fa74ad70e3a3238ecee576`；
-  `core_portme.h` 的测量配置将 `ITERATIONS` 设为 `10`，文件 hash 为
-  `beaafe65699ef47191d6153fa9d6913ab5928a5b98e6c6f8949a31aad892335e`；
-  compiler 为 `riscv64-linux-gnu-gcc 11.4.0`。
-- retired instruction 定义：Single/Linux 为 `commit`；OoO 为
-  `commit + commit2`，对应 wrapper 的有效 commit packet。
+## 固定输入
 
-## 当前 public headless runtime
+- AM/CoreMark commit：`034e6c6b5902709546fa74ad70e3a3238ecee576`。
+- `ITERATIONS=10`，单 context；patch SHA256：
+  `586abb219713ac368b5e2d79289ce67a133af334346908328628f69d8e86279d`。
+- compiler：`riscv64-linux-gnu-gcc 11.4.0`；完整 flags 记录在 benchmark manifest。
+- benchmark manifest SHA256：
+  `d03f12046d34af83a2487db8594d62ad8b762c256bb6de38d66c0bab4e6f53d0`。
+- seed `1`；watchdog `20,000,000` cycles；VCD、itrace、mtrace、ftrace、
+  pmemtrace 均关闭。
 
-输入 binary 不在仓库内，以下 hash 用于重新取得和核对输入：
+| Variant | Profiles | BIN SHA256 | ELF SHA256 | Start marker | Stop marker |
+| --- | --- | --- | --- | --- | --- |
+| `rv32im_m` | Single、OoO | `601f942b5a32d071dd0170425107875fdc287bb86549c6489622656ea7ff1742` | `0dec53590bd873d2fb4b0055e7f62bfc041eefad686b843e2eb2f867f8a615e3` | PC `0x800015dc`, instr `0x38a7a223` | PC `0x80001618`, instr `0x34a7a623` |
+| `rv32ima_sv32` | Linux/Sv32 | `50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5` | `6aee51c5ea8084fde549169fc3f4360f2e5705057356fc824a2c55943d36bab2` | PC `0x80001788`, instr `0x7ca7a023` | PC `0x800017c4`, instr `0x78a7a423` |
 
-从项目根目录执行的命令（将 `external/...` 替换为已核对 hash 的本地输入）：
+runner 会同时核对 BIN、ELF 和 marker 处的指令编码。hash 不匹配、marker 重复、
+乱序、缺失或未闭合都会直接失败。多个完整 episode 出现时选择最后一个并保留
+全部 episode 计数。
+
+## 计量边界
+
+start/stop 指令退休时记录 cycle 与全局 commit ordinal：
+
+```text
+timed_cycles       = stop_commit_cycle - start_commit_cycle
+timed_instructions = stop_commit_ordinal - start_commit_ordinal
+timed_cpi          = timed_cycles / timed_instructions
+coremark_per_mhz   = 10 * 1,000,000 / timed_cycles
+```
+
+`whole` 从 reset 后运行到 ebreak；`pre`、`timed`、`post` 在 cycles 和 retired
+instructions 两个维度都必须守恒。host wall-clock 毫秒和项目自定义 `Marks` 只用
+于 sanity check，不进入性能数字。
+
+## 当前结果
+
+| Profile | Pre cycles/instr | Timed cycles/instr | Post cycles/instr | Timed CPI | CoreMark/MHz | Whole CPI | Difftest | 状态 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| `rv32im_single_perf` | 21,270 / 14,176 | 4,542,529 / 3,059,106 | 14,266 / 7,803 | 1.484920431 | 2.201416876 | 1.485861312 | PASS，466 MMIO skips | `verified` |
+| `rv32ima_sv32_linux` | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 1.725375105 | 1.894598197 | 1.725944902 | PASS，932 MMIO skips | `verified` |
+| `rv32im_ooo_4k` | 15,254 / 14,176 | 2,691,933 / 3,059,106 | 11,540 / 7,834 | 0.879973757 | 3.714802709 | 0.882383851 | 未运行：双退休 MMIO 歧义 | `provisional` |
+
+Single/Linux adapter 在 REF 执行前解码已知 Timer/UART MMIO，执行确定性的
+skip-and-sync，随后继续比较 PC/instruction/GPR。未知 MMIO 或 PMEM 副作用会失败。
+OoO 同周期可能退休两个 packet；当其中包含 MMIO 时，当前 ABI 无法无歧义地确定
+reference 执行/跳过顺序。本轮没有放宽协议，所以 OoO 只作为 self-check 与计数
+通过的 provisional 结果。
+
+## 复现
+
+外部 BIN/ELF 不进入 Git。取得与 manifest 完全匹配的本地文件后：
 
 ```sh
-python3 sim/common/verilator_runner.py --profile rv32im_single_perf \
-  --filelist filelists/rv32im_single_perf.f --build-dir build/coremark-public \
-  --image external/coremark-riscv32-M-npc.bin --watchdog 10000000
+make rv32im_single_perf_defconfig
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark-riscv32-M-npc.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark-riscv32-M-npc.elf \
+make coremark-difftest
 
-python3 sim/common/verilator_runner.py --profile rv32ima_sv32_linux \
-  --filelist filelists/rv32ima_sv32_linux.f --build-dir build/coremark-public \
-  --image external/coremark-riscv32s-M-fpga.bin --watchdog 10000000 \
-  --ifetch-latency 0 --lsu-latency 0 --memory-latency 0
+make rv32ima_sv32_linux_defconfig
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark-riscv32s-M-fpga.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark-riscv32s-M-fpga.elf \
+make coremark-difftest
 
-python3 sim/common/verilator_runner.py --profile rv32im_ooo_4k \
-  --filelist filelists/rv32im_ooo_4k.f --build-dir build/coremark-public \
-  --image external/coremark-riscv32-M-npc.bin --watchdog 10000000
+make rv32im_ooo_4k_defconfig
+NPC_OPEN_COREMARK_IMAGE=/path/to/coremark-riscv32-M-npc.bin \
+NPC_OPEN_COREMARK_ELF=/path/to/coremark-riscv32-M-npc.elf \
+make coremark
+
+make performance-check
 ```
 
-| Profile | Binary / ELF SHA256 | Runtime latency | Cycles | Retired instructions | CPI | CoreMark stop |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| `rv32im_single_perf` | `coremark-riscv32-M-npc.bin` / `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd` (ELF)；binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `4578475` | `3081067` | `1.486003063` | `CoreMark PASS`, ebreak |
-| `rv32ima_sv32_linux` | `coremark-riscv32s-M-fpga.bin` / `8d6a55b2766fe039267ea3bc8b8457d296689872d45dccccb39861de960cc774` (ELF)；binary `814002f10fb0f2e4338fb07d8b421dc7c3c4bb4f06e633d1426f867133f39cdb` | `0/0/0`; public filelist uses `NPC_DCACHE_WRITE_ALLOCATE=1` | `5668250` | `3252429` | `1.742774400` | ebreak at `_trm_init`; CoreMark marker unavailable |
-| `rv32im_ooo_4k` | `coremark-riscv32-M-npc.bin` / ELF `46c58bd81c055444cac483d7f83038774d9afd0c9c2f2c62ac4916f720e3a1bd`；binary `ea230c1a3766d7ea5726d8ff53f0a615bfa2cd7f7d2c98a69d0c829c432a663d` | `2/3/2` (IF/LSU/memory) | `2718694` | `3081098` (`2040454 + 1040644`) | `0.882378295` | `CoreMark PASS`, ebreak |
+`coremark-difftest` 需要先按[仿真指南](../simulation.md)准备本地 NEMU adapter。
+每次运行输出 `PUBLIC_SIM_PASS`、`PUBLIC_BENCHMARK_EPISODE`、
+`PUBLIC_BENCHMARK`，并在 `build/performance/<profile>/` 写一次性 JSON。
 
-对应的 `PUBLIC_SIM_PASS` 行为为：
+## Linux parity 与配置解释
 
-```text
-single: PUBLIC_SIM_PASS cycles=4578475 commit=3081067 commit2=0
-linux:  PUBLIC_SIM_PASS cycles=5668250 commit=3252429 commit2=0
-ooo:    PUBLIC_SIM_PASS cycles=2718694 commit=2040454 commit2=1040644
-```
+私有 `abf66cad` RTL 加 measurement-only observer 与公开 wrapper 使用同一 Sv32
+binary、`WRITE_ALLOCATE=0`：二者均得到 `5,278,164` timed cycles、`3,059,140`
+timed instructions、CPI `1.725375105`。observer patch SHA256 为
+`d3bd6c500dac32403eb6fa7f1fd92933cc4269e844231992f9cd98fdd5515623`。
 
-OoO 使用 M-mode binary；将 Linux/Sv32 binary 放到 OoO 会在 Sv32 trap handler
-停止，不能把该结果当作 OoO CoreMark。
+私有/公开 whole-program 分别为 `5,613,479 / 3,252,449` 与
+`5,613,603 / 3,252,481`；差值来自 reset/计数索引和结束 UART/terminal 边界。
+`WRITE_ALLOCATE=1` 诊断得到 whole `5,668,419` cycles，但 timed 仅
+`5,277,919` cycles。相对默认配置，多出的 `54,816` whole cycles 几乎全部是
+start marker 前的 `54,999` cycles，不能解释为 CoreMark 主循环约 1% 的性能差。
 
-这些运行没有启用 difftest。尝试开启 profile-matched adapter 的结果如下：
-
-- Single：在 legacy RTC `0xa0000048` 访问处被当前 `device=false` NEMU 合同拒绝；
-- Linux：在 AXI timer `0xa0000000` 访问处被同一合同拒绝；
-- OoO：第 11 条 commit 出现 `x8` 参考值 `0`、DUT 值 `0xb` 的确定性 mismatch。
-
-因此 Single/OoO 是“CoreMark PASS、runtime PASS、difftest 未接受”，Linux 是
-“CoreMark image 到达正常 ebreak、marker 不可见、difftest 未接受”。三行都只是
-provisional 数据，不能标为架构 verified claim。Linux 的 marker 缺失来自公开
-runtime 未实现 AXI UARTLite/AXI Timer；私有同一 binary 家族的重跑仍有明确 PASS。
-DPI runtime 的 host 毫秒和 Marks 只作停机 sanity check；没有实现时钟，不能换算
-CoreMark/MHz。
-
-## Linux 后续优化 checkpoint 私有重跑
-
-为确认历史 `≈1.72`，在 source commit
-`abf66cad0f9ad02efc8beb641d4005adeaeeae0b` 上使用同一 S-mode binary 和
-`NPC_DCACHE_WRITE_ALLOCATE=0` 的私有配置重跑：
-
-```text
-cycles=5613732
-committed=3252492
-CPI=1.7259787264657377
-```
-
-CoreMark PASS、GOOD TRAP、CPI attribution mismatch `0`、unknown `0`。
-私有运行日志 hash 为 `25b995dd6e12d9e77284f5552667d149d7c77986f3bcb722e7e2aa62449b4451`，
-build log hash 为 `13e01b226d40c4e633246e1cc08244d3a16ae3f976c4ed39425ef0a19839984d`，
-CoreMark build log hash 为 `3a7ac0ed58723aa0d233ea2305daeb6e31fa1d82347488f9416191c706c24ba8`。
-这解释了历史 `≈1.72`，也说明它与当前公开 Linux filelist 的
-`WRITE_ALLOCATE=1`、CPI `1.742774400` 不是同一配置；两者不能混为一个结果。
-
-历史重跑仍是 `provisional`：binary、完整私有构建树和 NEMU/AM 依赖没有进入
-公开仓库。公开表保留精确 CPI 及其条件，频率、面积、CoreMark/MHz 和七 workload
-weighted CPI 继续留空。
+另见[性能页](../performance.md)、[验证说明](../verification.md)和
+[限制说明](../limitations.md)。

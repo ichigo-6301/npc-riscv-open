@@ -26,6 +26,7 @@
   "run_id": "rv32im_single_perf_smoke",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
+  "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
   "stages": [
     "config_check",
     "source_closure",

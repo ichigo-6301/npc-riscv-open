@@ -3,7 +3,7 @@
   "default_run_config": "rv32im_ooo_4k_smoke",
   "design_config": "rv32im_ooo_4k",
   "intent": "Dual-dispatch dual-commit RV32IM out-of-order performance profile with 4 KiB instruction and data structures",
-  "kind": "public_profile",
+  "kind": "profile",
   "maturity": "development",
   "product_class": "cpu_core",
   "profile_id": "rv32im_ooo_4k",
@@ -18,6 +18,7 @@
   "public_filelist": "filelists/rv32im_ooo_4k.f",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
+  "source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "source_root": ".",
   "source_set": "rv32im_ooo_4k",
   "stages": {
