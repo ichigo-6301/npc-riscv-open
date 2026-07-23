@@ -41,19 +41,19 @@ flowchart LR
 ```mermaid
 flowchart LR
   subgraph P1["Single Perf: 5-stage in-order"]
-    direction LR
+    direction TB
     A1["IF"] --> A2["ID"] --> A3["EX"] --> A4["MEM"] --> A5["WB"]
   end
   subgraph P2["Linux/Sv32: translated 5-stage in-order"]
-    direction LR
+    direction TB
     B1["IF + ITLB"] --> B2["ID"] --> B3["EX"] --> B4["MEM + DTLB"] --> B5["WB"]
   end
   subgraph P3["OoO 4K: dual-width out-of-order"]
-    direction LR
+    direction TB
     C1["Fetch pair"] --> C2["Decode"] --> C3["Rename / Dispatch"] --> C4["Issue"] --> C5["Execute / Complete"] --> C6["Commit"]
   end
-  A5 ~~~ B1
-  B5 ~~~ C1
+  P1 ~~~ P2
+  P2 ~~~ P3
 ```
 
 ## Current performance
