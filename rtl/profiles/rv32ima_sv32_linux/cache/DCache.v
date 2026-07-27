@@ -269,6 +269,14 @@ module DCache #(
     wire refill_st_merge = in_refill && refill_same_set && cpu_req_write &&
         ((refill_same_tag_w0 && hit_resp_pending && !hit_read_way_r) || (refill_same_tag_w1 && hit_resp_pending && hit_read_way_r));
 
+`ifdef NPC_USE_DPI
+    wire [31:0] dmem_rdata_w0 = sim_rdata_w0_r;
+    wire [31:0] dmem_rdata_w1 = sim_rdata_w1_r;
+`else
+    wire [31:0] dmem_rdata_w0;
+    wire [31:0] dmem_rdata_w1;
+`endif
+
     wire wb_req_valid = (state == S_WB_REQ);
     wire [SET_WORD_ADDR_BITS-1:0] wb_set_word = {set_r, wb_word_r};
     wire [31:0] wb_addr = {victim_tag_r, set_r, wb_word_r, 2'b00};
@@ -341,14 +349,6 @@ module DCache #(
         (dmem_rd_cmd ? cpu_req_set_word : wb_set_word);
     wire dmem_ren_w0 = dmem_rd_cmd_any && !dmem_rd_way;
     wire dmem_ren_w1 = dmem_rd_cmd_any && dmem_rd_way;
-
-`ifdef NPC_USE_DPI
-    wire [31:0] dmem_rdata_w0 = sim_rdata_w0_r;
-    wire [31:0] dmem_rdata_w1 = sim_rdata_w1_r;
-`else
-    wire [31:0] dmem_rdata_w0;
-    wire [31:0] dmem_rdata_w1;
-`endif
 
     // CPU ready: in S_IDLE, or in S_REFILL_WAIT for loads to non-conflicting lines
     wire refill_same_way_w0 = (state == S_REFILL_WAIT) && refill_same_tag_w0;

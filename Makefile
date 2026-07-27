@@ -45,7 +45,7 @@ help:
 	  '  make performance-check                    Validate tracked performance evidence' \
 	  '  make <profile>_asic_defconfig             Select a register-expanded ASIC Profile' \
 	  '  make asic-config-check                    Validate ASIC source/config closure' \
-	  '  make dc-matrix[-dry-run]                  Run/show the selected DC frequency scan' \
+	  '  make dc-matrix[-dry-run]                  Run/show the WNS-guided DC frequency scan' \
 	  '  make pnr[-dry-run]                        Run/show mapped-netlist OpenROAD/OpenRCX' \
 	  '  make sta[-dry-run]                        Run/show same-run PrimeTime STA' \
 	  '  make a3-dc-eval                           Evaluate three-way OoO A3 DC evidence' \

@@ -254,6 +254,7 @@ def build_contract(root: Path, config_path: Path, requested_mode: str) -> dict:
         "filelist": filelist,
         "parameter_file": parameter_file,
         "frequencies_mhz": [int(value) for value in profile_data["dc_frequencies_mhz"]],
+        "navigation_quantum_mhz": int(matrix.get("dc_navigation_quantum_mhz", 10)),
         "matrix": matrix,
         "defines": defines,
         "sources": sources,
@@ -294,28 +295,120 @@ def write_json(path: Path, value: object) -> None:
 
 def parse_frequency_list(raw: str, defaults: Iterable[int]) -> List[int]:
     if not raw:
-        return list(defaults)
-    values = [int(item) for item in raw.split(",") if item]
+        values = list(defaults)
+    else:
+        values = [int(item) for item in raw.split(",") if item]
     if not values or any(value <= 0 for value in values) or len(set(values)) != len(values):
         raise AsicError("frequencies must be unique positive comma-separated MHz values")
+    if values != sorted(values, reverse=True):
+        raise AsicError("frequencies must be listed in strictly descending order")
     return values
+
+
+def wns_navigation_eligible(row: dict) -> bool:
+    """Return true only when lowering the clock addresses the sole failed gate."""
+    required_zero = (
+        "timing_loop_evidence", "automatic_arc_break_evidence",
+        "electrical_violations", "check_design_errors", "unresolved_reference_count",
+        "latch_count", "unclocked_sync_endpoint_count", "macro_count", "blackbox_count",
+    )
+    return bool(
+        row.get("completed") and not row.get("missing_gate_fields") and
+        row.get("timing_loop_report_valid") and
+        all(row.get(key) == 0 for key in required_zero) and
+        row.get("check_design_ok") == 1 and row.get("check_timing_ok") == 1 and
+        row.get("wns_ns") is not None and float(row["wns_ns"]) < -0.0005 and
+        row.get("tns_ns") is not None and float(row["tns_ns"]) < -0.0005 and
+        row.get("violating_paths") is not None and int(row["violating_paths"]) > 0
+    )
+
+
+def dc_frequency_decision(frequencies: List[int], current: int, row: dict,
+                          quantum_mhz: int = 10) -> dict:
+    """Choose a quantized point below the Fmax estimated from setup WNS."""
+    if quantum_mhz <= 0:
+        raise AsicError("DC navigation quantum must be positive")
+    floor_mhz = min(frequencies)
+    remaining = [frequency for frequency in frequencies if frequency < current]
+    base = {
+        "frequency_mhz": current,
+        "frequency_floor_mhz": floor_mhz,
+        "navigation_quantum_mhz": quantum_mhz,
+        "period_ns": row.get("period_ns"),
+        "wns_ns": row.get("wns_ns"),
+        "next_frequency_mhz": None,
+        "skipped_frequencies_mhz": [],
+        "estimated_required_period_ns": None,
+        "estimated_fmax_mhz": None,
+    }
+    if row.get("setup_closed"):
+        base.update({
+            "action": "stop_closed",
+            "reason": "highest_executed_candidate_is_setup_closed",
+            "skipped_frequencies_mhz": remaining,
+        })
+        return base
+    if not wns_navigation_eligible(row):
+        base.update({
+            "action": "stop_non_setup_failure",
+            "reason": "result_is_not_a_clean_setup_only_failure",
+            "skipped_frequencies_mhz": remaining,
+        })
+        return base
+
+    period = float(row["period_ns"])
+    wns = float(row["wns_ns"])
+    required_period = period - wns
+    if not math.isfinite(required_period) or required_period <= 0.0:
+        base.update({
+            "action": "stop_invalid_estimate",
+            "reason": "period_minus_wns_is_not_positive_and_finite",
+            "skipped_frequencies_mhz": remaining,
+        })
+        return base
+    estimate = 1000.0 / required_period
+    base["estimated_required_period_ns"] = round(required_period, 9)
+    base["estimated_fmax_mhz"] = round(estimate, 6)
+    next_frequency = int(math.floor((estimate + 1.0e-9) / quantum_mhz) * quantum_mhz)
+    if next_frequency >= current:
+        next_frequency = current - quantum_mhz
+    base["quantized_fmax_mhz"] = next_frequency
+    if next_frequency < floor_mhz:
+        base.update({
+            "action": "stop_below_candidate_floor",
+            "reason": "quantized_wns_estimate_is_below_frequency_floor",
+            "skipped_frequencies_mhz": remaining,
+        })
+        return base
+
+    base.update({
+        "action": "run_quantized_wns_candidate",
+        "reason": "floor_wns_estimated_fmax_to_navigation_quantum",
+        "next_frequency_mhz": next_frequency,
+        "skipped_frequencies_mhz": [
+            frequency for frequency in remaining if next_frequency < frequency < current
+        ],
+    })
+    return base
 
 
 def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     contract = build_contract(root, config_path, args.ooo_mode)
     frequencies = parse_frequency_list(args.frequencies, contract["frequencies_mhz"])
+    quantum_mhz = contract["navigation_quantum_mhz"]
+    if quantum_mhz <= 0:
+        raise AsicError("dc_navigation_quantum_mhz must be positive")
     build_root = Path(args.build_root).resolve() if args.build_root else root / "build/asic"
     run_id = args.run_id or utc_id()
     matrix_root = build_root / contract["profile"] / contract["mode"] / "dc" / run_id
     tool_value = os.environ.get("NPC_ASIC_DC_SHELL", "dc_shell")
-    commands = [
-        [*split_tool(tool_value), "-f", str(root / "flows/asic/dc/run.tcl")]
-        for _ in frequencies
-    ]
-    print("ASIC_DC_MATRIX profile={} mode={} source={} run_id={}".format(
+    command = [*split_tool(tool_value), "-f", str(root / "flows/asic/dc/run.tcl")]
+    print("ASIC_DC_MATRIX profile={} mode={} source={} run_id={} policy=wns_quantized".format(
         contract["profile"], contract["mode"], contract["source_commit"], run_id))
-    for frequency, command in zip(frequencies, commands):
-        print("dc_{}mhz: {}".format(frequency, " ".join(shlex.quote(item) for item in command)))
+    print("dc_initial_candidate_{}mhz: {}".format(
+        frequencies[0], " ".join(shlex.quote(item) for item in command)))
+    print("dc_navigation_quantum_mhz={} dc_frequency_floor_mhz={}".format(
+        quantum_mhz, min(frequencies)))
     if args.dry_run:
         print("ASIC_DC_MATRIX_DRY_RUN_PASS")
         return 0
@@ -340,6 +433,12 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "source_set_sha256": contract["source_set_sha256"],
         "config_sha256": contract["config_sha256"],
         "frequencies_mhz": frequencies,
+        "frequency_start_mhz": frequencies[0],
+        "frequency_floor_mhz": min(frequencies),
+        "navigation_quantum_mhz": quantum_mhz,
+        "scan_policy": "wns_guided_quantized_v2",
+        "wns_estimate_formula": "estimated_fmax_mhz=1000/(period_ns-wns_ns)",
+        "next_frequency_formula": "floor(estimated_fmax_mhz/navigation_quantum_mhz)*navigation_quantum_mhz",
         "memory_mode": "registers", "macro_count": 0,
         "liberty_sha256": sha256_file(liberty), "db_sha256": sha256_file(database),
         "timer_clock_hz": args.timer_clock_hz,
@@ -360,7 +459,10 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         }
     write_json(matrix_root / "input_manifest.json", input_manifest)
     failed_tools = 0
-    for frequency in frequencies:
+    rows: List[dict] = []
+    decisions: List[dict] = []
+    frequency: Optional[int] = frequencies[0]
+    while frequency is not None:
         run = matrix_root / f"dc_{frequency}mhz"
         run.mkdir()
         period = 1000.0 / frequency
@@ -400,8 +502,28 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
             (run / "run.ok").write_text("DC_RUN_COMPLETED\n")
         else:
             failed_tools += 1
-    rows = [parse_run(path) for path in sorted(matrix_root.glob("dc_*mhz"))]
-    write_json(matrix_root / "summary.json", {"input": input_manifest, "runs": rows})
+        row = parse_run(run)
+        rows.append(row)
+        decision = dc_frequency_decision(frequencies, frequency, row, quantum_mhz)
+        decisions.append(decision)
+        print("ASIC_DC_STEP frequency_mhz={} wns_ns={} action={} next_mhz={} skipped={}".format(
+            frequency, row.get("wns_ns"), decision["action"],
+            decision["next_frequency_mhz"], decision["skipped_frequencies_mhz"]))
+        frequency = decision["next_frequency_mhz"]
+    scan = {
+        "policy": "wns_guided_quantized_v2",
+        "frequency_anchors_mhz": frequencies,
+        "navigation_quantum_mhz": quantum_mhz,
+        "executed_frequencies_mhz": [int(decision["frequency_mhz"])
+                                     for decision in decisions],
+        "decisions": decisions,
+        "stop_action": decisions[-1]["action"] if decisions else "no_run",
+        "stop_reason": decisions[-1]["reason"] if decisions else "no_run",
+    }
+    write_json(matrix_root / "scan_decisions.json", scan)
+    write_json(matrix_root / "summary.json", {
+        "input": input_manifest, "scan": scan, "runs": rows,
+    })
     if rows:
         import csv
         with (matrix_root / "summary.csv").open("w", newline="") as handle:
@@ -412,9 +534,11 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     write_json(matrix_root / "verdict.json", {
         "status": "DC_CLOSED_POINT_AVAILABLE" if selected else "DC_NO_CLOSED_POINT",
         "selected": selected, "tool_failures": failed_tools,
+        "scan_policy": scan["policy"], "stop_action": scan["stop_action"],
+        "stop_reason": scan["stop_reason"],
     })
-    print("ASIC_DC_MATRIX_COMPLETE root={} closed_points={} tool_failures={}".format(
-        matrix_root, len(closed), failed_tools))
+    print("ASIC_DC_MATRIX_COMPLETE root={} closed_points={} tool_failures={} executed={}".format(
+        matrix_root, len(closed), failed_tools, scan["executed_frequencies_mhz"]))
     return 0 if failed_tools == 0 else 2
 
 

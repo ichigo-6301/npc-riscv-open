@@ -57,6 +57,7 @@ class AsicFlowTests(unittest.TestCase):
                 "liberty_sha256": "b" * 64,
                 "db_sha256": "c" * 64,
                 "frequencies_mhz": [400],
+                "scan_policy": "wns_guided_quantized_v2",
                 "memory_mode": "registers",
                 "macro_count": 0,
                 "timer_clock_hz": None,
@@ -69,6 +70,21 @@ class AsicFlowTests(unittest.TestCase):
         return {
             "schema": "npc-riscv-open/a3-cycle-identity-v1",
             "source_commit": A3_COMMIT,
+            "difftest_reference": {
+                "profile": "rv32im_4k_v1",
+                "nemu_commit": "a" * 40,
+                "nemu_so_sha256": "b" * 64,
+                "nemu_config_sha256": "c" * 64,
+                "source_evidence_manifest_sha256": "d" * 64,
+                "nemu_config_contract": {
+                    "CONFIG_ISA": '"riscv32"',
+                    "CONFIG_RISCV_FPGA_MMIO_LAYOUT": "y",
+                    "CONFIG_DEVICE": "y",
+                    "CONFIG_RTC_MMIO": "0xa0000048",
+                },
+                "mmio_policy": "private_ooo_dut_authoritative_skip_and_reference_resync",
+                "public_bounded_adapter_used": False,
+            },
             "rows": [
                 {
                     "profile": profile,
@@ -177,6 +193,16 @@ class AsicFlowTests(unittest.TestCase):
         self.assertIn("set check_timing_ok [check_timing]", text)
         self.assertNotIn("check_timing -verbose", text)
 
+    def test_ooo_wrapper_binds_a3_only_for_a3_source(self):
+        text = (ROOT / "rtl/wrappers/rv32im_ooo_4k_sim_top.sv").read_text()
+        guard = text.index("`ifdef NPC_OOO_A3_ENABLE")
+        end = text.index("`endif", guard)
+        guarded = text[guard:end]
+        self.assertIn(".STABLE_ENTRY_IQ_ENABLE(1'b1)", guarded)
+        self.assertIn(".IQ_SPLIT_PAYLOAD_READ_ENABLE(1'b1)", guarded)
+        self.assertIn(".ROB_INDEXED_SERVICE_LEVEL(1)", guarded)
+        self.assertNotIn("`define NPC_OOO_A3_ENABLE 0", text)
+
     def test_dc_diagnostic_collection_failure_is_not_clean(self):
         text = (ROOT / "flows/asic/dc/run.tcl").read_text()
         self.assertIn("proc collection_count_or_invalid", text)
@@ -234,6 +260,98 @@ class AsicFlowTests(unittest.TestCase):
             (run / "timing_loops.rpt").write_text("No timing loops found\n")
             self.assertIn("tns_ns", parse_run(run)["missing_gate_fields"])
             self.assertFalse(parse_run(run)["setup_closed"])
+
+    def test_dc_frequency_navigation_quantizes_below_wns_estimate(self):
+        row = {
+            "completed": True,
+            "period_ns": 1000.0 / 700.0,
+            "wns_ns": -0.396732,
+            "tns_ns": -13578.86,
+            "violating_paths": 100,
+            "setup_closed": False,
+            "missing_gate_fields": [],
+            "timing_loop_report_valid": True,
+            "timing_loop_evidence": 0,
+            "automatic_arc_break_evidence": 0,
+            "electrical_violations": 0,
+            "check_design_errors": 0,
+            "check_design_ok": 1,
+            "check_timing_ok": 1,
+            "unresolved_reference_count": 0,
+            "latch_count": 0,
+            "unclocked_sync_endpoint_count": 0,
+            "macro_count": 0,
+            "blackbox_count": 0,
+        }
+        decision = asicctl.dc_frequency_decision([800, 700, 600, 500], 700, row)
+        self.assertAlmostEqual(decision["estimated_fmax_mhz"], 547.854, places=3)
+        self.assertEqual(decision["quantized_fmax_mhz"], 540)
+        self.assertEqual(decision["next_frequency_mhz"], 540)
+        self.assertEqual(decision["skipped_frequencies_mhz"], [600])
+
+    def test_dc_frequency_navigation_accepts_generated_current_point(self):
+        row = {
+            "completed": True,
+            "period_ns": 1000.0 / 540.0,
+            "wns_ns": -0.05,
+            "tns_ns": -10.0,
+            "violating_paths": 10,
+            "setup_closed": False,
+            "missing_gate_fields": [],
+            "timing_loop_report_valid": True,
+            "timing_loop_evidence": 0,
+            "automatic_arc_break_evidence": 0,
+            "electrical_violations": 0,
+            "check_design_errors": 0,
+            "check_design_ok": 1,
+            "check_timing_ok": 1,
+            "unresolved_reference_count": 0,
+            "latch_count": 0,
+            "unclocked_sync_endpoint_count": 0,
+            "macro_count": 0,
+            "blackbox_count": 0,
+        }
+        decision = asicctl.dc_frequency_decision([800, 700, 600, 500], 540, row)
+        self.assertEqual(decision["next_frequency_mhz"], 520)
+        self.assertEqual(decision["skipped_frequencies_mhz"], [])
+
+    def test_dc_frequency_navigation_stops_after_first_closed_point(self):
+        decision = asicctl.dc_frequency_decision(
+            [500, 400, 350], 500, {"setup_closed": True})
+        self.assertEqual(decision["action"], "stop_closed")
+        self.assertIsNone(decision["next_frequency_mhz"])
+        self.assertEqual(decision["skipped_frequencies_mhz"], [400, 350])
+
+    def test_dc_frequency_navigation_does_not_mask_non_timing_failure(self):
+        row = {
+            "completed": True,
+            "period_ns": 2.0,
+            "wns_ns": -0.5,
+            "tns_ns": -10.0,
+            "violating_paths": 10,
+            "setup_closed": False,
+            "missing_gate_fields": [],
+            "timing_loop_report_valid": True,
+            "timing_loop_evidence": 1,
+            "automatic_arc_break_evidence": 0,
+            "electrical_violations": 0,
+            "check_design_errors": 0,
+            "check_design_ok": 1,
+            "check_timing_ok": 1,
+            "unresolved_reference_count": 0,
+            "latch_count": 0,
+            "unclocked_sync_endpoint_count": 0,
+            "macro_count": 0,
+            "blackbox_count": 0,
+        }
+        decision = asicctl.dc_frequency_decision([500, 400, 300], 500, row)
+        self.assertEqual(decision["action"], "stop_non_setup_failure")
+        self.assertIsNone(decision["next_frequency_mhz"])
+        self.assertEqual(decision["skipped_frequencies_mhz"], [400, 300])
+
+    def test_dc_frequency_candidates_must_be_descending(self):
+        with self.assertRaisesRegex(asicctl.AsicError, "descending"):
+            asicctl.parse_frequency_list("500,600,400", [])
 
     def test_pnr_summary_requires_route_antenna_and_extraction_cleanliness(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -382,15 +500,28 @@ class AsicFlowTests(unittest.TestCase):
         self.assertEqual(result["status"], "A3_DC_REJECT")
         self.assertFalse(result["merge_allowed"])
 
+    def test_a3_dc_evaluation_rejects_public_bounded_adapter(self):
+        cpi = copy.deepcopy(self.a3_cpi_identity())
+        cpi["difftest_reference"]["public_bounded_adapter_used"] = True
+        result = evaluate_a3_dc(
+            self.a3_matrix("legacy", LEGACY_COMMIT, 2.0, source_set="legacy"),
+            self.a3_matrix("a3_split_off", A3_COMMIT, 2.0),
+            self.a3_matrix("a3", A3_COMMIT, 1.8),
+            cpi,
+        )
+        self.assertEqual(result["status"], "A3_DC_REJECT")
+        self.assertFalse(result["merge_allowed"])
+
     def test_a3_cpi_builder_requires_and_binds_all_rows(self):
         with tempfile.TemporaryDirectory() as temp:
-            path = Path(temp) / "a3.csv"
+            root = Path(temp)
+            csv_path = root / "a3.csv"
             fields = (
                 "profile", "workload", "binary_sha256", "cycles", "instructions",
                 "cpi", "commit_trace_lines", "commit_pc_instruction_sha256",
                 "cycle_identity", "instruction_identity", "trace_identity", "guard_status",
             )
-            with path.open("w", newline="") as stream:
+            with csv_path.open("w", newline="") as stream:
                 writer = csv.DictWriter(stream, fieldnames=fields)
                 writer.writeheader()
                 for row in self.a3_cpi_identity()["rows"]:
@@ -403,10 +534,39 @@ class AsicFlowTests(unittest.TestCase):
                         "commit_trace_lines": 11,
                         "commit_pc_instruction_sha256": "b" * 64,
                     })
-            result = build_a3_cpi_identity(path)
+            evidence = root / "evidence.txt"
+            evidence.write_text(
+                "profile=rv32im_4k_v1\n"
+                "implementation_commit=354f2e4a2d8cc8c96bd76949d61dec24f7247afd\n"
+                "functional_status=A3_CYCLE_IDENTITY_PASS\n"
+                "evidence_002_sha256={}\n"
+                "nemu_commit={}\n"
+                "nemu_so_sha256={}\n".format(
+                    asicctl.sha256_file(csv_path), "a" * 40, "b" * 64
+                )
+            )
+            reference_so = root / "profile-reference.so"
+            reference_so.write_bytes(b"profile-matched-reference")
+            so_sha = asicctl.sha256_file(reference_so)
+            evidence.write_text(
+                evidence.read_text().replace("b" * 64, so_sha)
+            )
+            reference_config = root / ".config"
+            reference_config.write_text(
+                'CONFIG_ISA="riscv32"\n'
+                "CONFIG_RISCV_FPGA_MMIO_LAYOUT=y\n"
+                "CONFIG_DEVICE=y\n"
+                "CONFIG_RTC_MMIO=0xa0000048\n"
+            )
+            result = build_a3_cpi_identity(
+                csv_path, evidence, reference_so, reference_config
+            )
             self.assertEqual(result["source_commit"], A3_COMMIT)
             self.assertEqual(result["row_count"], 14)
             self.assertEqual(result["status"], "A3_CYCLE_IDENTITY_PASS")
+            self.assertEqual(
+                result["difftest_reference"]["nemu_so_sha256"], so_sha
+            )
 
 
 if __name__ == "__main__":

@@ -64,7 +64,7 @@ iteration 数，不需要假设时钟频率，也不是绝对 CoreMark score。
 | Profile | CoreMark timed CPI | CoreMark/MHz | Whole-program CPI | 证据状态 |
 | --- | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | 1.484920431 | 2.201416876 | 1.485861312 | `verified`，NEMU difftest PASS |
-| `rv32ima_sv32_linux` | 1.725375105 | 1.894598197 | 1.725944902 | `historical_verified`（`abf66cad`）；E1 `bee5b918` 尚待同输入复测 |
+| `rv32ima_sv32_linux` | 1.725375105 | 1.894598197 | 1.725944902 | `historical_verified`（`abf66cad`）；E1 + DC 兼容提交 `995c7d98` 尚待同输入复测 |
 | `rv32im_ooo_4k` | 0.879973757 | 3.714802709 | 0.882383851 | `provisional`，self-check PASS；双退休 MMIO difftest 歧义未解除 |
 
 当前没有闭合频率、面积、功耗或硅后数据。绝对 CoreMark score 也保持 `—`。

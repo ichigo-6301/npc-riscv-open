@@ -86,6 +86,11 @@ module npc_public_sim_top (
         .SINGLETON_COALESCE_ORACLE_ENABLE(1'b0),
         .PARTIAL_PAIR_ORACLE_ENABLE(1'b0),
         .CACHED_CROSS_LINE_PAIR_ENABLE(1'b0),
+`ifdef NPC_OOO_A3_ENABLE
+        .STABLE_ENTRY_IQ_ENABLE(1'b1),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(1'b1),
+        .ROB_INDEXED_SERVICE_LEVEL(1),
+`endif
         .CACHED_CROSS_LINE_ROLLING_CARRY_ENABLE(1'b1)
     ) u_cpu (
         .clk(clk), .rst_n(rst_n),

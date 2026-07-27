@@ -29,9 +29,21 @@ make sta NPC_ASIC_PNR_RUN=<routed-pnr-run>
 make asic-evidence-check NPC_ASIC_BUILD_ROOT=<run-root>
 ```
 
-DC 每个频点从 clean elaboration 独立运行。只有 `WNS>=0`、`TNS=0`、零 setup
-violation、零组合环/自动断弧、零电气违反、零 macro 和零 blackbox 的最高频点可进入
-后端。P&R 默认频率为 `floor_to_25MHz(0.80 * F_dc_closed)`。
+DC 使用起始频点、最低频率边界和 10 MHz 网格进行 WNS 导航，每个实际执行点仍从
+clean elaboration 独立运行。
+若当前点仅 setup 失败，则按
+`F_est = 1000 / (period_ns - WNS_ns)` 估算可达频率，再按
+`F_next = floor(F_est / 10 MHz) * 10 MHz` 生成略低于估算值的新频点；中间更高的旧矩阵
+锚点记为 skipped，不再机械执行。一旦有频点闭合，立即
+停止向下扫描。若 elaboration、组合环/自动断弧、电气检查或工具证据失败，则停止扫描，
+不得用降频掩盖。只有 `WNS>=0`、`TNS=0`、零 setup violation、零组合环/自动断弧、
+零电气违反、零 macro 和零 blackbox 的最高实际执行频点可进入后端。P&R 默认频率为
+`floor_to_25MHz(0.80 * F_dc_closed)`。
+每次矩阵将实际执行点、估算值、跳过点和停止原因写入 `scan_decisions.json`。
+
+例如 Single Profile 在 700 MHz 的 `WNS=-0.396732 ns` 对应
+`F_est=547.854 MHz`，因此 600 MHz 应直接跳过并运行 540 MHz。该估算只用于选择
+下一次 DC 目标，不是闭合频率声明。
 
 正式 DC 矩阵使用 `max_transition=0.20` 和 `max_fanout=32`；capacitance 使用
 Nangate45 Liberty 原生限制，不额外施加全设计 `0.20` 的人为上限。所有 Liberty
@@ -44,8 +56,9 @@ memory bits 为零；register-expanded 和 `macro_count=0` 仍需由 elaboration
 `flowctl.py` 仍要求 Python 3.8 或更新版本。
 
 Linux 初次扫描使用 RTL 默认 timer clock；进入后端前必须在选定 `F_pnr_mhz` 下重新综合，
-显式传入 `NPC_TIMER_CLK_HZ=F_pnr_mhz * 1_000_000`，timebase保持 1 MHz。Linux E1 源锁是
-`bee5b918`；旧 `abf66cad` CoreMark 结果只保留为历史证据。
+显式传入 `NPC_TIMER_CLK_HZ=F_pnr_mhz * 1_000_000`，timebase保持 1 MHz。Linux 源锁是
+`995c7d98`：它在 E1 `bee5b918` 之上仅移动两项 DCache 声明以兼容 DC O-2018；旧
+`abf66cad` CoreMark 结果只保留为历史证据。
 
 ## OoO A3 对照
 
@@ -69,7 +82,12 @@ graph包含组合环、自动断弧或缺失原生检查时，结果固定为
 
 Tracked 14行 A3 performance CSV先通过
 `flows/scripts/build_a3_cpi_identity.py` 转换为带 source commit与输入 SHA256的
-bounded JSON；`a3-dc-eval` 不接受手工省略 workload或没有 commit绑定的 CPI结论。
+bounded JSON。该转换还必须提供原始 A3 evidence manifest、实际使用的私有 OoO
+NEMU `.so` 和对应 `.config`；生成结果绑定 Profile、NEMU commit、binary/config
+SHA256以及 MMIO skip/resync policy。公开仓库为三个 Profile生成的 bounded NEMU
+adapter各自用于本 Profile smoke，不能替代 OoO七 workload reference。
+`a3-dc-eval` 不接受手工省略 workload、没有 commit/reference绑定的 CPI结论，或
+使用 public bounded adapter生成的 OoO CPI结论。
 
 ## 后端交接
 

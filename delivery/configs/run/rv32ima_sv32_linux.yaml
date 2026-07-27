@@ -1,5 +1,5 @@
 {
-  "commit_sha": "bee5b91866c0d76d8335188e46240adb0fa76a44",
+  "commit_sha": "995c7d9815396b72cd04ead3d7a17a0805c86860",
   "constraints": {
     "a_extension": true,
     "architectural_overrides_allowed": false,
@@ -41,7 +41,7 @@
   "run_id": "rv32ima_sv32_linux_smoke",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
-  "source_ref": "bee5b91866c0d76d8335188e46240adb0fa76a44",
+  "source_ref": "995c7d9815396b72cd04ead3d7a17a0805c86860",
   "stages": [
     "config_check",
     "source_closure",

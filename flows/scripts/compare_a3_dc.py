@@ -85,8 +85,8 @@ def highest_closed(matrix: dict) -> Optional[float]:
 def validate_recipe_identity(matrices: List[dict]) -> List[str]:
     reasons: List[str] = []
     manifests = [matrix["manifest"] for matrix in matrices]
-    for key in ("liberty_sha256", "db_sha256", "frequencies_mhz", "memory_mode",
-                "macro_count", "timer_clock_hz"):
+    for key in ("liberty_sha256", "db_sha256", "frequencies_mhz", "scan_policy",
+                "memory_mode", "macro_count", "timer_clock_hz"):
         values = [manifest.get(key) for manifest in manifests]
         if any(value != values[0] for value in values[1:]):
             reasons.append("recipe mismatch: {}".format(key))
@@ -107,6 +107,34 @@ def validate_cpi(record: dict) -> dict:
         reasons.append("unexpected CPI evidence schema")
     if record.get("source_commit") != A3_COMMIT:
         reasons.append("CPI evidence source commit mismatch")
+    reference = record.get("difftest_reference")
+    if not isinstance(reference, dict):
+        reasons.append("CPI evidence has no Profile-bound difftest reference")
+    else:
+        if reference.get("profile") != "rv32im_4k_v1":
+            reasons.append("CPI difftest reference profile mismatch")
+        for key in (
+            "nemu_commit", "nemu_so_sha256", "nemu_config_sha256",
+            "source_evidence_manifest_sha256",
+        ):
+            value = reference.get(key)
+            width = 40 if key == "nemu_commit" else 64
+            if (not isinstance(value, str) or len(value) != width or
+                    any(ch not in "0123456789abcdef" for ch in value)):
+                reasons.append("CPI difftest reference has invalid {}".format(key))
+        expected_contract = {
+            "CONFIG_ISA": '"riscv32"',
+            "CONFIG_RISCV_FPGA_MMIO_LAYOUT": "y",
+            "CONFIG_DEVICE": "y",
+            "CONFIG_RTC_MMIO": "0xa0000048",
+        }
+        if reference.get("nemu_config_contract") != expected_contract:
+            reasons.append("CPI difftest NEMU configuration mismatch")
+        if reference.get("mmio_policy") != (
+                "private_ooo_dut_authoritative_skip_and_reference_resync"):
+            reasons.append("CPI difftest MMIO policy mismatch")
+        if reference.get("public_bounded_adapter_used") is not False:
+            reasons.append("public bounded adapter cannot qualify A3 CPI")
     rows = record.get("rows")
     if not isinstance(rows, list):
         rows = []

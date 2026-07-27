@@ -31,10 +31,25 @@ make sta NPC_ASIC_PNR_RUN=<routed-pnr-run>
 make asic-evidence-check NPC_ASIC_BUILD_ROOT=<run-root>
 ```
 
-Every DC frequency starts from a clean elaboration. Only the highest point with
-`WNS>=0`, `TNS=0`, no setup violations, no combinational loop or automatic arc
-break, no electrical violation, no macro, and no blackbox may enter P&R. The
-default physical frequency is `floor_to_25MHz(0.80 * F_dc_closed)`.
+DC uses a starting point, a lower frequency bound, and a 10 MHz grid for
+WNS-guided navigation. Every point that is actually run still starts from a
+clean elaboration. When setup is the only failed gate, it estimates
+`F_est = 1000 / (period_ns - WNS_ns)` and generates the next point as
+`F_next = floor(F_est / 10 MHz) * 10 MHz`; higher legacy matrix anchors are
+recorded as skipped instead of being run mechanically. The scan stops at the
+first closed point. Elaboration, combinational-loop or automatic-arc-break,
+electrical-check, and tool-evidence failures stop the scan and cannot be hidden
+by lowering the frequency. Only the highest executed point with `WNS>=0`,
+`TNS=0`, no setup violations, no combinational loop or automatic arc break, no
+electrical violation, no macro, and no blackbox may enter P&R. The default
+physical frequency is `floor_to_25MHz(0.80 * F_dc_closed)`.
+Each matrix records executed points, estimates, skipped points, and the stop
+reason in `scan_decisions.json`.
+
+For example, the Single Profile result at 700 MHz with
+`WNS=-0.396732 ns` gives `F_est=547.854 MHz`, so the declared 600 MHz point is
+skipped and 540 MHz is run next. The estimate selects the next DC target; it is
+not a frequency-closure claim.
 
 The formal DC matrix uses `max_transition=0.20` and `max_fanout=32`.
 Capacitance keeps the native Nangate45 Liberty limits instead of imposing an
@@ -53,8 +68,9 @@ newer.
 The first Linux scan uses the RTL timer default. Before physical handoff it must
 be resynthesized at the chosen `F_pnr_mhz` with
 `NPC_TIMER_CLK_HZ=F_pnr_mhz * 1_000_000` and a 1 MHz
-timebase. Linux E1 is locked to `bee5b918`; the old `abf66cad` CoreMark row stays
-historical until an exact rerun.
+timebase. Linux is locked to `995c7d98`, which only moves two DCache declarations
+for DC O-2018 compatibility on top of E1 `bee5b918`. The old `abf66cad`
+CoreMark row stays historical until an exact rerun.
 
 ## OoO A3 Comparison
 
@@ -81,8 +97,14 @@ native timing-graph check yields `A3_DC_INCONCLUSIVE_LOOP` and forbids merge.
 
 The tracked 14-row A3 performance CSV is first converted by
 `flows/scripts/build_a3_cpi_identity.py` into bounded JSON carrying the source
-commit and input SHA256. `a3-dc-eval` does not accept a manually shortened
-workload set or CPI evidence without commit binding.
+commit and input SHA256. The conversion also requires the original A3 evidence
+manifest, the private OoO NEMU `.so` actually used, and its matching `.config`;
+the result binds the Profile, NEMU commit, binary/config SHA256, and MMIO
+skip/resynchronization policy. The public bounded adapters generated separately
+for the three Profiles remain Profile smoke references and cannot replace the
+OoO seven-workload reference. `a3-dc-eval` rejects a manually shortened
+workload set, CPI evidence without commit/reference binding, or OoO CPI evidence
+produced with the public bounded adapter.
 
 ## Physical Handoff
 
