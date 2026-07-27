@@ -47,6 +47,7 @@ module ooo_pipeline_serial_executor_1w #(
     output logic debug_store_fallthrough_valid_o,
     output logic debug_store_fallthrough_accept_o,
     output logic debug_store_fallthrough_capture_o,
+    output logic [2:0] debug_issue_registered_credit_o,
     output logic fallthrough_conservation_error_o
 );
 `ifdef NPC_OOO_EBREAK_TRAP
@@ -462,6 +463,15 @@ module ooo_pipeline_serial_executor_1w #(
     assign debug_store_fallthrough_valid_o = store_fallthrough_valid_c;
     assign debug_store_fallthrough_accept_o = store_fallthrough_accept_c;
     assign debug_store_fallthrough_capture_o = store_fallthrough_capture_c;
+    // Measurement-only service calendar inputs. These credits depend only on
+    // registered executor occupancy and recovery state, never on the current
+    // issue payload or completion ready.
+    assign debug_issue_registered_credit_o[0] = !reset && !flush_i &&
+        !selective_kill_valid_i && (state_q == SERIAL_IDLE) && !mdu_occupied;
+    assign debug_issue_registered_credit_o[1] =
+        debug_issue_registered_credit_o[0] && mdu_issue_ready;
+    assign debug_issue_registered_credit_o[2] =
+        debug_issue_registered_credit_o[0];
     assign fallthrough_conservation_error_o =
         (store_fallthrough_accept_c && store_fallthrough_capture_c) ||
         (store_fallthrough_valid_c && local_completion_valid_c) ||

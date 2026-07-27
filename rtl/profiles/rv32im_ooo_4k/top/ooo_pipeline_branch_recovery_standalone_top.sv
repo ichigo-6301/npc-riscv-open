@@ -39,6 +39,10 @@ module ooo_pipeline_branch_recovery_standalone_top #(
     parameter bit STRONG_BRANCH_LINE_DELIVERY_ENABLE = 1'b0,
     parameter bit SPECULATIVE_STORE_DISPATCH_ENABLE = 1'b0,
     parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0,
     parameter bit CORRELATED_REACHABILITY_ORACLE_ENABLE = 1'b0,
     parameter bit WEAK_BIMODAL_REACHABILITY_ORACLE_ENABLE = 1'b0,
     parameter bit LOCAL_HISTORY_REACHABILITY_ORACLE_ENABLE = 1'b0,
@@ -173,6 +177,12 @@ module ooo_pipeline_branch_recovery_standalone_top #(
     output logic [31:0] perf_retirement_chain_o,
     output logic [63:0] perf_complex_retire_pairing_o,
     output logic [63:0] perf_completion_ownership_o,
+    output logic [63:0] perf_issue_service_candidates0_o,
+    output logic [63:0] perf_issue_service_candidates1_o,
+    output logic [63:0] perf_issue_service_dispatch_details_o,
+    output logic [63:0] perf_issue_service_events_o,
+    output logic [63:0] perf_issue_service_capacity_o,
+    output logic [63:0] perf_issue_service_accepts_o,
     output logic [7:0] perf_serial_attribution_o,
     output logic [8:0] perf_branch_resolution_o,
     output logic [7:0] perf_predictor_o,
@@ -257,6 +267,8 @@ module ooo_pipeline_branch_recovery_standalone_top #(
     logic controller_conservation;
     logic controller_checkpoint_miss;
     logic branch_pending_select;
+    logic [63:0] issue_service_capacity_backend;
+    logic [63:0] issue_service_accepts_backend;
     logic checkpoint_release_valid, checkpoint_select_valid;
     bbus_ooo_rob_tag_t checkpoint_release_tag, checkpoint_select_tag;
     logic checkpoint_alloc_ready;
@@ -773,7 +785,11 @@ module ooo_pipeline_branch_recovery_standalone_top #(
         .YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE(
             YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE),
         .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
-            STRUCTURAL_THROUGHPUT_ORACLE_ENABLE)
+            STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+        .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL)
     ) u_p7 (
         .clk(clk),
         .reset(reset),
@@ -869,6 +885,15 @@ module ooo_pipeline_branch_recovery_standalone_top #(
         .perf_retirement_chain_o(perf_retirement_chain_o),
         .perf_complex_retire_pairing_o(perf_complex_retire_pairing_o),
         .perf_completion_ownership_o(perf_completion_ownership_o),
+        .perf_issue_service_candidates0_o(
+            perf_issue_service_candidates0_o),
+        .perf_issue_service_candidates1_o(
+            perf_issue_service_candidates1_o),
+        .perf_issue_service_dispatch_details_o(
+            perf_issue_service_dispatch_details_o),
+        .perf_issue_service_events_o(perf_issue_service_events_o),
+        .perf_issue_service_capacity_o(issue_service_capacity_backend),
+        .perf_issue_service_accepts_o(issue_service_accepts_backend),
         .perf_serial_attribution_o(perf_serial_attribution_o),
         .debug_arch_idx_i(debug_arch_idx_i),
         .debug_phys_idx_i(debug_phys_idx_i),
@@ -885,6 +910,46 @@ module ooo_pipeline_branch_recovery_standalone_top #(
         .recovery_mapping_error_o(p7_recovery_mapping_error),
         .conservation_error_o(p7_conservation_error)
     );
+
+    always_comb begin
+        perf_issue_service_capacity_o = issue_service_capacity_backend;
+        perf_issue_service_accepts_o = issue_service_accepts_backend;
+        if (ISSUE_SERVICE_ORACLE_ENABLE) begin
+            perf_issue_service_capacity_o[55] = branch_issue_ready;
+            perf_issue_service_capacity_o[56] = branch_issue_accept;
+            perf_issue_service_capacity_o[57] = branch_occupied;
+            perf_issue_service_capacity_o[58] = branch_completion_valid;
+            perf_issue_service_capacity_o[59] = branch_completion_ready;
+            perf_issue_service_capacity_o[60] = branch_dispatch_fire;
+            perf_issue_service_capacity_o[61] =
+                branch_controller_redirect_valid;
+            perf_issue_service_capacity_o[62] =
+                branch_controller_redirect_ready;
+            perf_issue_service_capacity_o[63] = checkpoint_select_valid;
+            // High accept bits carry bounded recovery identity. Bits 44:0
+            // remain the five FU accept records exported by the backend.
+            perf_issue_service_accepts_o[45] = selective_request_valid ||
+                selective_transaction_valid || p7_selective_fire;
+            perf_issue_service_accepts_o[50:46] = {
+                selective_request_branch_tag.gen,
+                selective_request_branch_tag.idx
+            };
+            perf_issue_service_accepts_o[53:51] =
+                (selective_request_valid || selective_transaction_valid ||
+                 p7_selective_fire) ? 3'd1 :
+                p7_global_recover ? 3'd2 : 3'd0;
+            perf_issue_service_accepts_o[55:54] = p7_selective_fire ? 2'd3 :
+                selective_transaction_valid ? 2'd2 :
+                selective_request_valid ? 2'd1 : 2'd0;
+            perf_issue_service_accepts_o[60:56] = {
+                pending_checkpoint_q.branch_rob_tag.gen,
+                pending_checkpoint_q.branch_rob_tag.idx
+            };
+            perf_issue_service_accepts_o[61] = branch_issue_accept;
+            perf_issue_service_accepts_o[62] = p7_global_recover;
+            perf_issue_service_accepts_o[63] = selective_transaction_fire;
+        end
+    end
 
     assign recovery_done_o = p7_recovery_done;
     assign perf_branch_resolution_o = {

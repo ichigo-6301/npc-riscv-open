@@ -31,7 +31,11 @@ module ooo_pipeline_backend_standalone_top #(
     parameter bit LOAD_TRANSACTION_DEPTH3_ENABLE = 1'b0,
     parameter bit CORRECT_BRANCH_DUAL_RETIRE_ENABLE = 1'b0,
     parameter bit YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE = 1'b0,
-    parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0
+    parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0
 ) (
     input logic clk, input logic reset, input logic flush_i,
     // P8 only: when set, BRU does not create the conservative all-dispatch
@@ -118,6 +122,12 @@ module ooo_pipeline_backend_standalone_top #(
     output logic [31:0] perf_retirement_chain_o,
     output logic [63:0] perf_complex_retire_pairing_o,
     output logic [63:0] perf_completion_ownership_o,
+    output logic [63:0] perf_issue_service_candidates0_o,
+    output logic [63:0] perf_issue_service_candidates1_o,
+    output logic [63:0] perf_issue_service_dispatch_details_o,
+    output logic [63:0] perf_issue_service_events_o,
+    output logic [63:0] perf_issue_service_capacity_o,
+    output logic [63:0] perf_issue_service_accepts_o,
     output logic conservation_error_o
 );
     localparam logic [2:0] SK_BRU=0, SK_LSU=1, SK_CSR=2, SK_SYS=3, SK_MDU=4;
@@ -132,6 +142,9 @@ module ooo_pipeline_backend_standalone_top #(
     logic [1:0] iq_issue_from_dispatch;
     logic [63:0] iq_structural_oracle;
     logic [47:0] iq_structural_meta;
+    logic [63:0] iq_issue_service_candidates0;
+    logic [63:0] iq_issue_service_candidates1;
+    logic [63:0] iq_issue_service_dispatch_details;
     logic [3:0] structural_dispatch_reason0;
     logic [3:0] structural_dispatch_reason1;
     logic iq_mixed_source_valid;
@@ -149,7 +162,7 @@ module ooo_pipeline_backend_standalone_top #(
     logic [31:0] issue_a0_c, issue_b0_c, issue_a1_c, issue_b1_c;
     logic [31:0] stage_in_src10_c, stage_in_src20_c;
     logic [31:0] stage_in_src11_c, stage_in_src21_c;
-    logic a0v,a1v,lsuv,a0r,a1r,lsur,a0acc,a1acc;
+    logic a0v,a1v,lsuv,a0r,a1r,lsur,a0acc,a1acc,lsu_issue_accept;
     bbus_ooo_alu_iq_uop_t a0u,a1u,lsuu;
     logic [31:0] a0a,a0b,a1a,a1b,lsua,lsub;
     bbus_ooo_writeback_t aw0,aw1,lw,xw,fw0,fw1;
@@ -197,6 +210,7 @@ module ooo_pipeline_backend_standalone_top #(
     logic [2:0] lsu_store_block_reason;
     logic [2:0] lsu_store_service_phase;
     logic [29:0] lsu_store_admission;
+    logic [15:0] lsu_issue_service_state;
     logic lsu_load_response_match, lsu_load_response_live;
     logic lsu_pre_arbiter_load_offer_valid;
     logic [1:0] lsu_pre_arbiter_load_offer_source;
@@ -268,6 +282,9 @@ module ooo_pipeline_backend_standalone_top #(
     logic [18:0] rob_slot1_bypass_oracle;
     logic [63:0] rob_complex_retire_pairing;
     logic issue_fire0, issue_fire1;
+    logic [4:0] issue_service_accept_valid_c;
+    logic [4:0] issue_service_accept_tag_c [4:0];
+    logic [2:0] issue_service_accept_class_c [4:0];
 
     function automatic logic is_serial(input bbus_ooo_renamed_uop_t u);
         is_serial=u.is_store||u.is_csr||u.is_system||u.exception.valid||
@@ -279,6 +296,33 @@ module ooo_pipeline_backend_standalone_top #(
             serial_blocks_dispatch = is_serial(u) && !u.is_store &&
                 !(branch_nonblocking_i && (u.fu_type == BBUS_OOO_FU_BRU));
         end
+    endfunction
+    function automatic logic [4:0] issue_service_tag_key(
+      input bbus_ooo_rob_tag_t tag
+    );
+      issue_service_tag_key = {tag.gen, tag.idx};
+    endfunction
+    function automatic logic [2:0] issue_service_class(
+      input bbus_ooo_alu_iq_uop_t uop
+    );
+      begin
+        if (uop.is_store) begin
+          issue_service_class = 3'd4;
+        end else if (uop.fu_type == BBUS_OOO_FU_MDU) begin
+          issue_service_class = 3'd5;
+        end else if (uop.exception.valid || uop.is_csr || uop.is_system) begin
+          issue_service_class = 3'd6;
+        end else begin
+          unique case (uop.fu_type)
+            BBUS_OOO_FU_NONE,
+            BBUS_OOO_FU_ALU: issue_service_class = 3'd1;
+            BBUS_OOO_FU_LSU: issue_service_class = 3'd2;
+            BBUS_OOO_FU_BRU: issue_service_class = 3'd3;
+            BBUS_OOO_FU_AMO: issue_service_class = 3'd7;
+            default: issue_service_class = 3'd0;
+          endcase
+        end
+      end
     endfunction
     function automatic logic is_memory(input bbus_ooo_renamed_uop_t u);
         is_memory = u.is_load || u.is_store || (u.fu_type == BBUS_OOO_FU_AMO);
@@ -486,7 +530,11 @@ module ooo_pipeline_backend_standalone_top #(
             REGISTERED_BRU_DISPATCH_ORDINARY_ISSUE2_ENABLE),
       .PRECISE_STORE_BUFFER_ENABLE(PRECISE_STORE_BUFFER_ENABLE),
       .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
-        STRUCTURAL_THROUGHPUT_ORACLE_ENABLE)
+        STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+      .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+      .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+      .BALANCED_SERVICE_SELECTOR_ENABLE(ROB_INDEXED_SERVICE_LEVEL == 1),
+      .SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE)
     ) u_iq(.clk(clk),.reset(reset),.flush_i(flush_i),.selective_kill_valid_i(selective_squash_fire_o),.selective_killed_rob_mask_i(selective_killed_rob_mask_o),.selective_killed_count_o(selective_unused_iq_killed_count),.rob_head_i(rob_head),.rob_head_tag_i(rob_head_tag),
       .alu0_available_i(a0r),.alu1_available_i(a1r),
       .lsu_available_i(lsu_iq_available),
@@ -517,6 +565,10 @@ module ooo_pipeline_backend_standalone_top #(
       .debug_mixed_source_pair_kind_o(iq_mixed_source_pair_kind),
       .debug_structural_oracle_o(iq_structural_oracle),
       .debug_structural_meta_o(iq_structural_meta),
+      .debug_issue_service_candidates0_o(iq_issue_service_candidates0),
+      .debug_issue_service_candidates1_o(iq_issue_service_candidates1),
+      .debug_issue_service_dispatch_details_o(
+        iq_issue_service_dispatch_details),
       .debug_count_o(iq_count_o));
 
     assign perf_mixed_source_reason = !iq_mixed_source_valid ? 3'd0 :
@@ -683,7 +735,7 @@ module ooo_pipeline_backend_standalone_top #(
         POSTED_STORE_RESPONSE_PIPELINE_ENABLE),
       .DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE(
         DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE)
-    ) u_lsu(.clk(clk),.reset(reset),.flush_i(flush_i),.selective_kill_valid_i(selective_squash_fire_o),.selective_killed_rob_mask_i(selective_killed_rob_mask_o),.issue_valid_i(lsuv && (|stage_fire)),.issue_uop_i(lsuu),.base_data_i(lsua),.store_data_i(lsub),.issue_ready_o(lsur),
+    ) u_lsu(.clk(clk),.reset(reset),.flush_i(flush_i),.selective_kill_valid_i(selective_squash_fire_o),.selective_killed_rob_mask_i(selective_killed_rob_mask_o),.issue_valid_i(lsuv && (|stage_fire)),.issue_uop_i(lsuu),.base_data_i(lsua),.store_data_i(lsub),.issue_ready_o(lsur),.issue_accept_o(lsu_issue_accept),
       .mem_req_valid_o(lsu_mem_req_valid),.mem_req_ready_i(lsu_mem_req_ready),.mem_req_write_o(lsu_mem_req_write),.mem_req_addr_o(lsu_mem_req_addr),.mem_req_wdata_o(lsu_mem_req_wdata),.mem_req_wstrb_o(lsu_mem_req_wstrb),.mem_req_len_o(lsu_mem_req_len),
       .mem_req_token_o(lsu_mem_req_token),.mem_rsp_valid_i(lsu_mem_rsp_valid),.mem_rsp_ready_o(lsu_mem_rsp_ready),.mem_rsp_rdata_i(lsu_mem_rsp_rdata),.mem_rsp_error_i(lsu_mem_rsp_error),.mem_rsp_page_fault_i(lsu_mem_rsp_page_fault),.mem_rsp_token_i(lsu_mem_rsp_token),
       .load_completion_valid_o(lwv),.load_completion_ready_i(pclear[2]),.load_completion_wb_o(lw),.exception_completion_valid_o(xwv),.exception_completion_ready_i(sclear[1]),.exception_completion_wb_o(xw),
@@ -724,7 +776,8 @@ module ooo_pipeline_backend_standalone_top #(
       .debug_load_response_live_o(lsu_load_response_live),
       .debug_store_block_reason_o(lsu_store_block_reason),
       .debug_store_service_phase_o(lsu_store_service_phase),
-      .debug_store_admission_o(lsu_store_admission));
+      .debug_store_admission_o(lsu_store_admission),
+      .debug_issue_service_state_o(lsu_issue_service_state));
 
     assign atomic_available=!atomic_occupied&&!lsu_occ&&(mem_owner==2'd0);
     assign lsu_store_relaxed = STORE_LOAD_FORWARDING_ENABLE &&
@@ -895,6 +948,152 @@ module ooo_pipeline_backend_standalone_top #(
       lsu_store_load_forward,
       lsu_store_buffer_rsp, lsu_store_buffer_req, lsu_store_buffer_full,
       lsu_store_buffer_ack, lsu_store_buffer_enq, lsu_store_buffer_count};
+
+    // S9V measurement-only issue/service transport. Candidate selection,
+    // actual FU admission, and capacity state remain separate so the shadow
+    // model cannot mistake an elastic-stage capture for Issue progress.
+    generate
+    if (ISSUE_SERVICE_ORACLE_ENABLE) begin : g_issue_service_oracle
+      always_comb begin : issue_service_pack
+        integer accept_i;
+        integer accept_count;
+        logic [4:0] accept_tag0;
+        logic [4:0] accept_tag1;
+        logic [2:0] accept_class0;
+        logic [2:0] accept_class1;
+
+        issue_service_accept_valid_c = {
+          atomic_issue_accept, serial_issue_fire, lsu_issue_accept,
+          a1acc, a0acc
+        };
+        issue_service_accept_tag_c[0] = issue_service_tag_key(a0u.rob_tag);
+        issue_service_accept_tag_c[1] = issue_service_tag_key(a1u.rob_tag);
+        issue_service_accept_tag_c[2] = issue_service_tag_key(lsuu.rob_tag);
+        issue_service_accept_tag_c[3] =
+          issue_service_tag_key(serial_issue_uop_o.rob_tag);
+        issue_service_accept_tag_c[4] = issue_service_tag_key(iu0.rob_tag);
+        issue_service_accept_class_c[0] = 3'd1;
+        issue_service_accept_class_c[1] = 3'd1;
+        issue_service_accept_class_c[2] = 3'd2;
+        issue_service_accept_class_c[3] =
+          issue_service_class(serial_issue_uop_o);
+        issue_service_accept_class_c[4] = 3'd7;
+
+        accept_count = 0;
+        accept_tag0 = '0;
+        accept_tag1 = '0;
+        accept_class0 = '0;
+        accept_class1 = '0;
+        for (accept_i = 0; accept_i < 5; accept_i = accept_i + 1) begin
+          if (issue_service_accept_valid_c[accept_i]) begin
+            if (accept_count == 0) begin
+              accept_tag0 = issue_service_accept_tag_c[accept_i];
+              accept_class0 = issue_service_accept_class_c[accept_i];
+            end else if (accept_count == 1) begin
+              accept_tag1 = issue_service_accept_tag_c[accept_i];
+              accept_class1 = issue_service_accept_class_c[accept_i];
+            end
+            accept_count = accept_count + 1;
+          end
+        end
+
+        perf_issue_service_candidates0_o = iq_issue_service_candidates0;
+        perf_issue_service_candidates1_o = iq_issue_service_candidates1;
+        perf_issue_service_dispatch_details_o =
+          iq_issue_service_dispatch_details;
+        perf_issue_service_accepts_o = '0;
+        for (accept_i = 0; accept_i < 5; accept_i = accept_i + 1) begin
+          perf_issue_service_accepts_o[accept_i * 9 +: 9] = {
+            issue_service_accept_class_c[accept_i],
+            issue_service_accept_tag_c[accept_i],
+            issue_service_accept_valid_c[accept_i]
+          };
+        end
+        perf_issue_service_events_o = '0;
+        perf_issue_service_events_o[4:0] = issue_service_tag_key(rob_head_tag);
+        perf_issue_service_events_o[5] = iv0;
+        perf_issue_service_events_o[10:6] = issue_service_tag_key(iu0.rob_tag);
+        perf_issue_service_events_o[13:11] = issue_service_class(iu0);
+        perf_issue_service_events_o[14] = issue_fire0;
+        perf_issue_service_events_o[15] = iv1;
+        perf_issue_service_events_o[20:16] = issue_service_tag_key(iu1.rob_tag);
+        perf_issue_service_events_o[23:21] = issue_service_class(iu1);
+        perf_issue_service_events_o[24] = issue_fire1;
+        perf_issue_service_events_o[29:25] = accept_tag0;
+        perf_issue_service_events_o[34:30] = accept_tag1;
+        perf_issue_service_events_o[37:35] = accept_class0;
+        perf_issue_service_events_o[40:38] = accept_class1;
+        perf_issue_service_events_o[41] = accept_count >= 1;
+        perf_issue_service_events_o[42] = accept_count >= 2;
+        perf_issue_service_events_o[43] = accept_count > 2;
+        perf_issue_service_events_o[44] = branch_ordinary_pair_c;
+        perf_issue_service_events_o[45] = branch_ordinary_pair_accept_c;
+        perf_issue_service_events_o[46] = branch_ordinary_pair_protocol_error_c;
+        perf_issue_service_events_o[47] = flush_i;
+        perf_issue_service_events_o[48] = selective_squash_fire_o;
+        perf_issue_service_events_o[49] = commit_event_o.slot0.valid;
+        perf_issue_service_events_o[54:50] =
+          issue_service_tag_key(commit_event_o.slot0.rob_tag);
+        perf_issue_service_events_o[55] = commit_event_o.slot1.valid;
+        perf_issue_service_events_o[60:56] =
+          issue_service_tag_key(commit_event_o.slot1.rob_tag);
+        perf_issue_service_events_o[61] = issue_fire0 !=
+          (issue_service_accept_valid_c != 5'b0) && !branch_ordinary_pair_c;
+        perf_issue_service_events_o[62] = issue_fire0 + issue_fire1 !=
+          (accept_count > 2 ? 2 : accept_count);
+        perf_issue_service_events_o[63] = conservation_error_o;
+
+        perf_issue_service_capacity_o = '0;
+        perf_issue_service_capacity_o[0] = a0r;
+        perf_issue_service_capacity_o[1] = a1r;
+        perf_issue_service_capacity_o[2] = lsur;
+        perf_issue_service_capacity_o[3] = serial_issue_ready_i;
+        perf_issue_service_capacity_o[4] = atomic_issue_ready;
+        perf_issue_service_capacity_o[5] = atomic_available;
+        perf_issue_service_capacity_o[7:6] = stage_in_ready;
+        perf_issue_service_capacity_o[9:8] = route_ready;
+        perf_issue_service_capacity_o[11:10] = stage_in_accept;
+        perf_issue_service_capacity_o[12] = a0acc;
+        perf_issue_service_capacity_o[13] = a1acc;
+        perf_issue_service_capacity_o[14] = lsu_issue_accept;
+        perf_issue_service_capacity_o[15] = serial_issue_fire;
+        perf_issue_service_capacity_o[16] = atomic_issue_accept;
+        perf_issue_service_capacity_o[17] = aw0v;
+        perf_issue_service_capacity_o[18] = aw1v;
+        perf_issue_service_capacity_o[19] = lwv;
+        perf_issue_service_capacity_o[22:20] = pclear;
+        perf_issue_service_capacity_o[23] = (|raw_probe_valid_mask) &&
+          !((|pclear) || (|sclear));
+        perf_issue_service_capacity_o[24] = stage_full;
+        perf_issue_service_capacity_o[25] = stage_pair_held;
+        perf_issue_service_capacity_o[26] = lsu_occ;
+        perf_issue_service_capacity_o[27] = atomic_occupied;
+        perf_issue_service_capacity_o[28] = serial_pending_q;
+        perf_issue_service_capacity_o[29] = mem_req_valid_o;
+        perf_issue_service_capacity_o[30] = mem_req_ready_i;
+        perf_issue_service_capacity_o[31] = mem_rsp_valid_i;
+        perf_issue_service_capacity_o[32] = mem_rsp_ready_o;
+        perf_issue_service_capacity_o[48:33] = lsu_issue_service_state;
+        perf_issue_service_capacity_o[50:49] = fvalid;
+        perf_issue_service_capacity_o[52:51] = fconsume;
+        perf_issue_service_capacity_o[54:53] = fwake;
+      end
+    end else begin : g_no_issue_service_oracle
+      always_comb begin
+        issue_service_accept_valid_c = '0;
+        for (integer accept_i = 0; accept_i < 5; accept_i = accept_i + 1) begin
+          issue_service_accept_tag_c[accept_i] = '0;
+          issue_service_accept_class_c[accept_i] = '0;
+        end
+        perf_issue_service_candidates0_o = '0;
+        perf_issue_service_candidates1_o = '0;
+        perf_issue_service_dispatch_details_o = '0;
+        perf_issue_service_events_o = '0;
+        perf_issue_service_capacity_o = '0;
+        perf_issue_service_accepts_o = '0;
+      end
+    end
+    endgenerate
 
     // Simulation-only raw-completion lifecycle sideband. It reports the
     // exact fresh packets accepted by the completion fabric and never feeds

@@ -34,6 +34,7 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
     parameter bit LOAD_TRANSACTION_DEPTH3_ENABLE = 1'b0,
     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+    parameter bit FRONTEND_CAUSAL_REQUEST_CUT_ENABLE = 1'b0,
     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
     parameter bit ORDERED_TARGET_PREFETCH_ORACLE_ENABLE = 1'b0,
     parameter bit DEMAND_FETCH_LATENCY_ORACLE_ENABLE = 1'b0,
@@ -57,6 +58,10 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
     parameter bit BRANCH_WINDOW_LINE_DELIVERY_ENABLE = 1'b0,
     parameter bit SPECULATIVE_STORE_DISPATCH_ENABLE = 1'b0,
     parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0,
     parameter bit SINGLETON_COALESCE_ORACLE_ENABLE = 1'b0,
     parameter bit PARTIAL_PAIR_ORACLE_ENABLE = 1'b0,
     parameter bit CACHED_CROSS_LINE_PAIR_ENABLE = 1'b0,
@@ -157,6 +162,12 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
     output logic [31:0] perf_retirement_chain_o,
     output logic [63:0] perf_complex_retire_pairing_o,
     output logic [63:0] perf_completion_ownership_o,
+    output logic [63:0] perf_issue_service_candidates0_o,
+    output logic [63:0] perf_issue_service_candidates1_o,
+    output logic [63:0] perf_issue_service_dispatch_details_o,
+    output logic [63:0] perf_issue_service_events_o,
+    output logic [63:0] perf_issue_service_capacity_o,
+    output logic [63:0] perf_issue_service_accepts_o,
     output logic [7:0] perf_serial_attribution_o,
     output logic [8:0] perf_branch_resolution_o,
     output logic [4:0] perf_target_line_o,
@@ -312,6 +323,8 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
             BRANCH_WINDOW_LINE_DELIVERY_ENABLE),
         .FETCH_DECODE_FALLTHROUGH_ENABLE(
             FETCH_DECODE_FALLTHROUGH_ENABLE),
+        .FRONTEND_CAUSAL_REQUEST_CUT_ENABLE(
+            FRONTEND_CAUSAL_REQUEST_CUT_ENABLE),
         .FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE(
             FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE),
         .ORDERED_TARGET_PREFETCH_ORACLE_ENABLE(
@@ -508,6 +521,10 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
             SPECULATIVE_STORE_DISPATCH_ENABLE),
         .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
             STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+        .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL),
         .CORRELATED_REACHABILITY_ORACLE_ENABLE(
             CORRELATED_REACHABILITY_ORACLE_ENABLE),
         .WEAK_BIMODAL_REACHABILITY_ORACLE_ENABLE(
@@ -650,6 +667,15 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
         .perf_retirement_chain_o(perf_retirement_chain_o),
         .perf_complex_retire_pairing_o(perf_complex_retire_pairing_o),
         .perf_completion_ownership_o(perf_completion_ownership_o),
+        .perf_issue_service_candidates0_o(
+            perf_issue_service_candidates0_o),
+        .perf_issue_service_candidates1_o(
+            perf_issue_service_candidates1_o),
+        .perf_issue_service_dispatch_details_o(
+            perf_issue_service_dispatch_details_o),
+        .perf_issue_service_events_o(perf_issue_service_events_o),
+        .perf_issue_service_capacity_o(perf_issue_service_capacity_o),
+        .perf_issue_service_accepts_o(perf_issue_service_accepts_o),
         .perf_serial_attribution_o(perf_serial_attribution_o),
         .perf_branch_resolution_o(perf_branch_resolution_o),
         .perf_predictor_o(perf_predictor_o),

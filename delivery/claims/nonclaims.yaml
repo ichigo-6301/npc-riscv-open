@@ -126,6 +126,7 @@
       },
       "id": "ooo_coremark_cpi_not_yet_claimed",
       "profile": "rv32im_ooo_4k",
+      "profile_source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "public": true,
       "reason": "The current public runtime reproduces the marker interval and self-check, but a dual-retire MMIO packet cannot use the single-retire skip-and-sync rule without ambiguous architectural ordering",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
@@ -140,7 +141,7 @@
       "profile": "rv32im_ooo_4k",
       "public": true,
       "reason": "CoreMark self-check and marker accounting pass, but profile-matched difftest is blocked by an ambiguous dual-retire MMIO packet",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "statement": "Current public headless timed CoreMark CPI 0.879973757 and whole-program CPI 0.882383851 remain provisional",
       "status": "provisional"
     },
@@ -157,6 +158,7 @@
       },
       "id": "ooo_public_cpi_not_yet_claimed",
       "profile": "rv32im_ooo_4k",
+      "profile_source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "public": true,
       "reason": "The public checkout does not contain all exact external workload binaries and has not rerun the matching suite",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
@@ -170,7 +172,7 @@
       "profile": "rv32im_ooo_4k",
       "public": true,
       "reason": "The private result is a finite seven-workload aggregate and includes workloads above CPI 1",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "statement": "CPI below 1 is not claimed universally",
       "status": "not_claimed"
     },
@@ -181,7 +183,7 @@
       "profile": "rv32im_ooo_4k",
       "public": true,
       "reason": "The open-source migration precedes the profile-specific ASIC baseline phase",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "statement": "Frequency, timing closure, area, power, energy, FPGA, P&R, signoff, and silicon performance are not claimed",
       "status": "not_claimed"
     },
@@ -192,7 +194,7 @@
       "profile": "rv32im_ooo_4k",
       "public": true,
       "reason": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
       "statement": "Full synthesis equivalence of the internal DPI performance memory path is not claimed",
       "status": "not_claimed"
     },

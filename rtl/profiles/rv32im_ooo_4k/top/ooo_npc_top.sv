@@ -34,6 +34,7 @@ module ooo_npc_top #(
     parameter bit IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE = 1'b0,
     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+    parameter bit FRONTEND_CAUSAL_REQUEST_CUT_ENABLE = 1'b0,
     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
     parameter bit ORDERED_TARGET_PREFETCH_ORACLE_ENABLE = 1'b0,
     parameter bit DEMAND_FETCH_LATENCY_ORACLE_ENABLE = 1'b0,
@@ -66,6 +67,10 @@ module ooo_npc_top #(
     parameter bit PIPE_PERF_ACCOUNTING_ENABLE = 1'b0,
     parameter bit PIPE_PERF_OBSERVABILITY_ENABLE = 1'b0,
     parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0,
     parameter bit SINGLETON_COALESCE_ORACLE_ENABLE = 1'b0,
     parameter bit PARTIAL_PAIR_ORACLE_ENABLE = 1'b0,
     parameter bit CACHED_CROSS_LINE_PAIR_ENABLE = 1'b0,
@@ -339,6 +344,12 @@ module ooo_npc_top #(
     output logic [31:0] dbg_pipe_perf_retirement_chain_o,
     output logic [63:0] dbg_pipe_perf_complex_retire_pairing_o,
     output logic [63:0] dbg_pipe_perf_completion_ownership_o,
+    output logic [63:0] dbg_issue_service_candidates0_o,
+    output logic [63:0] dbg_issue_service_candidates1_o,
+    output logic [63:0] dbg_issue_service_dispatch_details_o,
+    output logic [63:0] dbg_issue_service_events_o,
+    output logic [63:0] dbg_issue_service_capacity_o,
+    output logic [63:0] dbg_issue_service_accepts_o,
     output logic [7:0] dbg_pipe_perf_serial_attribution_o,
     output logic [8:0] dbg_pipe_perf_branch_resolution_o,
     output logic [4:0] dbg_pipe_perf_target_line_o,
@@ -629,6 +640,12 @@ module ooo_npc_top #(
     logic [31:0] pipe_perf_retirement_chain;
     logic [63:0] pipe_perf_complex_retire_pairing;
     logic [63:0] pipe_perf_completion_ownership;
+    logic [63:0] pipe_issue_service_candidates0;
+    logic [63:0] pipe_issue_service_candidates1;
+    logic [63:0] pipe_issue_service_dispatch_details;
+    logic [63:0] pipe_issue_service_events;
+    logic [63:0] pipe_issue_service_capacity;
+    logic [63:0] pipe_issue_service_accepts;
     logic [7:0] pipe_perf_serial_attribution;
     logic [8:0] pipe_perf_branch_resolution;
     logic [4:0] pipe_perf_target_line;
@@ -717,6 +734,8 @@ module ooo_npc_top #(
             IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE),
         .FETCH_DECODE_FALLTHROUGH_ENABLE(
             FETCH_DECODE_FALLTHROUGH_ENABLE),
+        .FRONTEND_CAUSAL_REQUEST_CUT_ENABLE(
+            FRONTEND_CAUSAL_REQUEST_CUT_ENABLE),
         .FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE(
             FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE),
         .ORDERED_TARGET_PREFETCH_ORACLE_ENABLE(
@@ -769,6 +788,10 @@ module ooo_npc_top #(
         .DATA_LINE_WAY_COUNT(DATA_LINE_WAY_COUNT),
         .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
             STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+        .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL),
         .SINGLETON_COALESCE_ORACLE_ENABLE(
             SINGLETON_COALESCE_ORACLE_ENABLE),
         .PARTIAL_PAIR_ORACLE_ENABLE(PARTIAL_PAIR_ORACLE_ENABLE),
@@ -839,6 +862,13 @@ module ooo_npc_top #(
         .perf_retirement_chain_o(pipe_perf_retirement_chain),
         .perf_complex_retire_pairing_o(pipe_perf_complex_retire_pairing),
         .perf_completion_ownership_o(pipe_perf_completion_ownership),
+        .perf_issue_service_candidates0_o(pipe_issue_service_candidates0),
+        .perf_issue_service_candidates1_o(pipe_issue_service_candidates1),
+        .perf_issue_service_dispatch_details_o(
+            pipe_issue_service_dispatch_details),
+        .perf_issue_service_events_o(pipe_issue_service_events),
+        .perf_issue_service_capacity_o(pipe_issue_service_capacity),
+        .perf_issue_service_accepts_o(pipe_issue_service_accepts),
         .perf_serial_attribution_o(pipe_perf_serial_attribution),
         .perf_branch_resolution_o(pipe_perf_branch_resolution),
         .perf_target_line_o(pipe_perf_target_line),
@@ -1238,6 +1268,18 @@ module ooo_npc_top #(
         dbg_pipe_perf_completion_ownership_o =
             PIPE_PERF_OBSERVABILITY_ENABLE ?
             pipe_perf_completion_ownership : '0;
+        dbg_issue_service_candidates0_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_candidates0 : '0;
+        dbg_issue_service_candidates1_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_candidates1 : '0;
+        dbg_issue_service_dispatch_details_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_dispatch_details : '0;
+        dbg_issue_service_events_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_events : '0;
+        dbg_issue_service_capacity_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_capacity : '0;
+        dbg_issue_service_accepts_o = ISSUE_SERVICE_ORACLE_ENABLE ?
+            pipe_issue_service_accepts : '0;
         dbg_pipe_perf_serial_attribution_o = PIPE_PERF_OBSERVABILITY_ENABLE ?
             pipe_perf_serial_attribution : '0;
         dbg_pipe_perf_branch_resolution_o = PIPE_PERF_OBSERVABILITY_ENABLE ?
@@ -1407,6 +1449,12 @@ module ooo_npc_top #(
     assign dbg_pipe_perf_retirement_chain_o = '0;
     assign dbg_pipe_perf_complex_retire_pairing_o = '0;
     assign dbg_pipe_perf_completion_ownership_o = '0;
+    assign dbg_issue_service_candidates0_o = '0;
+    assign dbg_issue_service_candidates1_o = '0;
+    assign dbg_issue_service_dispatch_details_o = '0;
+    assign dbg_issue_service_events_o = '0;
+    assign dbg_issue_service_capacity_o = '0;
+    assign dbg_issue_service_accepts_o = '0;
     assign dbg_pipe_perf_serial_attribution_o = '0;
     assign dbg_pipe_perf_branch_resolution_o = '0;
     assign dbg_pipe_perf_target_line_o = '0;

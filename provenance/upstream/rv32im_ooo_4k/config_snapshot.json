@@ -84,6 +84,7 @@
     "fetch_decode_fallthrough": "1",
     "fetch_response_credit_turnover": "1",
     "fetch_response_service_oracle": "0",
+    "frontend_causal_request_cut": "0",
     "head_alu_writeback_commit_bypass": "1",
     "head_bru_writeback_commit_bypass": "1",
     "head_load_writeback_commit_bypass": "1",
@@ -132,6 +133,7 @@
     "singleton_coalesce_oracle": "0",
     "slot1_final_writeback_commit_bypass": "1",
     "speculative_store_dispatch": "1",
+    "stable_entry_iq": "0",
     "store_issue_final_fallthrough": "1",
     "store_load_forwarding": "1",
     "store_service_reachability_oracle": "0",
@@ -169,7 +171,7 @@
   "public_boundary": {
     "performance_claims": "not_claimed",
     "private_verification_and_evidence": "excluded",
-    "source_manifest_sha256": "03d7cc8d9f537be02b9a78e53eec2f4dbce1e672b2c72373d97ae0479c98978d",
+    "source_manifest_sha256": "ebb14fd96bd1d80232ca78509d4f6b6429857cd782acbfee152c6bfc7c339d8c",
     "transformation": "public_config_snapshot_v1"
   },
   "schema": "npc-riscv-open/upstream-config-v1",

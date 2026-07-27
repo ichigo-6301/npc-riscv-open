@@ -14,6 +14,7 @@ module ooo_pipeline_synth_core_top #(
     parameter bit PAIR_RAW_TO_FINAL_BYPASS_ENABLE = 1'b0,
     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+    parameter bit FRONTEND_CAUSAL_REQUEST_CUT_ENABLE = 1'b0,
     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
     parameter bit IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE = 1'b0,
     parameter bit TARGET_LINE_HIT_ENABLE = 1'b1,
@@ -57,6 +58,9 @@ module ooo_pipeline_synth_core_top #(
     parameter bit DATA_LINE_SAME_WORD_MISS_COALESCING_ENABLE = 1'b0,
     parameter bit DATA_LINE_STORE_RESPONSE_UPDATE_ENABLE = 1'b0,
     parameter bit RAS_SELF_FORWARD_EXCLUSION_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0,
     parameter bit DATA_LINE_HIT_ENABLE = 1'b1,
     parameter int unsigned DATA_LINE_COUNT = 64,
     parameter int unsigned DATA_LINE_WAY_COUNT = 1
@@ -141,6 +145,8 @@ module ooo_pipeline_synth_core_top #(
             DECODE_DISPATCH_FALLTHROUGH_ENABLE),
         .FETCH_DECODE_FALLTHROUGH_ENABLE(
             FETCH_DECODE_FALLTHROUGH_ENABLE),
+        .FRONTEND_CAUSAL_REQUEST_CUT_ENABLE(
+            FRONTEND_CAUSAL_REQUEST_CUT_ENABLE),
         .FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE(
             FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE),
         .IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE(
@@ -220,7 +226,10 @@ module ooo_pipeline_synth_core_top #(
         .DATA_LINE_STORE_RESPONSE_UPDATE_ENABLE(
             DATA_LINE_STORE_RESPONSE_UPDATE_ENABLE),
         .DATA_LINE_COUNT(DATA_LINE_COUNT),
-        .DATA_LINE_WAY_COUNT(DATA_LINE_WAY_COUNT)
+        .DATA_LINE_WAY_COUNT(DATA_LINE_WAY_COUNT),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL)
     ) u_core (
         .clk(clk), .reset(reset), .commit_ready_i(1'b1),
         .debug_arch_idx_i('0),

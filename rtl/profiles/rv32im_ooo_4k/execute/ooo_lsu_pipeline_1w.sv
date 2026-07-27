@@ -104,7 +104,8 @@ module ooo_lsu_pipeline_1w #(
     output logic debug_load_response_live_o,
     output logic [2:0] debug_store_block_reason_o,
     output logic [2:0] debug_store_service_phase_o,
-    output logic [29:0] debug_store_admission_o
+    output logic [29:0] debug_store_admission_o,
+    output logic [15:0] debug_issue_service_state_o
 );
     typedef enum logic [2:0] {
         LSU_PIPE_IDLE,
@@ -655,6 +656,23 @@ module ooo_lsu_pipeline_1w #(
         debug_store_admission_o[26] = state_q == LSU_PIPE_IDLE;
         debug_store_admission_o[27] = store_buffer_busy_c;
         debug_store_admission_o[29:28] = store_load_budget_q;
+    end
+    // Measurement-only registered-capacity view for the S9V shadow Oracle.
+    // It exposes existing state and handshakes and never feeds LSU control.
+    always_comb begin
+        debug_issue_service_state_o = '0;
+        debug_issue_service_state_o[1:0] = lq_valid_mask_c;
+        debug_issue_service_state_o[3:2] = lq_issued_mask_c;
+        debug_issue_service_state_o[5:4] = lq_done_mask_c;
+        debug_issue_service_state_o[7:6] = lq_alloc_ready_c;
+        debug_issue_service_state_o[8] = issue_ready_o;
+        debug_issue_service_state_o[9] = issue_accept_o;
+        debug_issue_service_state_o[10] = load_completion_valid_o;
+        debug_issue_service_state_o[11] = load_completion_fire_c;
+        debug_issue_service_state_o[12] = load_rsp_fire_c;
+        debug_issue_service_state_o[13] = |lq_req_fire_c;
+        debug_issue_service_state_o[14] = mem_rsp_valid_i && mem_rsp_ready_o;
+        debug_issue_service_state_o[15] = occupied_o;
     end
     assign flush_drop_o = flush_i && ((|physical_valid_q) || (|lq_valid_mask_c));
     assign selective_kill_drop_o = !flush_i && selective_kill_valid_i &&

@@ -19,6 +19,10 @@ module ooo_pipeline_redirect_frontend_2w #(
     parameter bit SEQUENTIAL_LINE_HIT_ENABLE = 1'b0,
     parameter bit BRANCH_WINDOW_LINE_DELIVERY_ENABLE = 1'b0,
     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+    // Break the response/decode/request combinational ownership loop while
+    // preserving same-edge response delivery.  The default path is kept
+    // cycle-for-cycle compatible with the historical implementation.
+    parameter bit FRONTEND_CAUSAL_REQUEST_CUT_ENABLE = 1'b0,
     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
     parameter bit ORDERED_TARGET_PREFETCH_ORACLE_ENABLE = 1'b0,
     parameter bit DEMAND_FETCH_LATENCY_ORACLE_ENABLE = 1'b0,
@@ -270,6 +274,11 @@ module ooo_pipeline_redirect_frontend_2w #(
     logic reservation_head_same_line_c;
     logic response_from_queue_c;
     logic same_cycle_response_c;
+    logic same_edge_response_candidate_c;
+    logic same_edge_response_request_valid_c;
+    logic request_predecode_capacity_c;
+    logic request_predecode_valid_c;
+    logic request_predecode_fire_c;
     logic [1:0] expected_rsp_mask_c;
     logic request_fire_c;
     logic fetch_req_valid_base_c;
@@ -278,6 +287,9 @@ module ooo_pipeline_redirect_frontend_2w #(
     logic redirect_fire_c;
     logic response_malformed_c;
     logic response_has_owner_c;
+    logic request_owner_predecode_c;
+    logic causal_request_state_error_c;
+    logic causal_request_state_error_q;
     logic response_stale_c;
     logic invalidation_level_c;
     logic slot0_predict_taken_c;
@@ -363,6 +375,7 @@ module ooo_pipeline_redirect_frontend_2w #(
     logic target_line_eligible_hit_c;
     logic sequential_line_eligible_hit_c;
     logic frontend_control_present_c;
+    logic registered_frontend_control_present_c;
     logic [2:0] target_line_word_count_c;
     logic target_line_capacity_c;
     logic target_line_inject_c;
@@ -552,6 +565,31 @@ module ooo_pipeline_redirect_frontend_2w #(
         input logic taken
     );
         history_push = {history[6:0], taken};
+    endfunction
+
+    // Match the BRU forms accepted by ooo_rv32i_alu_decode_adapter without
+    // feeding the same-edge Decode result back into target-line eligibility.
+    // This classifier only inspects instructions already held in the
+    // registered frontend queue.
+    function automatic logic is_supported_control_instr(
+        input logic [31:0] instr
+    );
+        logic [6:0] opcode;
+        logic [2:0] funct3;
+        begin
+            opcode = instr[6:0];
+            funct3 = instr[14:12];
+            unique case (opcode)
+                7'b1101111: is_supported_control_instr = 1'b1;
+                7'b1100111: is_supported_control_instr =
+                    (funct3 == 3'b000);
+                7'b1100011: is_supported_control_instr =
+                    (funct3 == 3'b000) || (funct3 == 3'b001) ||
+                    (funct3 == 3'b100) || (funct3 == 3'b101) ||
+                    (funct3 == 3'b110) || (funct3 == 3'b111);
+                default: is_supported_control_instr = 1'b0;
+            endcase
+        end
     endfunction
 
     assign queue_second_idx_c = queue_head_q + 2'd1;
@@ -996,8 +1034,12 @@ module ooo_pipeline_redirect_frontend_2w #(
     assign redirect_ready_o = !reset && !global_recover_i;
     assign redirect_fire_c = redirect_valid_i && redirect_ready_o;
     assign response_from_queue_c = (request_count_q != 3'd0);
-    assign same_cycle_response_c = !response_from_queue_c &&
-        request_base_fire_c && response_fire_c;
+    // The legacy path derives same-edge ownership from the request handshake.
+    // The causal-cut path uses a predecode-only candidate so decoded branch
+    // information cannot feed back and cancel the request which owns it.
+    assign same_cycle_response_c = FRONTEND_CAUSAL_REQUEST_CUT_ENABLE ?
+        same_edge_response_candidate_c :
+        (!response_from_queue_c && request_base_fire_c && response_fire_c);
     assign request_word_count_c = next_pc_q[2] ? 3'd1 : 3'd2;
     assign request_capacity_c =
         (queue_count_after_pop_c + reserved_words_q +
@@ -1008,11 +1050,18 @@ module ooo_pipeline_redirect_frontend_2w #(
     assign target_line_word_count_c = next_pc_q[2] ? 3'd1 : 3'd2;
     assign target_line_capacity_c =
         (queue_count_after_pop_c + target_line_word_count_c <= 3'd4);
+    assign registered_frontend_control_present_c =
+        (queue_valid_c[0] && !queue_exception0_c &&
+         is_supported_control_instr(queue_instr0_c)) ||
+        (queue_valid_c[1] && !queue_exception1_c &&
+         is_supported_control_instr(queue_instr1_c));
     assign frontend_control_present_c =
-        (queue_valid_c[0] && !queue_exception0_c && decode0_supported &&
-         (decoded_uop0_c.fu_type == BBUS_OOO_FU_BRU)) ||
-        (queue_valid_c[1] && !queue_exception1_c && decode1_supported &&
-         (decoded_uop1_c.fu_type == BBUS_OOO_FU_BRU));
+        FRONTEND_CAUSAL_REQUEST_CUT_ENABLE ?
+        registered_frontend_control_present_c :
+        ((queue_valid_c[0] && !queue_exception0_c && decode0_supported &&
+          (decoded_uop0_c.fu_type == BBUS_OOO_FU_BRU)) ||
+         (queue_valid_c[1] && !queue_exception1_c && decode1_supported &&
+          (decoded_uop1_c.fu_type == BBUS_OOO_FU_BRU)));
     assign branch_window_line_delivery_c =
         BRANCH_WINDOW_LINE_DELIVERY_ENABLE &&
         branch_window_line_delivery_safe_i;
@@ -1042,22 +1091,47 @@ module ooo_pipeline_redirect_frontend_2w #(
          (!taken_predict_fire_c || direct_target_line_c));
     assign target_line_branch_window_inject_c = target_line_inject_c &&
         !target_line_lookup_pending_q && branch_window_active_i;
+    // A same-edge response needs an ownership decision before Decode can
+    // inspect its payload.  Use only registered frontend state and transport
+    // handshakes here.  In particular, do not consume queue_count_after_pop_c
+    // or taken_predict_fire_c: both may depend on the response being owned.
+    assign request_predecode_capacity_c =
+        (queue_count_q + reserved_words_q + request_word_count_c <= 3'd4);
+    assign request_predecode_valid_c =
+        !reset && !global_recover_i && !stop_i &&
+        !branch_recovery_pending_i && !redirect_valid_i &&
+        !frontend_fault_q && !frontend_eof_q &&
+        !target_line_eligible_hit_c &&
+        (request_count_q < 3'd4) && request_predecode_capacity_c;
+    assign request_predecode_fire_c =
+        request_predecode_valid_c && fetch_req_ready_i;
     assign fetch_req_valid_base_c = !reset && !global_recover_i && !stop_i &&
         !branch_recovery_pending_i && !redirect_valid_i &&
         !taken_predict_fire_c && !frontend_fault_q && !frontend_eof_q &&
         !(cross_line_cached_pair_c && response_from_queue_c) &&
         !target_line_eligible_hit_c &&
         (request_count_q < 3'd4) && request_capacity_c;
-    assign fetch_req_valid_o = fetch_req_valid_base_c ||
-        (FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE &&
-         response_credit_structural_eligible_c &&
-         !branch_window_active_i);
+    // Once a matching response is present on an otherwise ownerless edge,
+    // keep the request handshake causal: Decode may redirect the *next* PC,
+    // but it cannot withdraw the request which owns this response.
+    assign same_edge_response_request_valid_c =
+        FRONTEND_CAUSAL_REQUEST_CUT_ENABLE &&
+        !response_from_queue_c && request_predecode_valid_c &&
+        response_fire_c && !redirect_fire_c && !invalidation_level_c &&
+        ((fetch_rsp_page_fault_i === 1'b1) ||
+         (fetch_rsp_addr_i == {next_pc_q[31:3], 3'b000}));
+    assign fetch_req_valid_o = same_edge_response_request_valid_c ? 1'b1 :
+        (fetch_req_valid_base_c ||
+         (FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE &&
+          response_credit_structural_eligible_c &&
+          !branch_window_active_i));
     assign fetch_req_addr_o = {next_pc_q[31:3], 3'b000};
     assign fetch_req_pc_o = next_pc_q;
     assign request_base_fire_c = fetch_req_valid_base_c && fetch_req_ready_i;
     assign request_fire_c = fetch_req_valid_o && fetch_req_ready_i;
-    assign response_has_owner_c = response_from_queue_c ||
-        request_base_fire_c;
+    assign response_has_owner_c = FRONTEND_CAUSAL_REQUEST_CUT_ENABLE ?
+        request_owner_predecode_c :
+        (response_from_queue_c || request_base_fire_c);
     assign response_stale_c = response_from_queue_c &&
         (request_epoch_q[request_head_q] != frontend_epoch_q);
     assign invalidation_level_c = global_recover_i || stop_i ||
@@ -1072,6 +1146,28 @@ module ooo_pipeline_redirect_frontend_2w #(
         (fetch_rsp_addr_i != response_addr_c) ||
         (fetch_rsp_eof_i && (fetch_rsp_valid_mask_i != 2'b00)) ||
          (!fetch_rsp_eof_i && (fetch_rsp_valid_mask_i != expected_rsp_mask_c)));
+    // No Decode/Predictor/request-fire fan-in is allowed here.  This is the
+    // ownership token for a response presented on the same edge as a request,
+    // before a request queue entry can exist.  Page faults retain ownership
+    // even though their data mask is not meaningful.
+    assign same_edge_response_candidate_c =
+        same_edge_response_request_valid_c && request_predecode_fire_c;
+    assign request_owner_predecode_c = response_from_queue_c ||
+        same_edge_response_candidate_c;
+    assign causal_request_state_error_c =
+        FRONTEND_CAUSAL_REQUEST_CUT_ENABLE && (
+        (same_edge_response_candidate_c &&
+         (response_from_queue_c || !response_fire_c ||
+          !request_predecode_fire_c || !request_fire_c ||
+          !request_owner_predecode_c || !response_has_owner_c ||
+          !same_cycle_response_c)) ||
+        (response_fire_c && !response_has_owner_c &&
+         !redirect_fire_c && !invalidation_level_c) ||
+        (same_edge_response_candidate_c && taken_predict_fire_c &&
+         !request_fire_c) ||
+        ((redirect_fire_c || invalidation_level_c) &&
+         (same_edge_response_candidate_c || request_fire_c ||
+          response_delivery_candidate_c || direct_response_c)));
     assign response_delivery_candidate_c = response_fire_c &&
         response_has_owner_c && !response_stale_c && !redirect_fire_c &&
         !invalidation_level_c && !frontend_fault_q && !frontend_eof_q &&
@@ -1928,6 +2024,7 @@ module ooo_pipeline_redirect_frontend_2w #(
         end
     end
     assign conservation_error_o = illegal_decode_accept_q ||
+        causal_request_state_error_q || causal_request_state_error_c ||
         cross_line_state_error_c ||
         cross_line_carry_state_error_c ||
         (queue_count_q > 3'd4) ||
@@ -2011,6 +2108,7 @@ module ooo_pipeline_redirect_frontend_2w #(
             unsupported_seen_q <= 1'b0;
             illegal_decode_accept_q <= 1'b0;
             stale_response_drop_q <= 1'b0;
+            causal_request_state_error_q <= 1'b0;
         end else begin
             if (!CORRELATED_PREDICTOR_ENABLE || global_recover_i) begin
                 predictor_history_q <= '0;
@@ -2027,6 +2125,9 @@ module ooo_pipeline_redirect_frontend_2w #(
                 predictor_history_q <= predictor_history_after_accept_c;
             end
             stale_response_drop_q <= 1'b0;
+            if (causal_request_state_error_c) begin
+                causal_request_state_error_q <= 1'b1;
+            end
             invalidation_active_q <= invalidation_level_c;
             if (global_recover_i || stop_i) begin
                 target_line_lookup_pending_q <= 1'b0;

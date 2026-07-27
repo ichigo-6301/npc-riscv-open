@@ -12,6 +12,7 @@
 +define+NPC_OOO_DISPATCH2_TEST_LIMIT_IQ_FREE=0
 +define+NPC_OOO_DISPATCH2_TEST_LIMIT_FREELIST_FREE=0
 +define+NPC_M_EXTENSION
++define+NPC_OOO_A3_ENABLE=1
 +define+NPC_ASIC
 rtl/profiles/rv32im_ooo_4k/common/bbus_ooo_freelist.sv
 rtl/profiles/rv32im_ooo_4k/core/alu_issue_queue_1w.sv

@@ -11,6 +11,12 @@ module alu_issue_queue_1w #(
     parameter bit REGISTERED_BRU_DISPATCH_ORDINARY_ISSUE2_ENABLE = 1'b0,
     parameter bit PRECISE_STORE_BUFFER_ENABLE = 1'b0,
     parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit BALANCED_SERVICE_SELECTOR_ENABLE = 1'b0,
+    parameter bit SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    // Timing-proxy control only. Production wrappers leave this enabled.
+    parameter bit SPLIT_PAYLOAD_ONEHOT_READ_ENABLE = 1'b1,
     localparam int IQ_IDX_W = $clog2(IQ_DEPTH),
     localparam int IQ_COUNT_W = $clog2(IQ_DEPTH + 1)
 ) (
@@ -84,6 +90,9 @@ module alu_issue_queue_1w #(
     output logic [1:0] debug_mixed_source_pair_kind_o,
     output logic [63:0] debug_structural_oracle_o,
     output logic [47:0] debug_structural_meta_o,
+    output logic [63:0] debug_issue_service_candidates0_o,
+    output logic [63:0] debug_issue_service_candidates1_o,
+    output logic [63:0] debug_issue_service_dispatch_details_o,
     output logic debug_duplicate_issue_guard_o
 );
     // S6B3: issue age priority uses ROB-head-relative compare at IQ_DEPTH=8.
@@ -91,7 +100,78 @@ module alu_issue_queue_1w #(
     // FUTURE: consider stable entries, age matrix, or staged select before larger depths.
     localparam logic [`BBUS_OOO_ROB_IDX_W:0] ROB_ENTRIES_EXT = `BBUS_OOO_ROB_ENTRIES;
 
+    typedef struct packed {
+        bbus_ooo_rob_tag_t rob_tag;
+        bbus_ooo_phys_reg_t phys_rs1;
+        bbus_ooo_phys_reg_t phys_rs2;
+        logic src1_ready;
+        logic src2_ready;
+        bbus_ooo_fu_type_e fu_type;
+        logic is_load;
+        logic is_store;
+        logic is_csr;
+        logic is_system;
+        bbus_ooo_atomic_op_e atomic_op;
+        logic exception_valid;
+    } iq_sched_fields_t;
+
+    typedef struct packed {
+        logic [31:0] pc;
+        logic [31:0] instr;
+        bbus_ooo_arch_reg_t arch_rd;
+        bbus_ooo_phys_reg_t phys_rd_new;
+        logic rf_wen;
+        bbus_ooo_branch_op_e branch_op;
+        logic pred_taken;
+        logic [31:0] pred_target;
+        bbus_ooo_pred_source_e pred_source;
+        logic pred_correlated;
+        logic pred_base_taken;
+        logic pred_base_counter_valid;
+        logic pred_base_counter_taken;
+        logic pred_corr_candidate;
+        logic pred_corr_raw_candidate;
+        logic pred_corr_chooser_prefer;
+        logic pred_corr_taken;
+        bbus_ooo_pred_history_t pred_history;
+        bbus_ooo_local_history_t pred_local_history;
+        logic pred_local_strong;
+        logic pred_local_taken;
+        logic pred_local_chooser_prefer;
+        logic pred_local_chooser_strong;
+        bbus_ooo_multihistory_mask_t pred_multihistory_hit;
+        bbus_ooo_multihistory_mask_t pred_multihistory_strong;
+        bbus_ooo_multihistory_mask_t pred_multihistory_taken;
+        bbus_ooo_multihistory_mask_t pred_multihistory_chooser_prefer;
+        bbus_ooo_multihistory_mask_t pred_multihistory_chooser_strong;
+        logic pred_ras_self_collision;
+        bbus_ooo_alu_op_e alu_op;
+        bbus_ooo_mdu_op_e mdu_op;
+        logic aq;
+        logic rl;
+        bbus_ooo_mem_op_e mem_op;
+        logic src1_is_pc;
+        logic src2_is_imm;
+        logic [31:0] imm;
+        logic [11:0] csr_addr;
+        logic [31:0] exception_cause;
+        logic [31:0] exception_tval;
+    } iq_payload_fields_t;
+
+    localparam int IQ_SCHED_W = $bits(iq_sched_fields_t);
+    localparam int IQ_PAYLOAD_W = $bits(iq_payload_fields_t);
+
+    // entry_q is the common read view. Split mode reconstructs it from the
+    // narrow mutable schedule state and immutable payload storage; legacy
+    // modes retain the original monolithic register array.
     bbus_ooo_alu_iq_uop_t entry_q [IQ_DEPTH-1:0];
+    bbus_ooo_alu_iq_uop_t legacy_entry_q [IQ_DEPTH-1:0];
+    iq_sched_fields_t sched_q [IQ_DEPTH-1:0];
+    logic [IQ_PAYLOAD_W-1:0] payload_q [IQ_DEPTH-1:0];
+    // O3 keeps the same entry payload and selector, but makes validity an
+    // explicit stable-slot mask.  The mask is only elaborated into the
+    // sequential ownership path when the guarded feature is enabled.
+    logic [IQ_DEPTH-1:0] valid_q;
     logic [IQ_COUNT_W-1:0] count_q;
     logic [IQ_IDX_W-1:0] issue_idx_c;
     logic [IQ_IDX_W-1:0] issue1_idx_c;
@@ -118,6 +198,36 @@ module alu_issue_queue_1w #(
     logic registered_issue_found_c;
     logic registered_issue1_found_c;
     bbus_ooo_alu_iq_uop_t registered_issue_uop_c;
+
+    localparam int CALENDAR_CANDIDATE_COUNT = IQ_DEPTH;
+    logic [CALENDAR_CANDIDATE_COUNT-1:0] calendar_candidate_valid_c;
+    logic [CALENDAR_CANDIDATE_COUNT-1:0][3:0]
+        calendar_candidate_rank_c;
+    logic [CALENDAR_CANDIDATE_COUNT-1:0][4:0]
+        calendar_candidate_tag_c;
+    logic [CALENDAR_CANDIDATE_COUNT-1:0][2:0]
+        calendar_candidate_service_c;
+    logic [CALENDAR_CANDIDATE_COUNT-1:0][3:0]
+        calendar_candidate_slot_c;
+    logic [7:0] calendar_service_credit_c;
+    logic [1:0] calendar_preselect_valid_c;
+    logic [1:0][3:0] calendar_preselect_slot_c;
+    logic [1:0][CALENDAR_CANDIDATE_COUNT-1:0]
+        calendar_preselect_onehot_c;
+    bbus_ooo_alu_iq_uop_t split_read_uop0_c;
+    bbus_ooo_alu_iq_uop_t split_read_uop1_c;
+    logic [IQ_SCHED_W-1:0] split_sched_mask0_c [IQ_DEPTH-1:0];
+    logic [IQ_SCHED_W-1:0] split_sched_mask1_c [IQ_DEPTH-1:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_mask0_c [IQ_DEPTH-1:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_mask1_c [IQ_DEPTH-1:0];
+    logic [IQ_SCHED_W-1:0] split_sched_l1_0_c [3:0];
+    logic [IQ_SCHED_W-1:0] split_sched_l1_1_c [3:0];
+    logic [IQ_SCHED_W-1:0] split_sched_l2_0_c [1:0];
+    logic [IQ_SCHED_W-1:0] split_sched_l2_1_c [1:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_l1_0_c [3:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_l1_1_c [3:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_l2_0_c [1:0];
+    logic [IQ_PAYLOAD_W-1:0] split_payload_l2_1_c [1:0];
 
     localparam int STRUCT_MODEL_COUNT = 7;
     localparam int STRUCT_PHASE_COUNT = 3;
@@ -173,6 +283,7 @@ module alu_issue_queue_1w #(
     integer struct_best_down_key_c [STRUCT_MODEL_COUNT-1:0];
     logic [3:0] struct_reason_c;
     logic [11:0] struct_overlap_c;
+    logic [119:0] issue_service_candidates_c;
     logic struct_state_error_c;
     integer struct_selected_model_c;
     integer struct_selected_i_c;
@@ -191,6 +302,222 @@ module alu_issue_queue_1w #(
     localparam logic [2:0] MIXED_REASON_PORT_UNAVAILABLE = 3'd4;
     localparam logic [2:0] MIXED_REASON_SERIAL_RECOVERY = 3'd5;
     localparam logic [2:0] MIXED_REASON_ELIGIBLE = 3'd7;
+
+    function automatic iq_sched_fields_t pack_sched_fields(
+        input bbus_ooo_alu_iq_uop_t entry
+    );
+        iq_sched_fields_t fields;
+        begin
+            fields.rob_tag = entry.rob_tag;
+            fields.phys_rs1 = entry.phys_rs1;
+            fields.phys_rs2 = entry.phys_rs2;
+            fields.src1_ready = entry.src1_ready;
+            fields.src2_ready = entry.src2_ready;
+            fields.fu_type = entry.fu_type;
+            fields.is_load = entry.is_load;
+            fields.is_store = entry.is_store;
+            fields.is_csr = entry.is_csr;
+            fields.is_system = entry.is_system;
+            fields.atomic_op = entry.atomic_op;
+            fields.exception_valid = entry.exception.valid;
+            pack_sched_fields = fields;
+        end
+    endfunction
+
+    function automatic logic [IQ_PAYLOAD_W-1:0] pack_payload_fields(
+        input bbus_ooo_alu_iq_uop_t entry
+    );
+        iq_payload_fields_t fields;
+        begin
+            fields.pc = entry.pc;
+            fields.instr = entry.instr;
+            fields.arch_rd = entry.arch_rd;
+            fields.phys_rd_new = entry.phys_rd_new;
+            fields.rf_wen = entry.rf_wen;
+            fields.branch_op = entry.branch_op;
+            fields.pred_taken = entry.pred_taken;
+            fields.pred_target = entry.pred_target;
+            fields.pred_source = entry.pred_source;
+            fields.pred_correlated = entry.pred_correlated;
+            fields.pred_base_taken = entry.pred_base_taken;
+            fields.pred_base_counter_valid = entry.pred_base_counter_valid;
+            fields.pred_base_counter_taken = entry.pred_base_counter_taken;
+            fields.pred_corr_candidate = entry.pred_corr_candidate;
+            fields.pred_corr_raw_candidate = entry.pred_corr_raw_candidate;
+            fields.pred_corr_chooser_prefer = entry.pred_corr_chooser_prefer;
+            fields.pred_corr_taken = entry.pred_corr_taken;
+            fields.pred_history = entry.pred_history;
+            fields.pred_local_history = entry.pred_local_history;
+            fields.pred_local_strong = entry.pred_local_strong;
+            fields.pred_local_taken = entry.pred_local_taken;
+            fields.pred_local_chooser_prefer = entry.pred_local_chooser_prefer;
+            fields.pred_local_chooser_strong = entry.pred_local_chooser_strong;
+            fields.pred_multihistory_hit = entry.pred_multihistory_hit;
+            fields.pred_multihistory_strong = entry.pred_multihistory_strong;
+            fields.pred_multihistory_taken = entry.pred_multihistory_taken;
+            fields.pred_multihistory_chooser_prefer =
+                entry.pred_multihistory_chooser_prefer;
+            fields.pred_multihistory_chooser_strong =
+                entry.pred_multihistory_chooser_strong;
+            fields.pred_ras_self_collision = entry.pred_ras_self_collision;
+            fields.alu_op = entry.alu_op;
+            fields.mdu_op = entry.mdu_op;
+            fields.aq = entry.aq;
+            fields.rl = entry.rl;
+            fields.mem_op = entry.mem_op;
+            fields.src1_is_pc = entry.src1_is_pc;
+            fields.src2_is_imm = entry.src2_is_imm;
+            fields.imm = entry.imm;
+            fields.csr_addr = entry.csr_addr;
+            fields.exception_cause = entry.exception.cause;
+            fields.exception_tval = entry.exception.tval;
+            pack_payload_fields = fields;
+        end
+    endfunction
+
+    function automatic bbus_ooo_alu_iq_uop_t rebuild_entry(
+        input logic valid,
+        input iq_sched_fields_t sched,
+        input logic [IQ_PAYLOAD_W-1:0] payload
+    );
+        bbus_ooo_alu_iq_uop_t entry;
+        iq_payload_fields_t fields;
+        begin
+            entry = '0;
+            fields = iq_payload_fields_t'(payload);
+            entry.valid = valid;
+            entry.rob_tag = sched.rob_tag;
+            entry.pc = fields.pc;
+            entry.instr = fields.instr;
+            entry.arch_rd = fields.arch_rd;
+            entry.phys_rs1 = sched.phys_rs1;
+            entry.phys_rs2 = sched.phys_rs2;
+            entry.phys_rd_new = fields.phys_rd_new;
+            entry.rf_wen = fields.rf_wen;
+            entry.fu_type = sched.fu_type;
+            entry.branch_op = fields.branch_op;
+            entry.pred_taken = fields.pred_taken;
+            entry.pred_target = fields.pred_target;
+            entry.pred_source = fields.pred_source;
+            entry.pred_correlated = fields.pred_correlated;
+            entry.pred_base_taken = fields.pred_base_taken;
+            entry.pred_base_counter_valid = fields.pred_base_counter_valid;
+            entry.pred_base_counter_taken = fields.pred_base_counter_taken;
+            entry.pred_corr_candidate = fields.pred_corr_candidate;
+            entry.pred_corr_raw_candidate = fields.pred_corr_raw_candidate;
+            entry.pred_corr_chooser_prefer = fields.pred_corr_chooser_prefer;
+            entry.pred_corr_taken = fields.pred_corr_taken;
+            entry.pred_history = fields.pred_history;
+            entry.pred_local_history = fields.pred_local_history;
+            entry.pred_local_strong = fields.pred_local_strong;
+            entry.pred_local_taken = fields.pred_local_taken;
+            entry.pred_local_chooser_prefer = fields.pred_local_chooser_prefer;
+            entry.pred_local_chooser_strong = fields.pred_local_chooser_strong;
+            entry.pred_multihistory_hit = fields.pred_multihistory_hit;
+            entry.pred_multihistory_strong = fields.pred_multihistory_strong;
+            entry.pred_multihistory_taken = fields.pred_multihistory_taken;
+            entry.pred_multihistory_chooser_prefer =
+                fields.pred_multihistory_chooser_prefer;
+            entry.pred_multihistory_chooser_strong =
+                fields.pred_multihistory_chooser_strong;
+            entry.pred_ras_self_collision = fields.pred_ras_self_collision;
+            entry.alu_op = fields.alu_op;
+            entry.mdu_op = fields.mdu_op;
+            entry.atomic_op = sched.atomic_op;
+            entry.aq = fields.aq;
+            entry.rl = fields.rl;
+            entry.is_load = sched.is_load;
+            entry.is_store = sched.is_store;
+            entry.mem_op = fields.mem_op;
+            entry.src1_is_pc = fields.src1_is_pc;
+            entry.src2_is_imm = fields.src2_is_imm;
+            entry.imm = fields.imm;
+            entry.is_csr = sched.is_csr;
+            entry.is_system = sched.is_system;
+            entry.csr_addr = fields.csr_addr;
+            entry.src1_ready = sched.src1_ready;
+            entry.src2_ready = sched.src2_ready;
+            entry.exception.valid = sched.exception_valid;
+            entry.exception.cause = fields.exception_cause;
+            entry.exception.tval = fields.exception_tval;
+            rebuild_entry = entry;
+        end
+    endfunction
+
+    always_comb begin : entry_read_view
+        integer entry_i;
+        for (entry_i = 0; entry_i < IQ_DEPTH; entry_i = entry_i + 1) begin
+            if (SPLIT_PAYLOAD_READ_ENABLE)
+                entry_q[entry_i] = rebuild_entry(
+                    valid_q[entry_i], sched_q[entry_i], payload_q[entry_i]);
+            else
+                entry_q[entry_i] = legacy_entry_q[entry_i];
+        end
+    end
+
+    // The accepted configuration is fixed at IQ_DEPTH=8. Each selector leaf
+    // carries its physical one-hot through both merge trees, so payload read
+    // is eight fixed masks followed by a three-level balanced OR tree.
+    generate
+    if (IQ_DEPTH == 8) begin : g_split_payload_reader
+    always_comb begin : split_payload_read
+        integer read_i;
+        for (read_i = 0; read_i < IQ_DEPTH; read_i = read_i + 1) begin
+            split_sched_mask0_c[read_i] = sched_q[read_i] &
+                {IQ_SCHED_W{calendar_preselect_onehot_c[0][read_i]}};
+            split_sched_mask1_c[read_i] = sched_q[read_i] &
+                {IQ_SCHED_W{calendar_preselect_onehot_c[1][read_i]}};
+            split_payload_mask0_c[read_i] = payload_q[read_i] &
+                {IQ_PAYLOAD_W{calendar_preselect_onehot_c[0][read_i]}};
+            split_payload_mask1_c[read_i] = payload_q[read_i] &
+                {IQ_PAYLOAD_W{calendar_preselect_onehot_c[1][read_i]}};
+        end
+        for (read_i = 0; read_i < 4; read_i = read_i + 1) begin
+            split_sched_l1_0_c[read_i] =
+                split_sched_mask0_c[read_i * 2] |
+                split_sched_mask0_c[read_i * 2 + 1];
+            split_sched_l1_1_c[read_i] =
+                split_sched_mask1_c[read_i * 2] |
+                split_sched_mask1_c[read_i * 2 + 1];
+            split_payload_l1_0_c[read_i] =
+                split_payload_mask0_c[read_i * 2] |
+                split_payload_mask0_c[read_i * 2 + 1];
+            split_payload_l1_1_c[read_i] =
+                split_payload_mask1_c[read_i * 2] |
+                split_payload_mask1_c[read_i * 2 + 1];
+        end
+        for (read_i = 0; read_i < 2; read_i = read_i + 1) begin
+            split_sched_l2_0_c[read_i] =
+                split_sched_l1_0_c[read_i * 2] |
+                split_sched_l1_0_c[read_i * 2 + 1];
+            split_sched_l2_1_c[read_i] =
+                split_sched_l1_1_c[read_i * 2] |
+                split_sched_l1_1_c[read_i * 2 + 1];
+            split_payload_l2_0_c[read_i] =
+                split_payload_l1_0_c[read_i * 2] |
+                split_payload_l1_0_c[read_i * 2 + 1];
+            split_payload_l2_1_c[read_i] =
+                split_payload_l1_1_c[read_i * 2] |
+                split_payload_l1_1_c[read_i * 2 + 1];
+        end
+        split_read_uop0_c = rebuild_entry(
+            |(valid_q & calendar_preselect_onehot_c[0]),
+            iq_sched_fields_t'(split_sched_l2_0_c[0] |
+                split_sched_l2_0_c[1]),
+            split_payload_l2_0_c[0] | split_payload_l2_0_c[1]);
+        split_read_uop1_c = rebuild_entry(
+            |(valid_q & calendar_preselect_onehot_c[1]),
+            iq_sched_fields_t'(split_sched_l2_1_c[0] |
+                split_sched_l2_1_c[1]),
+            split_payload_l2_1_c[0] | split_payload_l2_1_c[1]);
+    end
+    end else begin : g_unsupported_split_payload_depth
+    always_comb begin
+        split_read_uop0_c = '0;
+        split_read_uop1_c = '0;
+    end
+    end
+    endgenerate
 
     function automatic logic wakeup_match(input bbus_ooo_phys_reg_t phys);
         begin
@@ -216,6 +543,61 @@ module alu_issue_queue_1w #(
                 !(selective_kill_valid_i && entry.rob_tag.valid &&
                   selective_killed_rob_mask_i[entry.rob_tag.idx]);
         end
+    endfunction
+
+    function automatic logic [2:0] issue_service_class(
+        input bbus_ooo_alu_iq_uop_t entry
+    );
+        begin
+            if (entry.is_store) begin
+                issue_service_class = 3'd4;
+            end else if (entry.fu_type == BBUS_OOO_FU_MDU) begin
+                issue_service_class = 3'd5;
+            end else if (entry.exception.valid || entry.is_csr ||
+                         entry.is_system) begin
+                issue_service_class = 3'd6;
+            end else begin
+                unique case (entry.fu_type)
+                    BBUS_OOO_FU_NONE,
+                    BBUS_OOO_FU_ALU: issue_service_class = 3'd1;
+                    BBUS_OOO_FU_LSU: issue_service_class = 3'd2;
+                    BBUS_OOO_FU_BRU: issue_service_class = 3'd3;
+                    BBUS_OOO_FU_AMO: issue_service_class = 3'd7;
+                    default: issue_service_class = 3'd0;
+                endcase
+            end
+        end
+    endfunction
+
+    function automatic logic [11:0] issue_service_record(
+        input logic valid,
+        input logic ready,
+        input bbus_ooo_alu_iq_uop_t entry,
+        input logic [1:0] source
+    );
+        begin
+            issue_service_record = {
+                source,
+                issue_service_class(entry),
+                entry.rob_tag.gen,
+                entry.rob_tag.idx,
+                ready,
+                valid
+            };
+        end
+    endfunction
+
+    function automatic logic [20:0] issue_service_dispatch_detail(
+        input bbus_ooo_alu_iq_uop_t entry
+    );
+        issue_service_dispatch_detail = {
+            entry.rf_wen,
+            entry.phys_rd_new,
+            entry.phys_rs2,
+            entry.phys_rs1,
+            entry.src2_ready,
+            entry.src1_ready
+        };
     endfunction
 
     function automatic logic entry_src1_waiting(
@@ -643,6 +1025,60 @@ module alu_issue_queue_1w #(
         end
     endfunction
 
+    always_comb begin : calendar_candidate_metadata
+        integer entry_i;
+        calendar_candidate_valid_c = '0;
+        calendar_candidate_rank_c = '0;
+        calendar_candidate_tag_c = '0;
+        calendar_candidate_service_c = '0;
+        calendar_candidate_slot_c = '0;
+        calendar_service_credit_c = {
+            atomic_available_i,
+            csr_sys_available_i,
+            csr_sys_available_i,
+            csr_sys_available_i,
+            bru_available_i,
+            lsu_available_i,
+            alu1_available_i,
+            alu0_available_i
+        };
+
+        for (entry_i = 0; entry_i < IQ_DEPTH; entry_i = entry_i + 1) begin
+            calendar_candidate_valid_c[entry_i] =
+                BALANCED_SERVICE_SELECTOR_ENABLE && valid_q[entry_i] &&
+                entry_ready(entry_q[entry_i]) &&
+                entry_fu_available(entry_q[entry_i]);
+            calendar_candidate_tag_c[entry_i] = {
+                entry_q[entry_i].rob_tag.gen,
+                entry_q[entry_i].rob_tag.idx
+            };
+            calendar_candidate_service_c[entry_i] =
+                issue_service_class(entry_q[entry_i]);
+            calendar_candidate_slot_c[entry_i] = 4'(entry_i);
+            calendar_candidate_rank_c[entry_i] = 4'(
+                rob_age_distance(entry_q[entry_i].rob_tag.idx, rob_head_i));
+        end
+    end
+
+    ooo_issue_service_calendar_selector_2w #(
+        .CANDIDATE_COUNT(CALENDAR_CANDIDATE_COUNT),
+        .BRANCH_ORDINARY_CONCURRENT_ISSUE_ENABLE(
+            BRANCH_ORDINARY_CONCURRENT_ISSUE_ENABLE),
+        .BRANCH_YOUNGER_ORDINARY_CONCURRENT_ISSUE_ENABLE(
+            BRANCH_YOUNGER_ORDINARY_CONCURRENT_ISSUE_ENABLE)
+    ) u_service_calendar_selector (
+        .candidate_valid_i(calendar_candidate_valid_c),
+        .candidate_rank_i(calendar_candidate_rank_c),
+        .candidate_tag_i(calendar_candidate_tag_c),
+        .candidate_service_i(calendar_candidate_service_c),
+        .candidate_slot_i(calendar_candidate_slot_c),
+        .service_credit_i(calendar_service_credit_c),
+        .alu_round_robin_i(1'b0),
+        .select_valid_o(calendar_preselect_valid_c),
+        .select_slot_o(calendar_preselect_slot_c),
+        .select_onehot_o(calendar_preselect_onehot_c)
+    );
+
     always_comb begin
         integer i;
         integer debug_bru_count;
@@ -786,7 +1222,8 @@ module alu_issue_queue_1w #(
                     default: begin
                     end
                 endcase
-                if (entry_fu_available(entry_q[i]) &&
+                if (!BALANCED_SERVICE_SELECTOR_ENABLE &&
+                    entry_fu_available(entry_q[i]) &&
                     (!issue_found_c || entry_older_than(entry_q[i], issue_uop_select_c))) begin
                     issue_found_c = 1'b1;
                     issue_idx_c = IQ_IDX_W'(i);
@@ -811,7 +1248,7 @@ module alu_issue_queue_1w #(
 
         // S6_SIMPLIFICATION: issue2 select is still a fixed 2-wide scan.
         // FUTURE: stage or matrix this select before increasing beyond depth 8.
-        if (issue_found_c) begin
+        if (!BALANCED_SERVICE_SELECTOR_ENABLE && issue_found_c) begin
             for (i = 0; i < IQ_DEPTH; i = i + 1) begin
                 if ((IQ_IDX_W'(i) != issue_idx_c) &&
                     legal_issue2_pair(issue_uop_select_c, entry_q[i]) &&
@@ -822,6 +1259,26 @@ module alu_issue_queue_1w #(
                         issue1_uop_select_c = entry_q[i];
                     end
                 end
+            end
+        end
+
+        // The guarded selector changes only the combinational selection tree.
+        // FU acceptance, grant hold, Dispatch bypass and IQ dequeue remain on
+        // the production same-cycle ownership path below.
+        if (BALANCED_SERVICE_SELECTOR_ENABLE) begin
+            issue_found_c = calendar_preselect_valid_c[0];
+            issue1_found_c = calendar_preselect_valid_c[1];
+            issue_idx_c = IQ_IDX_W'(calendar_preselect_slot_c[0]);
+            issue1_idx_c = IQ_IDX_W'(calendar_preselect_slot_c[1]);
+            if (SPLIT_PAYLOAD_READ_ENABLE &&
+                SPLIT_PAYLOAD_ONEHOT_READ_ENABLE) begin
+                issue_uop_select_c = split_read_uop0_c;
+                issue1_uop_select_c = split_read_uop1_c;
+            end else begin
+                issue_uop_select_c = entry_q[
+                    IQ_IDX_W'(calendar_preselect_slot_c[0])];
+                issue1_uop_select_c = entry_q[
+                    IQ_IDX_W'(calendar_preselect_slot_c[1])];
             end
         end
 
@@ -891,6 +1348,63 @@ module alu_issue_queue_1w #(
             ((debug_head_src1_wait || debug_head_src2_wait) &&
              debug_head_ready);
     end
+
+    // S9V measurement-only candidate export. The ten fixed records are IQ
+    // entries 0..7 followed by accepted Dispatch0/1 virtual candidates.
+    // Operand readiness is exported independently from service availability;
+    // neither bus participates in selection, queue ownership, or backpressure.
+    generate
+    if (ISSUE_SERVICE_ORACLE_ENABLE) begin : g_issue_service_oracle
+        always_comb begin : issue_service_candidate_pack
+            integer candidate_i;
+            issue_service_candidates_c = '0;
+            for (candidate_i = 0; candidate_i < IQ_DEPTH;
+                 candidate_i = candidate_i + 1) begin
+                issue_service_candidates_c[candidate_i * 12 +: 12] =
+                    issue_service_record(
+                        entry_q[candidate_i].valid,
+                        entry_ready(entry_q[candidate_i]),
+                        entry_q[candidate_i],
+                        entry_uses_same_cycle_wakeup(entry_q[candidate_i]) ?
+                            2'd3 : 2'd0);
+            end
+            issue_service_candidates_c[IQ_DEPTH * 12 +: 12] =
+                issue_service_record(
+                    dispatch0_fire_c,
+                    dispatch0_fire_c && entry_ready(dispatch_uop_i),
+                    dispatch_uop_i,
+                    2'd1);
+            issue_service_candidates_c[(IQ_DEPTH + 1) * 12 +: 12] =
+                issue_service_record(
+                    dispatch1_fire_c,
+                    dispatch1_fire_c && entry_ready(dispatch1_uop_i),
+                    dispatch1_uop_i,
+                    2'd2);
+            debug_issue_service_candidates0_o =
+                issue_service_candidates_c[63:0];
+            debug_issue_service_candidates1_o = {
+                selective_killed_rob_mask_i,
+                issue_service_candidates_c[119:64]
+            };
+            debug_issue_service_dispatch_details_o = '0;
+            debug_issue_service_dispatch_details_o[20:0] =
+                issue_service_dispatch_detail(dispatch_uop_i);
+            debug_issue_service_dispatch_details_o[41:21] =
+                issue_service_dispatch_detail(dispatch1_uop_i);
+            debug_issue_service_dispatch_details_o[42] = wakeup_valid_i;
+            debug_issue_service_dispatch_details_o[48:43] = wakeup_phys_i;
+            debug_issue_service_dispatch_details_o[49] = wakeup1_valid_i;
+            debug_issue_service_dispatch_details_o[55:50] = wakeup1_phys_i;
+        end
+    end else begin : g_no_issue_service_oracle
+        always_comb begin
+            issue_service_candidates_c = '0;
+            debug_issue_service_candidates0_o = '0;
+            debug_issue_service_candidates1_o = '0;
+            debug_issue_service_dispatch_details_o = '0;
+        end
+    end
+    endgenerate
 
 
     // P8 measurement-only oracle. This classifies whether an accepted
@@ -1522,7 +2036,8 @@ module alu_issue_queue_1w #(
     assign issue1_valid_o = !flush_i && !selective_kill_valid_i &&
         (grant_hold_q ? grant1_hold_q : issue1_found_c);
     assign issue2_pair_valid_o = !flush_i && !selective_kill_valid_i &&
-        (grant_hold_q ? grant1_hold_q : (issue_found_c && issue1_found_c));
+        (grant_hold_q ? grant1_hold_q :
+         (issue_found_c && issue1_found_c));
     assign issue2_pair_is_alu_lsu_o =
         issue2_pair_valid_o && legal_alu_lsu_pair(issue_uop_o, issue1_uop_o);
     assign issue2_pair_is_alu_alu_o =
@@ -1564,11 +2079,14 @@ module alu_issue_queue_1w #(
         end
     end
 
+    generate
+    if (!STABLE_ENTRY_IQ_ENABLE) begin : g_compact_entry_update
     always_ff @(posedge clk) begin
         integer i;
 
         if (reset || flush_i) begin
             count_q <= '0;
+            valid_q <= '0;
             grant_hold_q <= 1'b0;
             grant1_hold_q <= 1'b0;
             grant_idx_q <= '0;
@@ -1576,7 +2094,7 @@ module alu_issue_queue_1w #(
             grant_uop_q <= '0;
             grant1_uop_q <= '0;
             for (i = 0; i < IQ_DEPTH; i = i + 1) begin
-                entry_q[i] <= '0;
+                legacy_entry_q[i] <= '0;
             end
         end else begin
             bbus_ooo_alu_iq_uop_t next_entry [IQ_DEPTH-1:0];
@@ -1689,9 +2207,430 @@ module alu_issue_queue_1w #(
             end
 
             for (j = 0; j < IQ_DEPTH; j = j + 1) begin
-                entry_q[j] <= next_entry[j];
+                legacy_entry_q[j] <= next_entry[j];
             end
             count_q <= next_count;
+            valid_q <= '0;
         end
+    end
+    end
+
+    if (STABLE_ENTRY_IQ_ENABLE) begin : g_stable_entry_update
+    // Stable-entry mode deliberately uses only cycle-start free slots for
+    // dispatch.  Issue clears valid bits, but those slots cannot be reused
+    // until the following cycle; this keeps ready timing independent of the
+    // issue/recovery feedback cone.
+    always_ff @(posedge clk) begin : stable_entry_update
+        integer i;
+        integer next_count_int;
+        integer free_i;
+        logic found_free;
+        logic [IQ_DEPTH-1:0] next_valid;
+        logic [IQ_DEPTH-1:0] allocated_slots;
+        bbus_ooo_alu_iq_uop_t next_entry [IQ_DEPTH-1:0];
+
+        if (reset || flush_i) begin
+            count_q <= '0;
+            valid_q <= '0;
+            grant_hold_q <= 1'b0;
+            grant1_hold_q <= 1'b0;
+            grant_idx_q <= '0;
+            grant1_idx_q <= '0;
+            grant_uop_q <= '0;
+            grant1_uop_q <= '0;
+            for (i = 0; i < IQ_DEPTH; i = i + 1) begin
+                if (SPLIT_PAYLOAD_READ_ENABLE) begin
+                    sched_q[i] <= '0;
+                    payload_q[i] <= '0;
+                end else begin
+                    legacy_entry_q[i] <= '0;
+                end
+            end
+        end else begin
+            next_valid = valid_q;
+            allocated_slots = '0;
+            for (i = 0; i < IQ_DEPTH; i = i + 1) begin
+                next_entry[i] = entry_q[i];
+                if (!valid_q[i]) begin
+                    next_valid[i] = 1'b0;
+                    next_entry[i] = '0;
+                end
+                if (tag_killed(entry_q[i].rob_tag) && valid_q[i]) begin
+                    next_valid[i] = 1'b0;
+                    next_entry[i].valid = 1'b0;
+                end
+            end
+
+            if (selective_kill_valid_i) begin
+                grant_hold_q <= 1'b0;
+                grant1_hold_q <= 1'b0;
+            end else if (grant_hold_q) begin
+                if (issue_fire_c) begin
+                    grant_hold_q <= 1'b0;
+                    grant1_hold_q <= 1'b0;
+                end
+            end else if (!issue_from_dispatch0_c &&
+                         !issue1_from_dispatch0_c &&
+                         !issue1_from_dispatch1_c && issue_valid_o &&
+                         (!issue_fire_c ||
+                          (issue1_valid_o && !issue1_fire_c))) begin
+                grant_hold_q <= 1'b1;
+                grant1_hold_q <= issue1_valid_o;
+                grant_idx_q <= issue_idx_c;
+                grant1_idx_q <= issue1_idx_c;
+                grant_uop_q <= issue_uop_o;
+                grant1_uop_q <= issue1_uop_o;
+                grant_uop_q.src1_ready <= 1'b1;
+                grant_uop_q.src2_ready <= 1'b1;
+                grant1_uop_q.src1_ready <= 1'b1;
+                grant1_uop_q.src2_ready <= 1'b1;
+            end
+
+            // Registered issue entries are removed in place.  A bypassed
+            // dispatch uop is not an IQ entry and is therefore never cleared
+            // or written a second time.
+            if (issue_fire_c && !issue_from_dispatch0_c) begin
+                next_valid[issue_idx_selected_c] = 1'b0;
+                next_entry[issue_idx_selected_c].valid = 1'b0;
+            end
+            if (issue1_fire_c && !issue1_from_dispatch0_c &&
+                !issue1_from_dispatch1_c) begin
+                next_valid[issue1_idx_selected_c] = 1'b0;
+                next_entry[issue1_idx_selected_c].valid = 1'b0;
+            end
+
+            // Wakeup is applied in place, including to entries that remain
+            // valid after an issue/dispatch event.  This is equivalent to
+            // compact mode but does not move any survivor payload.
+            for (i = 0; i < IQ_DEPTH; i = i + 1) begin
+                if (next_valid[i]) begin
+                    if (wakeup_valid_i &&
+                        (wakeup_phys_i != `BBUS_OOO_PHYS_ZERO)) begin
+                        if (next_entry[i].phys_rs1 == wakeup_phys_i)
+                            next_entry[i].src1_ready = 1'b1;
+                        if (next_entry[i].phys_rs2 == wakeup_phys_i)
+                            next_entry[i].src2_ready = 1'b1;
+                    end
+                    if (wakeup1_valid_i &&
+                        (wakeup1_phys_i != `BBUS_OOO_PHYS_ZERO)) begin
+                        if (next_entry[i].phys_rs1 == wakeup1_phys_i)
+                            next_entry[i].src1_ready = 1'b1;
+                        if (next_entry[i].phys_rs2 == wakeup1_phys_i)
+                            next_entry[i].src2_ready = 1'b1;
+                    end
+                end
+            end
+
+            // Dispatch slot0 is always allocated before slot1.  The search
+            // uses valid_q (cycle-start occupancy), not next_valid, so an
+            // issue-fired slot cannot create same-cycle ready capacity.
+            if (dispatch0_fire_c &&
+                !(issue_from_dispatch0_c && issue_fire_c) &&
+                !(issue1_from_dispatch0_c && issue1_fire_c)) begin
+                found_free = 1'b0;
+                for (free_i = 0; free_i < IQ_DEPTH; free_i = free_i + 1) begin
+                    if (!found_free && !valid_q[free_i] &&
+                        !allocated_slots[free_i]) begin
+                        next_entry[free_i] = dispatch_uop_i;
+                        next_entry[free_i].valid = 1'b1;
+                        next_valid[free_i] = 1'b1;
+                        allocated_slots[free_i] = 1'b1;
+                        found_free = 1'b1;
+                    end
+                end
+            end
+            if (dispatch1_fire_c &&
+                !(issue1_from_dispatch1_c && issue1_fire_c)) begin
+                found_free = 1'b0;
+                for (free_i = 0; free_i < IQ_DEPTH; free_i = free_i + 1) begin
+                    if (!found_free && !valid_q[free_i] &&
+                        !allocated_slots[free_i]) begin
+                        next_entry[free_i] = dispatch1_uop_i;
+                        next_entry[free_i].valid = 1'b1;
+                        next_valid[free_i] = 1'b1;
+                        allocated_slots[free_i] = 1'b1;
+                        found_free = 1'b1;
+                    end
+                end
+            end
+
+            // Newly captured entries receive same-cycle wakeup exactly as in
+            // the legacy compact path.
+            for (i = 0; i < IQ_DEPTH; i = i + 1) begin
+                if (allocated_slots[i]) begin
+                    if (wakeup_valid_i &&
+                        (wakeup_phys_i != `BBUS_OOO_PHYS_ZERO)) begin
+                        if (next_entry[i].phys_rs1 == wakeup_phys_i)
+                            next_entry[i].src1_ready = 1'b1;
+                        if (next_entry[i].phys_rs2 == wakeup_phys_i)
+                            next_entry[i].src2_ready = 1'b1;
+                    end
+                    if (wakeup1_valid_i &&
+                        (wakeup1_phys_i != `BBUS_OOO_PHYS_ZERO)) begin
+                        if (next_entry[i].phys_rs1 == wakeup1_phys_i)
+                            next_entry[i].src1_ready = 1'b1;
+                        if (next_entry[i].phys_rs2 == wakeup1_phys_i)
+                            next_entry[i].src2_ready = 1'b1;
+                    end
+                end
+            end
+
+            next_count_int = 0;
+            for (i = 0; i < IQ_DEPTH; i = i + 1) begin
+                if (SPLIT_PAYLOAD_READ_ENABLE) begin
+                    sched_q[i] <= pack_sched_fields(next_entry[i]);
+                    if (allocated_slots[i])
+                        payload_q[i] <= pack_payload_fields(next_entry[i]);
+                end else begin
+                    legacy_entry_q[i] <= next_entry[i];
+                end
+                next_count_int = next_count_int +
+                    (next_valid[i] ? 1 : 0);
+            end
+            valid_q <= next_valid;
+            count_q <= IQ_COUNT_W'(next_count_int);
+        end
+    end
+    end
+    endgenerate
+endmodule
+
+module ooo_issue_service_calendar_selector_2w #(
+    parameter int CANDIDATE_COUNT = 10,
+    parameter bit BRANCH_ORDINARY_CONCURRENT_ISSUE_ENABLE = 1'b0,
+    parameter bit BRANCH_YOUNGER_ORDINARY_CONCURRENT_ISSUE_ENABLE = 1'b0
+) (
+    input  logic [CANDIDATE_COUNT-1:0] candidate_valid_i,
+    input  logic [CANDIDATE_COUNT-1:0][3:0] candidate_rank_i,
+    input  logic [CANDIDATE_COUNT-1:0][4:0] candidate_tag_i,
+    input  logic [CANDIDATE_COUNT-1:0][2:0] candidate_service_i,
+    input  logic [CANDIDATE_COUNT-1:0][3:0] candidate_slot_i,
+    input  logic [7:0] service_credit_i,
+    input  logic alu_round_robin_i,
+    output logic [1:0] select_valid_o,
+    output logic [1:0][3:0] select_slot_o,
+    output logic [1:0][CANDIDATE_COUNT-1:0] select_onehot_o
+);
+    localparam logic [2:0] SERVICE_ALU = 3'd1;
+    localparam logic [2:0] SERVICE_LSU = 3'd2;
+    localparam logic [2:0] SERVICE_BRU = 3'd3;
+    localparam logic [2:0] SERVICE_STORE = 3'd4;
+    localparam logic [2:0] SERVICE_MDU = 3'd5;
+    localparam logic [2:0] SERVICE_CSR_SYS = 3'd6;
+    localparam logic [2:0] SERVICE_AMO = 3'd7;
+    localparam logic [2:0] TARGET_ALU0 = 3'd0;
+    localparam logic [2:0] TARGET_ALU1 = 3'd1;
+    localparam logic [2:0] TARGET_LSU = 3'd2;
+    localparam logic [2:0] TARGET_BRU = 3'd3;
+    localparam logic [2:0] TARGET_STORE = 3'd4;
+    localparam logic [2:0] TARGET_MDU = 3'd5;
+    localparam logic [2:0] TARGET_CSR_SYS = 3'd6;
+    localparam logic [2:0] TARGET_AMO = 3'd7;
+
+    typedef struct packed {
+        logic valid;
+        logic [3:0] rank;
+        logic [4:0] tag;
+        logic [2:0] service;
+        logic [3:0] slot;
+        logic [2:0] target;
+        logic [CANDIDATE_COUNT-1:0] onehot;
+    } candidate_t;
+
+    candidate_t candidate_leaf_c [15:0];
+    candidate_t primary_tree1_c [7:0];
+    candidate_t primary_tree2_c [3:0];
+    candidate_t primary_tree3_c [1:0];
+    candidate_t primary_c;
+    candidate_t partner_leaf_c [15:0];
+    candidate_t partner_tree1_c [7:0];
+    candidate_t partner_tree2_c [3:0];
+    candidate_t partner_tree3_c [1:0];
+    candidate_t partner_c;
+
+    function automatic logic service_credit_available(
+        input logic [2:0] service,
+        input logic [7:0] credit
+    );
+        unique case (service)
+            SERVICE_ALU: service_credit_available = credit[0] || credit[1];
+            SERVICE_LSU: service_credit_available = credit[TARGET_LSU];
+            SERVICE_BRU: service_credit_available = credit[TARGET_BRU];
+            SERVICE_STORE: service_credit_available = credit[TARGET_STORE];
+            SERVICE_MDU: service_credit_available = credit[TARGET_MDU];
+            SERVICE_CSR_SYS:
+                service_credit_available = credit[TARGET_CSR_SYS];
+            SERVICE_AMO: service_credit_available = credit[TARGET_AMO];
+            default: service_credit_available = 1'b0;
+        endcase
+    endfunction
+
+    function automatic logic [2:0] single_target(
+        input logic [2:0] service,
+        input logic [7:0] credit,
+        input logic alu_rr
+    );
+        unique case (service)
+            SERVICE_ALU: begin
+                if (alu_rr && credit[TARGET_ALU1])
+                    single_target = TARGET_ALU1;
+                else if (credit[TARGET_ALU0])
+                    single_target = TARGET_ALU0;
+                else
+                    single_target = TARGET_ALU1;
+            end
+            SERVICE_LSU: single_target = TARGET_LSU;
+            SERVICE_BRU: single_target = TARGET_BRU;
+            SERVICE_STORE: single_target = TARGET_STORE;
+            SERVICE_MDU: single_target = TARGET_MDU;
+            SERVICE_CSR_SYS: single_target = TARGET_CSR_SYS;
+            default: single_target = TARGET_AMO;
+        endcase
+    endfunction
+
+    function automatic logic legal_pair(
+        input logic [2:0] older_service,
+        input logic [2:0] younger_service
+    );
+        legal_pair =
+            (older_service == SERVICE_ALU &&
+             younger_service == SERVICE_ALU) ||
+            (older_service == SERVICE_ALU &&
+             younger_service == SERVICE_LSU) ||
+            (older_service == SERVICE_LSU &&
+             younger_service == SERVICE_ALU) ||
+            (BRANCH_ORDINARY_CONCURRENT_ISSUE_ENABLE &&
+             ((older_service == SERVICE_ALU ||
+               older_service == SERVICE_LSU) &&
+              younger_service == SERVICE_BRU)) ||
+            (BRANCH_YOUNGER_ORDINARY_CONCURRENT_ISSUE_ENABLE &&
+             older_service == SERVICE_BRU &&
+             (younger_service == SERVICE_ALU ||
+              younger_service == SERVICE_LSU));
+    endfunction
+
+    function automatic candidate_t make_candidate(
+        input logic valid,
+        input logic [3:0] rank,
+        input logic [4:0] tag,
+        input logic [2:0] service,
+        input logic [3:0] slot,
+        input logic [7:0] credit,
+        input logic alu_rr
+    );
+        candidate_t result;
+        result = '0;
+        result.valid = valid && service_credit_available(service, credit);
+        result.rank = rank;
+        result.slot = slot;
+        result.tag = tag;
+        result.service = service;
+        result.target = single_target(service, credit, alu_rr);
+        result.onehot = '0;
+        make_candidate = result;
+    endfunction
+
+    function automatic candidate_t older_candidate(
+        input candidate_t left,
+        input candidate_t right
+    );
+        if (!left.valid)
+            older_candidate = right;
+        else if (!right.valid)
+            older_candidate = left;
+        else if (left.rank < right.rank)
+            older_candidate = left;
+        else if (right.rank < left.rank)
+            older_candidate = right;
+        else if (left.tag < right.tag)
+            older_candidate = left;
+        else if (right.tag < left.tag)
+            older_candidate = right;
+        else if (left.slot <= right.slot)
+            older_candidate = left;
+        else
+            older_candidate = right;
+    endfunction
+
+    function automatic candidate_t make_partner_candidate(
+        input candidate_t candidate,
+        input candidate_t primary,
+        input logic [7:0] credit,
+        input logic alu_rr
+    );
+        candidate_t result;
+        logic pair_has_credit;
+        result = candidate;
+        pair_has_credit = candidate.valid && primary.valid &&
+            candidate.tag != primary.tag &&
+            legal_pair(primary.service, candidate.service);
+        if (primary.service == SERVICE_ALU &&
+            candidate.service == SERVICE_ALU) begin
+            pair_has_credit = pair_has_credit &&
+                credit[TARGET_ALU0] && credit[TARGET_ALU1];
+            result.target = primary.target == TARGET_ALU0 ?
+                TARGET_ALU1 : TARGET_ALU0;
+        end else begin
+            result.target = single_target(
+                candidate.service, credit, alu_rr);
+        end
+        result.valid = pair_has_credit && result.target != primary.target;
+        make_partner_candidate = result;
+    endfunction
+
+    always_comb begin : balanced_primary_partner_select
+        integer candidate_i;
+        for (candidate_i = 0; candidate_i < 16; candidate_i = candidate_i + 1)
+            candidate_leaf_c[candidate_i] = '0;
+        for (candidate_i = 0; candidate_i < CANDIDATE_COUNT;
+             candidate_i = candidate_i + 1) begin
+            candidate_leaf_c[candidate_i] = make_candidate(
+                candidate_valid_i[candidate_i],
+                candidate_rank_i[candidate_i],
+                candidate_tag_i[candidate_i],
+                candidate_service_i[candidate_i],
+                candidate_slot_i[candidate_i],
+                service_credit_i,
+                alu_round_robin_i);
+            candidate_leaf_c[candidate_i].onehot[candidate_i] = 1'b1;
+        end
+
+        for (candidate_i = 0; candidate_i < 8; candidate_i = candidate_i + 1)
+            primary_tree1_c[candidate_i] = older_candidate(
+                candidate_leaf_c[candidate_i * 2],
+                candidate_leaf_c[candidate_i * 2 + 1]);
+        for (candidate_i = 0; candidate_i < 4; candidate_i = candidate_i + 1)
+            primary_tree2_c[candidate_i] = older_candidate(
+                primary_tree1_c[candidate_i * 2],
+                primary_tree1_c[candidate_i * 2 + 1]);
+        for (candidate_i = 0; candidate_i < 2; candidate_i = candidate_i + 1)
+            primary_tree3_c[candidate_i] = older_candidate(
+                primary_tree2_c[candidate_i * 2],
+                primary_tree2_c[candidate_i * 2 + 1]);
+        primary_c = older_candidate(primary_tree3_c[0], primary_tree3_c[1]);
+
+        for (candidate_i = 0; candidate_i < 16; candidate_i = candidate_i + 1)
+            partner_leaf_c[candidate_i] = make_partner_candidate(
+                candidate_leaf_c[candidate_i], primary_c,
+                service_credit_i, alu_round_robin_i);
+        for (candidate_i = 0; candidate_i < 8; candidate_i = candidate_i + 1)
+            partner_tree1_c[candidate_i] = older_candidate(
+                partner_leaf_c[candidate_i * 2],
+                partner_leaf_c[candidate_i * 2 + 1]);
+        for (candidate_i = 0; candidate_i < 4; candidate_i = candidate_i + 1)
+            partner_tree2_c[candidate_i] = older_candidate(
+                partner_tree1_c[candidate_i * 2],
+                partner_tree1_c[candidate_i * 2 + 1]);
+        for (candidate_i = 0; candidate_i < 2; candidate_i = candidate_i + 1)
+            partner_tree3_c[candidate_i] = older_candidate(
+                partner_tree2_c[candidate_i * 2],
+                partner_tree2_c[candidate_i * 2 + 1]);
+        partner_c = older_candidate(partner_tree3_c[0], partner_tree3_c[1]);
+
+        select_valid_o = {partner_c.valid, primary_c.valid};
+        select_slot_o[0] = primary_c.slot;
+        select_slot_o[1] = partner_c.slot;
+        select_onehot_o[0] = primary_c.onehot;
+        select_onehot_o[1] = partner_c.onehot;
     end
 endmodule

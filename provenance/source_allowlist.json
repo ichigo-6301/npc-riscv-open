@@ -933,7 +933,8 @@
           "NPC_OOO_DISPATCH2_TEST_LIMIT_ROB_FREE=0",
           "NPC_OOO_DISPATCH2_TEST_LIMIT_IQ_FREE=0",
           "NPC_OOO_DISPATCH2_TEST_LIMIT_FREELIST_FREE=0",
-          "NPC_M_EXTENSION"
+          "NPC_M_EXTENSION",
+          "NPC_OOO_A3_ENABLE=1"
         ]
       },
       "entries": [
@@ -948,14 +949,14 @@
           "sha256": "7a5bf86a9307b5d46a87a75d982eb208a65f14fa3c03251f26260700cba4176c"
         },
         {
-          "blob": "832daa75ab6f5e62c3ba7744e4d8b88d680cdb9a",
-          "bytes": 77726,
+          "blob": "638809a61a661c5fcd1c7b2b8568cf57e67e8eff",
+          "bytes": 118603,
           "destination": "rtl/profiles/rv32im_ooo_4k/core/alu_issue_queue_1w.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "2896e6cce2d869f206c107d6408c1673feec21597c1064597470fe7cd4205361"
+          "sha256": "04ba06860d3f8157b6238921bc19b27b272a96041cf419a0be60a2b5daef8ab1"
         },
         {
           "blob": "ffcfe28cc432afbbc5675579bcc66dfcff90d8db",
@@ -1208,14 +1209,14 @@
           "sha256": "4bbed0b5fd66d29fa0e247023eda3531a60880837b23771e3b74545eb05f6e67"
         },
         {
-          "blob": "41b8a4cbdaf1221f34a33f66d1dd02103389306f",
-          "bytes": 45026,
+          "blob": "dc689acbf6e18e1edfe2146d6c4ac62a3424c542",
+          "bytes": 46040,
           "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu_pipeline_1w.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "dfef7a66070b559e95fa90df89cd08fa38acbeaa7a703a8a2f392996327a2602"
+          "sha256": "25acb641cb2fb56ae1dfee7a5f5a7649f76c2b4eb0e6b77645c8356f38e04df1"
         },
         {
           "blob": "f0dde9fc62079c3aa9079d1edbff30d466b9bb97",
@@ -1248,14 +1249,14 @@
           "sha256": "0eccdc9bc08df92f2df7ebc1f73b20f458dc4e7124effafa8dc50dbd5bb4411d"
         },
         {
-          "blob": "ec847d70890e9d28aabe36b7e48c64c2ada72660",
-          "bytes": 34727,
+          "blob": "026763d1c1634eef3a1bf8fd0a4e628a5a0b680d",
+          "bytes": 35332,
           "destination": "rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "78afe36e112ce8bbf389145ddf3900d8d13fabb3504e7d321ed5bc203358e783"
+          "sha256": "94ebcda0e244bdcff262d915a09a676b6710c89690c3681803f5d52ec8571de0"
         },
         {
           "blob": "95cf17a1d0143d19c211b5622098f82fa6052999",
@@ -1318,14 +1319,14 @@
           "sha256": "128efe921de7d36569057b10fd7c8c71b38b90fa58e90527ede6c419bc24f68f"
         },
         {
-          "blob": "c97ce546dedef4cdffffcd6a23f437408cddabab",
-          "bytes": 131624,
+          "blob": "a3a72020120d841f58be94ed85da8315ef382c97",
+          "bytes": 136977,
           "destination": "rtl/profiles/rv32im_ooo_4k/frontend/ooo_pipeline_redirect_frontend_2w.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "21d89129634a8c60f47cdf9a8405b67fdfea52a71641532a948e3a198b7eafc2"
+          "sha256": "2bc5f175579d8d7771a47d2f692c06f81eda45db2a73b655d8bf06a2bb759184"
         },
         {
           "blob": "83387b9b19cd2db2e4318ca7a026a3c6dcaa162f",
@@ -1458,73 +1459,73 @@
           "sha256": "60cc30504e90bc4633a5753c9077ddd69b7ce16e928089462d0cc88f36f7bfbc"
         },
         {
-          "blob": "856fdd6f272654eda62aed41684b38f6861c17a7",
-          "bytes": 97615,
+          "blob": "e0306f3255849212aa900bf729ddc366770b387c",
+          "bytes": 100312,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "b74ada0042361ef92fff5e9933f1e1bfd7b000c222cb08ea0aa4272df3230845"
+          "sha256": "243f4287df87134f9ff8dc9049e9d59b440e262598039e3617e0fda3c60121e8"
         },
         {
-          "blob": "d1562e5d4b1a088d92f33eee4e72932f562d9b77",
-          "bytes": 69569,
+          "blob": "5f08b37b4b223e511b1b9ddbceafe40ab2821733",
+          "bytes": 79373,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "6d1551c73546db3b958413c3507984bf54ab88331d6b1b9a72cda3066ab7007e"
+          "sha256": "8bf6eacbee37e4c42c96ca1fac91790cdac49ec671f4d70c0abb89573d8d1107"
         },
         {
-          "blob": "4eda76d4a4f2864bce493c1f0d9cfc386c3ddfea",
-          "bytes": 51566,
+          "blob": "e67c4bdbc5235b9ef99c88e7406209ffbf36b0cf",
+          "bytes": 55132,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "41e9477b244b78cd92e30322596cde044841828c3111e8171491f79bd55a4d57"
+          "sha256": "20eb68319d9768a9ec19091e290d43c6afc6a743dd2a89543188d76727f49733"
         },
         {
-          "blob": "1060015bb1ce9fe14e8f73fbc23aba53bfc14cb7",
-          "bytes": 27101,
+          "blob": "b982dc3af9b1ca2ef3712a64daaafbaed7ae033d",
+          "bytes": 28401,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "0958bb19f81bfc743edbe330f86dd38053ed8fed8d74dbc3bb1d6bb89582f951"
+          "sha256": "555c9d64102315f4fd4d4b9eb9281b53dd5ffaffab13d5ae2c36fabc0c6bed94"
         },
         {
-          "blob": "b15fd10902105abfea8d901bf9605e49e5fa19af",
-          "bytes": 61995,
+          "blob": "8c3abbf39c4df60ef4a82931f58f20814c4869c3",
+          "bytes": 64144,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "ec15105af4f4b1170cc8f33697358c1daf2ac2f3dee52aeb009b45cc35c534f7"
+          "sha256": "2f9a7d9bc39677b1bdbdfd982cc8cbb7bd778b7c4715d86179cc098806069c2c"
         },
         {
-          "blob": "1f862e40c94f06bdfa6e5a2e9f9a3256998a778b",
-          "bytes": 35677,
+          "blob": "edf8f9a65d427e23d9dacee4d334d32ee7800a3f",
+          "bytes": 37132,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "ab5592e1c5312402b90bc3c1a6fbe33079a7fbb70f6f828ad7409d0fd431d926"
+          "sha256": "dacb967f97606ed31831d60fb8885b2c93ac91347bbf2e72863c0d758eea47ef"
         },
         {
-          "blob": "3adb882feb093a743ac8a63cd56940ff8f0f4c95",
-          "bytes": 15123,
+          "blob": "7dfb86c607008a4351da36d7679be57143f3fc4a",
+          "bytes": 15629,
           "destination": "rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_synth_core_top.sv",
           "roles": [
             "asic"
           ],
-          "sha256": "51b3269e052ea684fb5bc9d5bba372d28a094f58d6f19ed5001e9e17623f6180"
+          "sha256": "1161041fbe8880d99be869bf67547358e2772994383e71eba411a847e987ed51"
         },
         {
           "blob": "4dac44e52e33f7fa79a756d0c0922e72a06436e9",
@@ -1571,16 +1572,16 @@
       "profile_id": "rv32im_ooo_4k",
       "provenance_entries": [
         {
-          "blob": "f9d5a3981262c298aaa607bd9a7a041ab3a07db7",
-          "bytes": 8314,
+          "blob": "35651a257606257da0348b13245debadf0abb0f6",
+          "bytes": 8382,
           "destination": "provenance/upstream/rv32im_ooo_4k/config_snapshot.json",
-          "sha256": "03d7cc8d9f537be02b9a78e53eec2f4dbce1e672b2c72373d97ae0479c98978d",
+          "sha256": "ebb14fd96bd1d80232ca78509d4f6b6429857cd782acbfee152c6bfc7c339d8c",
           "transform": "public_config_snapshot_v1"
         }
       ],
       "public_root": "rtl/profiles/rv32im_ooo_4k",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
-      "source_root": "vsrc_ooo",
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
+      "source_root": "npc/vsrc_ooo",
       "wrapper": "rtl/wrappers/rv32im_ooo_4k_sim_top.sv"
     }
   ],

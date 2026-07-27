@@ -34,7 +34,11 @@ module ooo_pipeline_frontend_backend_standalone_top #(
     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
     parameter bit CORRECT_BRANCH_DUAL_RETIRE_ENABLE = 1'b0,
     parameter bit YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE = 1'b0,
-    parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0
+    parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0
 ) (
     input logic clk,
     input logic reset,
@@ -133,6 +137,12 @@ module ooo_pipeline_frontend_backend_standalone_top #(
     output logic [31:0] perf_retirement_chain_o,
     output logic [63:0] perf_complex_retire_pairing_o,
     output logic [63:0] perf_completion_ownership_o,
+    output logic [63:0] perf_issue_service_candidates0_o,
+    output logic [63:0] perf_issue_service_candidates1_o,
+    output logic [63:0] perf_issue_service_dispatch_details_o,
+    output logic [63:0] perf_issue_service_events_o,
+    output logic [63:0] perf_issue_service_capacity_o,
+    output logic [63:0] perf_issue_service_accepts_o,
     output logic [7:0] perf_serial_attribution_o,
 
     input bbus_ooo_arch_reg_t debug_arch_idx_i,
@@ -358,7 +368,11 @@ module ooo_pipeline_frontend_backend_standalone_top #(
         .YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE(
             YOUNGER_SLOT1_CONTROL_DUAL_RETIRE_ENABLE),
         .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
-            STRUCTURAL_THROUGHPUT_ORACLE_ENABLE)
+            STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+        .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL)
     ) u_backend (
         .clk(clk),
         .reset(reset),
@@ -447,6 +461,15 @@ module ooo_pipeline_frontend_backend_standalone_top #(
         .perf_retirement_chain_o(perf_retirement_chain_o),
         .perf_complex_retire_pairing_o(perf_complex_retire_pairing_o),
         .perf_completion_ownership_o(perf_completion_ownership_o),
+        .perf_issue_service_candidates0_o(
+            perf_issue_service_candidates0_o),
+        .perf_issue_service_candidates1_o(
+            perf_issue_service_candidates1_o),
+        .perf_issue_service_dispatch_details_o(
+            perf_issue_service_dispatch_details_o),
+        .perf_issue_service_events_o(perf_issue_service_events_o),
+        .perf_issue_service_capacity_o(perf_issue_service_capacity_o),
+        .perf_issue_service_accepts_o(perf_issue_service_accepts_o),
         .conservation_error_o(backend_conservation)
     );
 

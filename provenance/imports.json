@@ -15,8 +15,8 @@
     {
       "entry_count": 63,
       "profile_id": "rv32im_ooo_4k",
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
-      "source_sha256": "1693a0966ccc0c7cccc55299e0bdb0394b008f295fb5b7c6345822f2aecee770"
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0",
+      "source_sha256": "7c4d4995af0114e4f6b5b59c9432e868cadf0b0c98daac4079b848faa88cc0a6"
     }
   ],
   "project_id": "npc-riscv-open",

@@ -35,6 +35,7 @@ module ooo_pipeline_npc_core_top #(
     parameter bit IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE = 1'b0,
     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+    parameter bit FRONTEND_CAUSAL_REQUEST_CUT_ENABLE = 1'b0,
     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
     parameter bit ORDERED_TARGET_PREFETCH_ORACLE_ENABLE = 1'b0,
     parameter bit DEMAND_FETCH_LATENCY_ORACLE_ENABLE = 1'b0,
@@ -65,6 +66,10 @@ module ooo_pipeline_npc_core_top #(
     parameter int unsigned DATA_LINE_COUNT = 64,
     parameter int unsigned DATA_LINE_WAY_COUNT = 1,
     parameter bit STRUCTURAL_THROUGHPUT_ORACLE_ENABLE = 1'b0,
+    parameter bit ISSUE_SERVICE_ORACLE_ENABLE = 1'b0,
+    parameter bit STABLE_ENTRY_IQ_ENABLE = 1'b0,
+    parameter bit IQ_SPLIT_PAYLOAD_READ_ENABLE = 1'b0,
+    parameter int unsigned ROB_INDEXED_SERVICE_LEVEL = 0,
     parameter bit SINGLETON_COALESCE_ORACLE_ENABLE = 1'b0,
     parameter bit PARTIAL_PAIR_ORACLE_ENABLE = 1'b0,
     parameter bit CACHED_CROSS_LINE_PAIR_ENABLE = 1'b0,
@@ -157,6 +162,12 @@ module ooo_pipeline_npc_core_top #(
     output logic [31:0] perf_retirement_chain_o,
     output logic [63:0] perf_complex_retire_pairing_o,
     output logic [63:0] perf_completion_ownership_o,
+    output logic [63:0] perf_issue_service_candidates0_o,
+    output logic [63:0] perf_issue_service_candidates1_o,
+    output logic [63:0] perf_issue_service_dispatch_details_o,
+    output logic [63:0] perf_issue_service_events_o,
+    output logic [63:0] perf_issue_service_capacity_o,
+    output logic [63:0] perf_issue_service_accepts_o,
     output logic [7:0] perf_serial_attribution_o,
     output logic [8:0] perf_branch_resolution_o,
     output logic [4:0] perf_target_line_o,
@@ -287,6 +298,8 @@ module ooo_pipeline_npc_core_top #(
     logic serial_completion_ready;
     bbus_ooo_writeback_t serial_completion_wb;
     logic [2:0] serial_completion_kind;
+    logic [2:0] serial_issue_registered_credit;
+    logic [63:0] pipeline_issue_service_dispatch_details;
 
     logic trace_can_accept1;
     logic trace_can_accept2;
@@ -452,6 +465,8 @@ module ooo_pipeline_npc_core_top #(
             DECODE_DISPATCH_FALLTHROUGH_ENABLE),
         .FETCH_DECODE_FALLTHROUGH_ENABLE(
             FETCH_DECODE_FALLTHROUGH_ENABLE),
+        .FRONTEND_CAUSAL_REQUEST_CUT_ENABLE(
+            FRONTEND_CAUSAL_REQUEST_CUT_ENABLE),
         .FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE(
             FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE),
         .ORDERED_TARGET_PREFETCH_ORACLE_ENABLE(
@@ -492,6 +507,10 @@ module ooo_pipeline_npc_core_top #(
             SPECULATIVE_STORE_DISPATCH_ENABLE),
         .STRUCTURAL_THROUGHPUT_ORACLE_ENABLE(
             STRUCTURAL_THROUGHPUT_ORACLE_ENABLE),
+        .ISSUE_SERVICE_ORACLE_ENABLE(ISSUE_SERVICE_ORACLE_ENABLE),
+        .STABLE_ENTRY_IQ_ENABLE(STABLE_ENTRY_IQ_ENABLE),
+        .IQ_SPLIT_PAYLOAD_READ_ENABLE(IQ_SPLIT_PAYLOAD_READ_ENABLE),
+        .ROB_INDEXED_SERVICE_LEVEL(ROB_INDEXED_SERVICE_LEVEL),
         .SINGLETON_COALESCE_ORACLE_ENABLE(
             SINGLETON_COALESCE_ORACLE_ENABLE),
         .PARTIAL_PAIR_ORACLE_ENABLE(PARTIAL_PAIR_ORACLE_ENABLE),
@@ -601,6 +620,15 @@ module ooo_pipeline_npc_core_top #(
         .perf_retirement_chain_o(perf_retirement_chain_o),
         .perf_complex_retire_pairing_o(perf_complex_retire_pairing_o),
         .perf_completion_ownership_o(perf_completion_ownership_o),
+        .perf_issue_service_candidates0_o(
+            perf_issue_service_candidates0_o),
+        .perf_issue_service_candidates1_o(
+            perf_issue_service_candidates1_o),
+        .perf_issue_service_dispatch_details_o(
+            pipeline_issue_service_dispatch_details),
+        .perf_issue_service_events_o(perf_issue_service_events_o),
+        .perf_issue_service_capacity_o(perf_issue_service_capacity_o),
+        .perf_issue_service_accepts_o(perf_issue_service_accepts_o),
         .perf_serial_attribution_o(perf_serial_attribution_o),
         .perf_branch_resolution_o(perf_branch_resolution_o),
         .perf_target_line_o(perf_target_line_o),
@@ -986,9 +1014,23 @@ module ooo_pipeline_npc_core_top #(
         .debug_store_fallthrough_valid_o(),
         .debug_store_fallthrough_accept_o(),
         .debug_store_fallthrough_capture_o(),
+        .debug_issue_registered_credit_o(serial_issue_registered_credit),
         .fallthrough_conservation_error_o(
             serial_fallthrough_conservation_error)
     );
+
+    always_comb begin
+        perf_issue_service_dispatch_details_o =
+            pipeline_issue_service_dispatch_details;
+        if (ISSUE_SERVICE_ORACLE_ENABLE) begin
+            perf_issue_service_dispatch_details_o[56] =
+                serial_issue_registered_credit[0];
+            perf_issue_service_dispatch_details_o[57] =
+                serial_issue_registered_credit[1];
+            perf_issue_service_dispatch_details_o[58] =
+                serial_issue_registered_credit[2];
+        end
+    end
 
     ooo_commit_trace_adapter #(
         .DUAL_TRACE_SINK_ENABLE(DUAL_TRACE_SINK_ENABLE)
