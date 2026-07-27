@@ -28,7 +28,7 @@ CoreMark score。后者目前为 `—`。
 | Profile | Timed cycles / instructions | Timed CPI | CoreMark/MHz | Whole cycles / instructions | Whole CPI | 状态 |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | 4,542,529 / 3,059,106 | 1.484920431 | 2.201416876 | 4,578,065 / 3,081,085 | 1.485861312 | `verified`，difftest PASS；`evidence:coremark_public_current` |
-| `rv32ima_sv32_linux` | 5,278,164 / 3,059,140 | 1.725375105 | 1.894598197 | 5,613,603 / 3,252,481 | 1.725944902 | `verified`，difftest PASS；`evidence:coremark_public_current` |
+| `rv32ima_sv32_linux` | 5,278,164 / 3,059,140 | 1.725375105 | 1.894598197 | 5,613,603 / 3,252,481 | 1.725944902 | `historical_verified`（`abf66cad`），difftest PASS；E1 尚未提升 |
 | `rv32im_ooo_4k` | 2,691,933 / 3,059,106 | 0.879973757 | 3.714802709 | 2,718,727 / 3,081,116 | 0.882383851 | `provisional`，self-check PASS、双退休 MMIO difftest 歧义；`evidence:coremark_public_current` / `nonclaim:ooo_public_coremark_runtime_provisional` |
 
 Single/OoO 使用同一 hash-locked M-mode binary，Linux 使用 hash-locked Sv32
@@ -54,9 +54,11 @@ CoreMark marker 区间完全一致：
 | 私有 NPC + measurement-only observer | 313,889 / 184,284 | 5,278,164 / 3,059,140 | 21,426 / 9,025 | 5,613,479 / 3,252,449 | `evidence:coremark_public_current` |
 | 公开 headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
-两边 timed CPI 都是 1.725375105（`evidence:coremark_public_current`）。Whole-program
+两边 timed CPI 都是 1.725375105（`evidence:coremark_public_current`）。这组证据锁定在
+`abf66cad`；当前 E1 `bee5b918` 只改变 ICache 异常 metadata ownership，但仍需用同一
+binary/config 重跑后才能成为当前 Profile claim。Whole-program
 差异由旧 harness 的 reset/计数索引和结束 UART/terminal 边界解释，不是 RTL 或
-CoreMark 主循环差异。因此当前公开 Linux 数字已经与性能较好的 checkpoint 同步。
+CoreMark 主循环差异。因此该历史公开数字与当时较快 checkpoint 同步，但未重标为 E1 结果。
 
 ### WRITE_ALLOCATE 诊断
 

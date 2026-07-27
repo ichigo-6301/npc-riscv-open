@@ -12,16 +12,13 @@ import re
 
 EXPECTED_STATUS = {
     "rv32im_single_perf": ("verified", "pass"),
-    "rv32ima_sv32_linux": ("verified", "pass"),
+    "rv32ima_sv32_linux": ("historical_verified", "pass"),
     "rv32im_ooo_4k": ("provisional", "not_run_dual_retire_mmio_ambiguity"),
 }
 EXPECTED_CLAIMS = {
     "single_public_coremark_timed_cpi": ("rv32im_single_perf", "timed_cpi"),
     "single_public_coremark_per_mhz": ("rv32im_single_perf", "coremark_per_mhz"),
     "single_public_coremark_whole_cpi": ("rv32im_single_perf", "whole_cpi"),
-    "linux_public_coremark_timed_cpi": ("rv32ima_sv32_linux", "timed_cpi"),
-    "linux_public_coremark_per_mhz": ("rv32ima_sv32_linux", "coremark_per_mhz"),
-    "linux_public_coremark_whole_cpi": ("rv32ima_sv32_linux", "whole_cpi"),
 }
 
 
@@ -207,7 +204,7 @@ def check_evidence(root: Path, manifest: dict, errors: list[str]) -> None:
                         f"{document.relative_to(root)} lacks {profile} metric {value}"
                     )
     parity = evidence.get("linux_parity")
-    if not isinstance(parity, dict) or parity.get("status") != "verified":
+    if not isinstance(parity, dict) or parity.get("status") != "historical_verified":
         errors.append("Linux private/public parity evidence is missing")
     elif (
         parity.get("timed_match") is not True

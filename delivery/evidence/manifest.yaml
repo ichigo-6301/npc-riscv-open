@@ -7,9 +7,9 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "251b01c4dcb59d113df348d8a625fde1c03941decba781205495022d00240d1a",
+      "sha256": "3846367e167a54abab7ef812adbf6db59c571f614f9968fdf0699105cba46381",
       "snapshot_id": "v0.1.0",
-      "source_ref": "9509c71d87552d0c2c7f94ebbeac237180da08a1",
+      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -21,9 +21,9 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "27239d81e11a112193039bcde7087efe9b28e71aa531d84c41aa1ab52dec2bb4",
+      "sha256": "b7ee5c4f2c803d44aff39bb4fe10727b6bb71947824ec91cb2ce3d8d9ed8c5d6",
       "snapshot_id": "v0.1.0",
-      "source_ref": "9509c71d87552d0c2c7f94ebbeac237180da08a1",
+      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -37,7 +37,7 @@
       "public": true,
       "sha256": "0bfa84fd7a91f9dad763876ce24775943bfa5f091679b0fa8e5ab0c17037701b",
       "snapshot_id": "v0.1.0",
-      "source_ref": "9509c71d87552d0c2c7f94ebbeac237180da08a1",
+      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -46,17 +46,14 @@
       "claims": [
         "single_public_coremark_timed_cpi",
         "single_public_coremark_per_mhz",
-        "single_public_coremark_whole_cpi",
-        "linux_public_coremark_timed_cpi",
-        "linux_public_coremark_per_mhz",
-        "linux_public_coremark_whole_cpi"
+        "single_public_coremark_whole_cpi"
       ],
       "id": "coremark_public_current",
       "path": "../evidence/performance/coremark.json",
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "601a9869d215cd13a5c346a22ea4eb1b932452e29726dd5cb63d4955f47273b4",
+      "sha256": "342b5a354c7063c3e7314163d883240ecaaf8d5fefb4fba771622d3968e10d2a",
       "snapshot_id": "v0.1.0",
       "source_ref": "7d30cf086c857fae6cbace0dd52b4bd3dd6319cb",
       "status": "partial",
@@ -72,7 +69,7 @@
       "public": true,
       "sha256": "b3e592c1a34b84e0a8a0a1d62704c8bbe5b903abdf98a6f38e949a0ef39781aa",
       "snapshot_id": "v0.1.0",
-      "source_ref": "9509c71d87552d0c2c7f94ebbeac237180da08a1",
+      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
       "status": "verified",
       "tool": "public CoreMark reproduction procedure",
       "type": "public_performance_summary"

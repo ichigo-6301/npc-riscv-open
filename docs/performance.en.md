@@ -31,7 +31,7 @@ the latter remains `—`.
 | Profile | Timed cycles / instructions | Timed CPI | CoreMark/MHz | Whole cycles / instructions | Whole CPI | State |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | 4,542,529 / 3,059,106 | 1.484920431 | 2.201416876 | 4,578,065 / 3,081,085 | 1.485861312 | `verified`, difftest PASS; `evidence:coremark_public_current` |
-| `rv32ima_sv32_linux` | 5,278,164 / 3,059,140 | 1.725375105 | 1.894598197 | 5,613,603 / 3,252,481 | 1.725944902 | `verified`, difftest PASS; `evidence:coremark_public_current` |
+| `rv32ima_sv32_linux` | 5,278,164 / 3,059,140 | 1.725375105 | 1.894598197 | 5,613,603 / 3,252,481 | 1.725944902 | `historical_verified` at `abf66cad`, difftest PASS; E1 is not promoted yet |
 | `rv32im_ooo_4k` | 2,691,933 / 3,059,106 | 0.879973757 | 3.714802709 | 2,718,727 / 3,081,116 | 0.882383851 | `provisional`, self-check PASS and dual-retire MMIO difftest ambiguity; `evidence:coremark_public_current` / `nonclaim:ooo_public_coremark_runtime_provisional` |
 
 Single/OoO use the same hash-locked M-mode binary; Linux uses a hash-locked
@@ -58,10 +58,13 @@ CoreMark marker interval in both harnesses:
 | Private NPC plus measurement-only observer | 313,889 / 184,284 | 5,278,164 / 3,059,140 | 21,426 / 9,025 | 5,613,479 / 3,252,449 | `evidence:coremark_public_current` |
 | Public headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
-Both timed CPI values are 1.725375105 (`evidence:coremark_public_current`). The
+Both timed CPI values are 1.725375105 (`evidence:coremark_public_current`). This
+evidence is locked to `abf66cad`; current E1 `bee5b918` changes only I-cache
+exception-metadata ownership, but still needs the same binary/config rerun before
+promotion. The
 whole-program difference is explained by the old harness reset/counter index
 and final UART/terminal boundary, not RTL or the CoreMark loop. The current
-public Linux number is therefore synchronized with the faster checkpoint.
+historical public Linux number is synchronized with that faster checkpoint and is not relabeled as E1.
 
 ### WRITE_ALLOCATE diagnostic
 

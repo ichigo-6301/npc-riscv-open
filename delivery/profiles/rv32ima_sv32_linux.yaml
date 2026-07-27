@@ -1,5 +1,5 @@
 {
-  "commit_sha": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+  "commit_sha": "bee5b91866c0d76d8335188e46240adb0fa76a44",
   "default_run_config": "rv32ima_sv32_linux_smoke",
   "design_config": "rv32ima_sv32_linux",
   "intent": "Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation",
@@ -13,12 +13,12 @@
     "headless_verilator": true,
     "native_rtl_preserved": true,
     "nvboard_excluded": true,
-    "verified_performance_claims": true
+    "verified_performance_claims": false
   },
   "public_filelist": "filelists/rv32ima_sv32_linux.f",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
-  "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+  "source_ref": "bee5b91866c0d76d8335188e46240adb0fa76a44",
   "source_root": "npc",
   "source_set": "rv32ima_sv32_linux",
   "stages": {

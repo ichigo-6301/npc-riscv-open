@@ -2,12 +2,13 @@
   "allowlist_manifest": "provenance/source_allowlist.json",
   "allowlist_profile_key": "rv32ima_sv32_linux",
   "blob_hash_policy": "required_at_export",
-  "commit_sha": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+  "commit_sha": "bee5b91866c0d76d8335188e46240adb0fa76a44",
   "compatibility_notes": [
     "The exact per-file source, destination, Git blob, byte count, and SHA256 records live only in the canonical JSON allowlist.",
     "OpenSBI, Linux, NEMU, AM, DTB, and KVM payloads are external dependencies and are never source-exported by this set.",
     "The source snapshot includes the later structural RTL layout (CSR, frontend, LSU, MMU, pipeline, statistic, and top subdirectories); this is a source refactor, not a change to the public wrapper ABI.",
-    "The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate validation gates."
+    "The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate validation gates.",
+    "E1 localizes I-cache exception metadata; performance evidence from abf66cad remains historical until rerun on this exact source lock."
   ],
   "destination_root": "rtl/profiles/rv32ima_sv32_linux",
   "groups": {
@@ -84,7 +85,7 @@
   "source_count": {
     "rtl_files": 51
   },
-  "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+  "source_ref": "bee5b91866c0d76d8335188e46240adb0fa76a44",
   "source_root": "npc",
   "source_set_id": "rv32ima_sv32_linux"
 }

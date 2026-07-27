@@ -209,6 +209,7 @@ module ICache #(
     wire pipe_resp_fire = pipe_resp_valid && pipe_resp_ready;
     wire lower_req_fire = lower_req_valid && lower_req_ready;
     wire lower_resp_fire = lower_resp_valid && lower_resp_ready;
+    wire pipe_exception_capture = pipe_req_fire && pipe_req_exception_valid;
 
     wire [SET_BITS-1:0] cpu_req_set = cpu_req_addr[OFFSET_BITS + SET_BITS - 1:OFFSET_BITS];
     wire [WORD_BITS-1:0] cpu_req_word = cpu_req_addr[OFFSET_BITS - 1:2];
@@ -503,6 +504,10 @@ module ICache #(
                 pipe_resp_miss <= pipe_data_miss_r;
                 pipe_data_valid <= 1'b0;
             end
+            if (pipe_exception_capture) begin
+                pipe_data_exception_cause_r <= pipe_req_exception_cause;
+                pipe_data_exception_tval_r <= pipe_req_exception_tval;
+            end
 
 `ifdef NPC_USE_DPI
 `ifdef NPC_CACHE_STAT
@@ -614,8 +619,6 @@ module ICache #(
                             pipe_data_pred_bht_state_r <= pipe_req_pred_bht_state;
                             pipe_data_pred_pht_idx_r <= pipe_req_pred_pht_idx;
                             pipe_data_exception_valid_r <= 1'b1;
-                            pipe_data_exception_cause_r <= pipe_req_exception_cause;
-                            pipe_data_exception_tval_r <= pipe_req_exception_tval;
                             pipe_data_hit_r <= 1'b0;
                             pipe_data_miss_r <= 1'b0;
                         end else if (pipe_req_uncached) begin
@@ -654,8 +657,6 @@ module ICache #(
                             pipe_data_pred_bht_state_r <= pipe_req_pred_bht_state;
                             pipe_data_pred_pht_idx_r <= pipe_req_pred_pht_idx;
                             pipe_data_exception_valid_r <= 1'b0;
-                            pipe_data_exception_cause_r <= 32'b0;
-                            pipe_data_exception_tval_r <= 32'b0;
                             pipe_data_hit_r <= 1'b1;
                             pipe_data_miss_r <= 1'b0;
                         end else begin
