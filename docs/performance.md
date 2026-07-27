@@ -55,8 +55,9 @@ CoreMark marker 区间完全一致：
 | 公开 headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
 两边 timed CPI 都是 1.725375105（`evidence:coremark_public_current`）。这组证据锁定在
-`abf66cad`；当前 source lock `34f13ec4` 包含 E1 的 ICache 异常 metadata ownership
-修改，以及不改变逻辑的 DCache/trigger 声明顺序兼容修复，但仍需用同一 binary/config 重跑后
+`abf66cad`；当前 source lock `d3caf5fe` 包含 E1 的 ICache 异常 metadata ownership
+修改、DCache/trigger 声明顺序修复，以及仅对 `NPC_ASIC` 生效的 CSR reset 展开；
+生产仿真路径不变，但仍需用同一 binary/config 重跑后
 才能成为当前 Profile claim。Whole-program
 差异由旧 harness 的 reset/计数索引和结束 UART/terminal 边界解释，不是 RTL 或
 CoreMark 主循环差异。因此该历史公开数字与当时较快 checkpoint 同步，但未重标为 E1 结果。
