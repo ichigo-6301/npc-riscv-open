@@ -341,7 +341,7 @@
       "profile_id": "rv32ima_sv32_linux",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 51,
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860"
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01"
     },
     {
       "abi": "ilp32",

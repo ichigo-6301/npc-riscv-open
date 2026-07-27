@@ -68,8 +68,9 @@ newer.
 The first Linux scan uses the RTL timer default. Before physical handoff it must
 be resynthesized at the chosen `F_pnr_mhz` with
 `NPC_TIMER_CLK_HZ=F_pnr_mhz * 1_000_000` and a 1 MHz
-timebase. Linux is locked to `995c7d98`, which only moves two DCache declarations
-for DC O-2018 compatibility on top of E1 `bee5b918`. The old `abf66cad`
+timebase. Linux is locked to `34f13ec4`, which only moves DCache declarations
+and the trigger-enable localparam ahead of task references for DC O-2018
+compatibility on top of E1 `bee5b918`. The old `abf66cad`
 CoreMark row stays historical until an exact rerun.
 
 ## OoO A3 Comparison

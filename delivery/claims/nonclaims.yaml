@@ -73,7 +73,7 @@
       },
       "id": "linux_prior_checkpoint_cpi_not_claimed",
       "profile": "rv32ima_sv32_linux",
-      "profile_source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "profile_source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "public": true,
       "reason": "The value belongs to the earlier frozen source checkpoint and is retained only to show the measured optimization delta",
       "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
@@ -87,7 +87,7 @@
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "statement": "A complete Linux distribution boot is not claimed",
       "status": "not_claimed"
     },
@@ -98,7 +98,7 @@
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "No source-matched implementation evidence has been selected for this profile",
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "statement": "Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed",
       "status": "not_claimed"
     },
@@ -110,7 +110,7 @@
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "WRITE_ALLOCATE=1 adds 54,816 whole-program cycles but 54,999 of those cycles occur before the timed marker; the timed interval is 245 cycles shorter rather than slower",
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "statement": "A one-percent CoreMark-loop speedup from disabling D-cache write allocation is not claimed",
       "status": "not_claimed"
     },
@@ -197,13 +197,13 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "E1 base bee5b918 plus declaration-only DC compatibility source 995c7d98; rerun exact binary, config and profile-matched difftest before promotion",
+      "conditions": "E1 base bee5b918 plus declaration-only DC compatibility source 34f13ec4; rerun exact binary, config and profile-matched difftest before promotion",
       "evidence_status": "historical_public_reference_only",
       "id": "linux_e1_coremark_not_yet_reproduced",
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "The prior verified marker run is byte-locked to abf66cad and is retained only as historical evidence",
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "statement": "The E1 Linux source plus its DC compatibility commit has no promoted public CoreMark result yet",
       "status": "not_claimed"
     }
