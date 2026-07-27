@@ -1,0 +1,11 @@
+# Copy to ignored flows/local/asic/dc_setup.tcl and keep licensed paths local.
+if {![info exists ::env(NPC_ASIC_STDCELL_DB)] || $::env(NPC_ASIC_STDCELL_DB) eq ""} {
+  error "Missing NPC_ASIC_STDCELL_DB"
+}
+set npc_asic_stdcell_db $::env(NPC_ASIC_STDCELL_DB)
+if {![file isfile $npc_asic_stdcell_db]} {
+  error "Missing standard-cell DB: $npc_asic_stdcell_db"
+}
+set search_path [list [file dirname $npc_asic_stdcell_db]]
+set target_library [list $npc_asic_stdcell_db]
+set link_library [concat "*" $target_library]

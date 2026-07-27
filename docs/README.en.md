@@ -12,7 +12,7 @@ conditions.
 | Profile | Architecture | Current public validation state |
 | --- | --- | --- |
 | `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, regression, and hash-locked CoreMark+difftest verified |
-| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | bounded architecture tests and hash-locked CoreMark+difftest verified; complete Linux not claimed |
+| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | E1 bounded architecture checks await this sync validation; the `abf66cad` CoreMark+difftest row is historical; complete Linux not claimed |
 | `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure and dual-width regression verified; CoreMark provisional at the dual-retire MMIO difftest boundary |
 
 The three RTL sets are not one parameterized implementation. One build compiles
@@ -30,6 +30,8 @@ debug observation.
 - [Simulation](simulation.en.md): Profile selection, images, tracing, and
   optional difftest.
 - [Verification](verification.en.md): test scope, current results, and gaps.
+- [No-SRAM ASIC implementation](asic-implementation.en.md): DC,
+  OpenROAD/OpenRCX, PrimeTime, and evidence gates.
 - [Limitations](limitations.en.md): unestablished feature, PPA, and system-level
   conclusions.
 

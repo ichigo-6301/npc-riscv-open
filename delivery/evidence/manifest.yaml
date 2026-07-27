@@ -7,9 +7,9 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "3846367e167a54abab7ef812adbf6db59c571f614f9968fdf0699105cba46381",
+      "sha256": "c8a6c3d49e9ebd43804b15eeaa84a2d010cfb26dc954fe097667631e620156e2",
       "snapshot_id": "v0.1.0",
-      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
+      "source_ref": "5935c50e6dc664daac052872bb70f7a9ab725742",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -21,9 +21,9 @@
       "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "b7ee5c4f2c803d44aff39bb4fe10727b6bb71947824ec91cb2ce3d8d9ed8c5d6",
+      "sha256": "087435dac4b6c62d16e3d9a6aec74dd2a4b7dedf12e8f7fe9e5dec57198432ea",
       "snapshot_id": "v0.1.0",
-      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
+      "source_ref": "5935c50e6dc664daac052872bb70f7a9ab725742",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -37,7 +37,7 @@
       "public": true,
       "sha256": "0bfa84fd7a91f9dad763876ce24775943bfa5f091679b0fa8e5ab0c17037701b",
       "snapshot_id": "v0.1.0",
-      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
+      "source_ref": "5935c50e6dc664daac052872bb70f7a9ab725742",
       "status": "verified",
       "tool": "deterministic public exporter and native-Linux fresh-clone checks",
       "type": "public_generated_record"
@@ -69,7 +69,7 @@
       "public": true,
       "sha256": "b3e592c1a34b84e0a8a0a1d62704c8bbe5b903abdf98a6f38e949a0ef39781aa",
       "snapshot_id": "v0.1.0",
-      "source_ref": "5817a6adbd90113e8fb3ebb77638a287ff6fee42",
+      "source_ref": "5935c50e6dc664daac052872bb70f7a9ab725742",
       "status": "verified",
       "tool": "public CoreMark reproduction procedure",
       "type": "public_performance_summary"

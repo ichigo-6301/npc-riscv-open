@@ -75,6 +75,19 @@ config NPC_ITRACE_PATH
 
 endmenu
 
+menu "ASIC implementation controls"
+
+config NPC_ASIC_REGISTER_EXPANDED
+    bool "Enable the register-expanded Nangate45 implementation profile"
+    default n
+
+config NPC_ASIC_MEMORY_MODE
+    string
+    default "registers" if NPC_ASIC_REGISTER_EXPANDED
+    default "simulation"
+
+endmenu
+
 menu "Public verification stages"
 
 config NPC_RUN_LINT

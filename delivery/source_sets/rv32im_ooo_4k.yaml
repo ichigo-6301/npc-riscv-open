@@ -4,7 +4,7 @@
   "blob_hash_policy": "required_at_export",
   "commit_sha": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "compatibility_notes": [
-    "The exact production OOO_NPC_VSRCS closure plus two includes is defined only in the canonical JSON allowlist.",
+    "The exact production OOO_NPC_VSRCS closure, no-DPI synthesis top, and two includes are defined only in the canonical JSON allowlist; the simulation filelist excludes the synthesis-only top.",
     "Accepted mechanism parameters are fixed by the rv32im_4k_v1 profile; all 17 observation Oracles remain disabled."
   ],
   "destination_root": "rtl/profiles/rv32im_ooo_4k",
@@ -62,7 +62,7 @@
   "snapshot_id": "v0.1.0",
   "source_count": {
     "include_files": 2,
-    "rtl_files": 60
+    "rtl_files": 61
   },
   "source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "source_root": ".",

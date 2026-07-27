@@ -13,14 +13,20 @@ CONFIG ?= $(ROOT)/.config
 DEFCONFIG ?= configs/rv32im_ooo_4k_defconfig
 PYTHON ?= python3
 FLOWCTL := $(PYTHON) "$(ROOT)/flows/scripts/flowctl.py" --root "$(ROOT)" --config "$(CONFIG)"
+ASICCTL := $(PYTHON) "$(ROOT)/flows/scripts/asicctl.py" --root "$(ROOT)" --config "$(CONFIG)"
+ASIC_OOO_MODE ?= auto
 
 -include $(CONFIG)
 
 .DEFAULT_GOAL := help
 .PHONY: help defconfig rv32im_single_perf_defconfig rv32ima_sv32_linux_defconfig \
-        rv32im_ooo_4k_defconfig menuconfig showconfig config-check source-check \
+        rv32im_ooo_4k_defconfig rv32im_single_perf_asic_defconfig \
+        rv32ima_sv32_linux_asic_defconfig rv32im_ooo_4k_asic_defconfig \
+        menuconfig showconfig config-check source-check \
         public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
-        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check verify-checksums ci
+        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check verify-checksums \
+        asic-config-check dc-matrix dc-matrix-dry-run pnr pnr-dry-run sta sta-dry-run \
+        asic-evidence-check a3-dc-eval ci
 
 help:
 	@printf '%s\n' \
@@ -37,6 +43,12 @@ help:
 	  '  make difftest                            Run strict difftest using the local adapter' \
 	  '  make coremark / coremark-difftest         Run hash-locked external CoreMark inputs' \
 	  '  make performance-check                    Validate tracked performance evidence' \
+	  '  make <profile>_asic_defconfig             Select a register-expanded ASIC Profile' \
+	  '  make asic-config-check                    Validate ASIC source/config closure' \
+	  '  make dc-matrix[-dry-run]                  Run/show the selected DC frequency scan' \
+	  '  make pnr[-dry-run]                        Run/show mapped-netlist OpenROAD/OpenRCX' \
+	  '  make sta[-dry-run]                        Run/show same-run PrimeTime STA' \
+	  '  make a3-dc-eval                           Evaluate three-way OoO A3 DC evidence' \
 	  '  make runtime-tests                       Run dependency-free control-plane tests' \
 	  '  make docs-check                           Validate bilingual docs and metric references' \
 	  '  make verify-checksums                     Verify the exported SHA256 manifest' \
@@ -54,6 +66,15 @@ rv32ima_sv32_linux_defconfig:
 
 rv32im_ooo_4k_defconfig:
 	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_ooo_4k_defconfig"
+
+rv32im_single_perf_asic_defconfig:
+	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_single_perf_asic_defconfig"
+
+rv32ima_sv32_linux_asic_defconfig:
+	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32ima_sv32_linux_asic_defconfig"
+
+rv32im_ooo_4k_asic_defconfig:
+	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_ooo_4k_asic_defconfig"
 
 menuconfig:
 	@test -f "$(CONFIG)" || $(MAKE) defconfig
@@ -106,6 +127,38 @@ performance-check:
 
 opensbi-smoke:
 	@$(FLOWCTL) opensbi-smoke
+
+asic-config-check:
+	@$(ASICCTL) config-check --ooo-mode "$(ASIC_OOO_MODE)"
+
+dc-matrix:
+	@$(ASICCTL) dc-matrix --ooo-mode "$(ASIC_OOO_MODE)" $(ASIC_DC_ARGS)
+
+dc-matrix-dry-run:
+	@$(ASICCTL) dc-matrix --dry-run --ooo-mode "$(ASIC_OOO_MODE)" $(ASIC_DC_ARGS)
+
+pnr:
+	@$(ASICCTL) pnr --ooo-mode "$(ASIC_OOO_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
+
+pnr-dry-run:
+	@$(ASICCTL) pnr --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
+
+sta:
+	@$(ASICCTL) sta --ooo-mode "$(ASIC_OOO_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
+
+sta-dry-run:
+	@$(ASICCTL) sta --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
+
+asic-evidence-check:
+	@$(ASICCTL) evidence-check --build-root "$(NPC_ASIC_BUILD_ROOT)"
+
+a3-dc-eval:
+	@$(ASICCTL) a3-dc-eval \
+	  --legacy "$(NPC_ASIC_A3_LEGACY_RUN)" \
+	  --split-off "$(NPC_ASIC_A3_SPLIT_OFF_RUN)" \
+	  --a3 "$(NPC_ASIC_A3_RUN)" \
+	  --cpi-summary "$(NPC_ASIC_A3_CPI_SUMMARY)" \
+	  --output "$(NPC_ASIC_A3_EVAL_OUTPUT)"
 
 runtime-tests:
 	@$(PYTHON) -m unittest discover -s "$(ROOT)/tests" -p 'test_*.py'

@@ -382,7 +382,7 @@
       "issue_width": 2,
       "memory_binding": "behavioral_dpi",
       "microarchitecture": "dual_issue_out_of_order",
-      "module_count": 61,
+      "module_count": 62,
       "modules": [
         "alu_issue_queue_1w",
         "alu_wb_buffer_1w",
@@ -429,6 +429,7 @@
         "ooo_pipeline_redirect_frontend_2w",
         "ooo_pipeline_redirect_frontend_standalone_top",
         "ooo_pipeline_serial_executor_1w",
+        "ooo_pipeline_synth_core_top",
         "ooo_pipeline_tagged_dpi_mem_bridge_1w",
         "ooo_pipeline_tagged_dpi_mem_bridge_2entry",
         "ooo_pmem_ifetch",
@@ -449,7 +450,7 @@
       "native_top": "ooo_npc_top",
       "profile_id": "rv32im_ooo_4k",
       "public_top": "npc_public_sim_top",
-      "rtl_file_count": 62,
+      "rtl_file_count": 63,
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391"
     }
   ],

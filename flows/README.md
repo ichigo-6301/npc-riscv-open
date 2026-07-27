@@ -29,3 +29,8 @@ not copied into the repository.
 
 Commercial EDA setup, PDKs, libraries, memory macros, credentials, and host
 absolute paths are outside this control plane.
+
+The register-expanded ASIC adapters are documented in
+[`docs/asic-implementation.md`](../docs/asic-implementation.md). They keep DC,
+OpenROAD/OpenRCX, and PrimeTime as separate fail-closed stages and never copy
+commercial libraries or raw implementation artifacts into the public tree.

@@ -49,6 +49,8 @@ ALLOWED_CONFIG_KEYS = {
     "CONFIG_NPC_VCD_PATH",
     "CONFIG_NPC_ITRACE",
     "CONFIG_NPC_ITRACE_PATH",
+    "CONFIG_NPC_ASIC_REGISTER_EXPANDED",
+    "CONFIG_NPC_ASIC_MEMORY_MODE",
     "CONFIG_NPC_RUN_LINT",
     "CONFIG_NPC_RUN_SMOKE",
     "CONFIG_NPC_RUN_REGRESSION",
@@ -667,6 +669,11 @@ def declared_allowlist(root: Path, profile: str, source_data: Mapping[str, Any])
                     digest = entry.get("sha256")
                     if not isinstance(destination, str) or not isinstance(digest, str):
                         raise FlowError("incomplete source allowlist entry for {}".format(profile))
+                    roles = entry.get("roles", ["simulation", "asic"])
+                    if not isinstance(roles, list) or any(not isinstance(role, str) for role in roles):
+                        raise FlowError("invalid source roles for {}".format(profile))
+                    if "simulation" not in roles:
+                        continue
                     result.append({"destination": destination, "sha256": digest})
                 return result
     raise FlowError("source allowlist {} has no entries for {}".format(manifest_path, key))

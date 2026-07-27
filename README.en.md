@@ -67,7 +67,7 @@ assumption and is not an absolute CoreMark score.
 | Profile | CoreMark timed CPI | CoreMark/MHz | Whole-program CPI | Evidence state |
 | --- | ---: | ---: | ---: | --- |
 | `rv32im_single_perf` | 1.484920431 | 2.201416876 | 1.485861312 | `verified`, NEMU difftest PASS |
-| `rv32ima_sv32_linux` | 1.725375105 | 1.894598197 | 1.725944902 | `verified`, private/public timed interval identical, NEMU difftest PASS |
+| `rv32ima_sv32_linux` | 1.725375105 | 1.894598197 | 1.725944902 | `historical_verified` at `abf66cad`; E1 `bee5b918` awaits an exact-input rerun |
 | `rv32im_ooo_4k` | 0.879973757 | 3.714802709 | 0.882383851 | `provisional`, self-check PASS; dual-retire MMIO difftest ambiguity unresolved |
 
 No closed frequency, area, power, or silicon data is currently available. The

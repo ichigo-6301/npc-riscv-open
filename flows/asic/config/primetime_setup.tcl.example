@@ -1,0 +1,8 @@
+# Copy to ignored flows/local/asic/primetime_setup.tcl on IC_EDA.
+if {![info exists ::env(NPC_ASIC_STDCELL_DB)] || $::env(NPC_ASIC_STDCELL_DB) eq ""} {
+  error "Missing NPC_ASIC_STDCELL_DB"
+}
+set npc_asic_stdcell_db $::env(NPC_ASIC_STDCELL_DB)
+if {![file isfile $npc_asic_stdcell_db]} {
+  error "Missing standard-cell DB: $npc_asic_stdcell_db"
+}

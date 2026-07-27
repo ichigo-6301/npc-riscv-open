@@ -1,0 +1,63 @@
+{
+  "schema": "npc-riscv-open/asic-register-expanded-v1",
+  "technology": "Nangate45",
+  "memory_mode": "registers",
+  "macro_count": 0,
+  "libraries": {
+    "liberty_sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+    "db_sha256": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5",
+    "pvt": "Nangate45 typical 1.1 V 25 C"
+  },
+  "orfs": {
+    "commit": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+    "image_digest": "sha256:5fb6465e18c42bfaa19f0ba40190f1c75cb6118feffd236b13ed8081ff3f573f",
+    "platform": "nangate45"
+  },
+  "clock_uncertainty_setup_ns": 0.1,
+  "clock_uncertainty_hold_ns": 0.0,
+  "backend_ratio": 0.8,
+  "backend_frequency_quantum_mhz": 25,
+  "profiles": {
+    "rv32im_single_perf": {
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "top": "cpu_top",
+      "clock_port": "clk",
+      "reset_port": "rst_n",
+      "filelist": "filelists/asic/rv32im_single_perf.f",
+      "dc_frequencies_mhz": [800, 700, 600, 500],
+      "elaboration_parameters": []
+    },
+    "rv32ima_sv32_linux": {
+      "source_commit": "bee5b91866c0d76d8335188e46240adb0fa76a44",
+      "top": "cpu_top",
+      "clock_port": "clk",
+      "reset_port": "rst_n",
+      "filelist": "filelists/asic/rv32ima_sv32_linux.f",
+      "dc_frequencies_mhz": [500, 400, 350, 300, 250],
+      "timer_timebase_hz": 1000000,
+      "elaboration_parameters": []
+    },
+    "rv32im_ooo_4k": {
+      "top": "ooo_pipeline_synth_core_top",
+      "clock_port": "clk",
+      "reset_port": "reset",
+      "filelist": "filelists/asic/rv32im_ooo_4k.f",
+      "dc_frequencies_mhz": [600, 500, 400, 300, 200],
+      "source_variants": {
+        "99fcc2be539eabb078c0d73b26a7ef2c00071391": {
+          "allowed_modes": ["legacy"],
+          "default_mode": "legacy"
+        },
+        "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0": {
+          "allowed_modes": ["a3_split_off", "a3"],
+          "default_mode": "a3"
+        }
+      },
+      "elaboration_parameter_files": {
+        "legacy": "flows/asic/parameters/rv32im_ooo_4k_legacy.tcl",
+        "a3_split_off": "flows/asic/parameters/rv32im_ooo_4k_a3_split_off.tcl",
+        "a3": "flows/asic/parameters/rv32im_ooo_4k_a3.tcl"
+      }
+    }
+  }
+}
