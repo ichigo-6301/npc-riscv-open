@@ -341,7 +341,7 @@
       "profile_id": "rv32ima_sv32_linux",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 51,
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860"
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01"
     },
     {
       "abi": "ilp32",
@@ -382,7 +382,7 @@
       "issue_width": 2,
       "memory_binding": "behavioral_dpi",
       "microarchitecture": "dual_issue_out_of_order",
-      "module_count": 62,
+      "module_count": 63,
       "modules": [
         "alu_issue_queue_1w",
         "alu_wb_buffer_1w",
@@ -406,6 +406,7 @@
         "ooo_ifetch_target_line_4entry",
         "ooo_issue_operand_elastic_2w",
         "ooo_issue_operand_fu_router_2alu_1lsu",
+        "ooo_issue_service_calendar_selector_2w",
         "ooo_jalr_btb_ras_2w",
         "ooo_load_queue_2entry",
         "ooo_lsu",
@@ -451,7 +452,7 @@
       "profile_id": "rv32im_ooo_4k",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 63,
-      "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391"
+      "source_commit": "94ae2c6fb82d5f077d5cc7a2c131d982ce53e3b0"
     }
   ],
   "project_id": "npc-riscv-open",

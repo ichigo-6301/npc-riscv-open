@@ -29,7 +29,7 @@
       "elaboration_parameters": []
     },
     "rv32ima_sv32_linux": {
-      "source_commit": "995c7d9815396b72cd04ead3d7a17a0805c86860",
+      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
       "top": "cpu_top",
       "clock_port": "clk",
       "reset_port": "rst_n",

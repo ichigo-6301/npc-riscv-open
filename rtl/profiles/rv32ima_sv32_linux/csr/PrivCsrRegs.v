@@ -119,6 +119,12 @@ module PrivCsrRegs #(ADDR_WIDTH = 1, DATA_WIDTH = 1, HART_ID = 32'd0) (
   localparam [31:0] MCOUNTINHIBIT_MASK = 32'h00000007;
   localparam [31:0] COUNTEREN_MASK = 32'h00000007;
 
+`ifdef NPC_TRIGGER_ENABLE
+  localparam TRIGGER_SLOT_ENABLE = 1'b1;
+`else
+  localparam TRIGGER_SLOT_ENABLE = 1'b0;
+`endif
+
   function csr_pmp_hardwired_zero;
     input [11:0] csr_addr;
     begin
@@ -421,12 +427,6 @@ module PrivCsrRegs #(ADDR_WIDTH = 1, DATA_WIDTH = 1, HART_ID = 32'd0) (
       end
     end
   endtask
-
-`ifdef NPC_TRIGGER_ENABLE
-  localparam TRIGGER_SLOT_ENABLE = 1'b1;
-`else
-  localparam TRIGGER_SLOT_ENABLE = 1'b0;
-`endif
 
   wire [6:0] raddr1_real = csr_addr_to_idx(raddr1);
   wire [6:0] waddr1_real = csr_addr_to_idx(waddr1);
