@@ -59,9 +59,10 @@ CoreMark marker interval in both harnesses:
 | Public headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
 Both timed CPI values are 1.725375105 (`evidence:coremark_public_current`). This
-evidence is locked to `abf66cad`; current source lock `34f13ec4` contains the
-E1 I-cache exception-metadata ownership change plus logic-neutral DCache and
-trigger declaration-order compatibility fixes, but still needs the same binary/config
+evidence is locked to `abf66cad`; current source lock `d3caf5fe` contains the
+E1 I-cache exception-metadata ownership change, DCache and trigger declaration-order
+fixes, and a CSR reset expansion active only under `NPC_ASIC`. The production
+simulation path is unchanged, but it still needs the same binary/config
 rerun before promotion. The
 whole-program difference is explained by the old harness reset/counter index
 and final UART/terminal boundary, not RTL or the CoreMark loop. The current

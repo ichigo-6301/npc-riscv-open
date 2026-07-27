@@ -534,14 +534,14 @@
           "sha256": "9d97cef9e8242c88ddb28898676ca5a967e9d45a622c5b5fe98d5da6d25e436d"
         },
         {
-          "blob": "c11c2785a50716f422a4d7f12401e15011882aab",
-          "bytes": 23002,
+          "blob": "9522e89541301ca306b2977c4b032df45c493756",
+          "bytes": 27933,
           "destination": "rtl/profiles/rv32ima_sv32_linux/csr/PrivCsrRegs.v",
           "roles": [
             "simulation",
             "asic"
           ],
-          "sha256": "f1da9554e330a07159a64058700f7c36c4eb029d942e46740008f0033207e9c1"
+          "sha256": "568ec980a2013387655f94cb0169c0bfd60a58842548004713938e5481925791"
         },
         {
           "blob": "0ef38ad9fba1dc58921853684b445fcbf82a4b2e",
@@ -908,7 +908,7 @@
       "profile_id": "rv32ima_sv32_linux",
       "provenance_entries": [],
       "public_root": "rtl/profiles/rv32ima_sv32_linux",
-      "source_commit": "34f13ec49dac1180ee88c05ac125c5a9c8f66b01",
+      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
       "source_root": "npc/vsrc_new",
       "wrapper": "rtl/wrappers/rv32ima_sv32_linux_sim_top.sv"
     },

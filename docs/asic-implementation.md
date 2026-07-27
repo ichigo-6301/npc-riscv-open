@@ -57,8 +57,8 @@ memory bits 为零；register-expanded 和 `macro_count=0` 仍需由 elaboration
 
 Linux 初次扫描使用 RTL 默认 timer clock；进入后端前必须在选定 `F_pnr_mhz` 下重新综合，
 显式传入 `NPC_TIMER_CLK_HZ=F_pnr_mhz * 1_000_000`，timebase保持 1 MHz。Linux 源锁是
-`34f13ec4`：它在 E1 `bee5b918` 之上仅前移 DCache 声明和 trigger-enable localparam，
-以兼容 DC O-2018 的 task 引用顺序；旧
+`d3caf5fe`：它在 E1 `bee5b918` 之上前移 DCache 声明和 trigger-enable localparam，
+并仅在 `NPC_ASIC` 下显式展开 CSR reset，以兼容 DC O-2018；生产仿真路径不变。旧
 `abf66cad` CoreMark 结果只保留为历史证据。
 
 ## OoO A3 对照
