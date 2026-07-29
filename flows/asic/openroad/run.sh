@@ -12,6 +12,7 @@ set -euo pipefail
 : "${NPC_ASIC_CORE_AREA:?Missing NPC_ASIC_CORE_AREA}"
 : "${NPC_ASIC_PLACE_DENSITY:?Missing NPC_ASIC_PLACE_DENSITY}"
 : "${NPC_ASIC_ORFS_IMAGE:?Missing NPC_ASIC_ORFS_IMAGE}"
+: "${NPC_ASIC_ORFS_IMAGE_DIGEST:?Missing NPC_ASIC_ORFS_IMAGE_DIGEST}"
 : "${NPC_ASIC_ORFS_COMMIT:?Missing NPC_ASIC_ORFS_COMMIT}"
 : "${NPC_ASIC_MEMORY_MODE:?Missing NPC_ASIC_MEMORY_MODE}"
 : "${NPC_ASIC_EXPECTED_MACRO_COUNT:?Missing NPC_ASIC_EXPECTED_MACRO_COUNT}"
@@ -38,9 +39,13 @@ case "$NPC_ASIC_MEMORY_MODE" in
   *) echo "Unsupported memory mode: $NPC_ASIC_MEMORY_MODE" >&2; exit 2 ;;
 esac
 
+if [[ ! "$NPC_ASIC_ORFS_IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "NPC_ASIC_ORFS_IMAGE_DIGEST must be a full sha256 digest" >&2
+  exit 2
+fi
 case "$NPC_ASIC_ORFS_IMAGE" in
-  *@sha256:*) ;;
-  *) echo "NPC_ASIC_ORFS_IMAGE must be pinned by repository digest" >&2; exit 2 ;;
+  ?*"@$NPC_ASIC_ORFS_IMAGE_DIGEST") ;;
+  *) echo "NPC_ASIC_ORFS_IMAGE does not match the tracked repository digest" >&2; exit 2 ;;
 esac
 if [[ ! "$NPC_ASIC_ORFS_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
   echo "NPC_ASIC_ORFS_COMMIT must be a full lowercase Git commit" >&2
@@ -69,6 +74,10 @@ esac
 build_in_container="/npc/${build_real#"$root_real"/}"
 orfs_identity_report="$NPC_ASIC_BUILD_ROOT/orfs_commit.txt"
 orfs_identity_container="$build_in_container/orfs_commit.txt"
+test ! -e "$orfs_identity_report" || {
+  echo "Refusing pre-existing ORFS runtime identity report" >&2
+  exit 2
+}
 netlist_real=$(realpath "$NPC_ASIC_MAPPED_NETLIST")
 sdc_real=$(realpath "$NPC_ASIC_PNR_SDC")
 for path in "$netlist_real" "$sdc_real"; do
@@ -144,13 +153,25 @@ results_dir="$work_home/results/nangate45/$NPC_ASIC_DESIGN_NICKNAME/base"
   "$NPC_ASIC_ORFS_IMAGE" \
   bash -lc '
     set -eo pipefail
-    actual_orfs_commit=$(git -c safe.directory=/OpenROAD-flow-scripts \
-      -C /OpenROAD-flow-scripts rev-parse --verify HEAD)
-    if test "$actual_orfs_commit" != "$NPC_ASIC_ORFS_COMMIT"; then
-      echo "ORFS commit mismatch: expected $NPC_ASIC_ORFS_COMMIT, got $actual_orfs_commit" >&2
-      exit 2
+    actual_orfs_commit=not_embedded
+    orfs_commit_verification=image_digest_bound_no_vcs_metadata
+    if test -e /OpenROAD-flow-scripts/.git || test -L /OpenROAD-flow-scripts/.git; then
+      if ! detected_orfs_commit=$(git -c safe.directory=/OpenROAD-flow-scripts \
+          -C /OpenROAD-flow-scripts rev-parse --verify HEAD 2>/dev/null); then
+        echo "ORFS VCS metadata is present but HEAD verification failed" >&2
+        exit 2
+      fi
+      if test "$detected_orfs_commit" != "$NPC_ASIC_ORFS_COMMIT"; then
+        echo "ORFS commit mismatch: expected $NPC_ASIC_ORFS_COMMIT, got $detected_orfs_commit" >&2
+        exit 2
+      fi
+      actual_orfs_commit=$detected_orfs_commit
+      orfs_commit_verification=git_head
     fi
-    printf "%s\n" "$actual_orfs_commit" > "$NPC_ASIC_ORFS_IDENTITY_REPORT"
+    {
+      printf "actual_commit=%s\n" "$actual_orfs_commit"
+      printf "verification=%s\n" "$orfs_commit_verification"
+    } > "$NPC_ASIC_ORFS_IDENTITY_REPORT"
     source /OpenROAD-flow-scripts/env.sh
     make DESIGN_CONFIG=/npc/flows/asic/openroad/config.mk \
       WORK_HOME="$NPC_ASIC_ORFS_WORK_HOME"
@@ -160,11 +181,23 @@ test -s "$orfs_identity_report" || {
   echo "Missing ORFS runtime identity report" >&2
   exit 2
 }
-read -r orfs_actual_commit < "$orfs_identity_report"
-test "$orfs_actual_commit" = "$NPC_ASIC_ORFS_COMMIT" || {
-  echo "ORFS runtime identity report mismatch" >&2
-  exit 2
-}
+orfs_actual_commit=$(sed -n 's/^actual_commit=//p' "$orfs_identity_report")
+orfs_commit_verification=$(sed -n 's/^verification=//p' "$orfs_identity_report")
+case "$orfs_commit_verification" in
+  git_head)
+    test "$orfs_actual_commit" = "$NPC_ASIC_ORFS_COMMIT" || {
+      echo "ORFS runtime Git identity report mismatch" >&2
+      exit 2
+    }
+    ;;
+  image_digest_bound_no_vcs_metadata)
+    test "$orfs_actual_commit" = not_embedded || {
+      echo "ORFS digest-bound identity report mismatch" >&2
+      exit 2
+    }
+    ;;
+  *) echo "Malformed ORFS runtime identity report" >&2; exit 2 ;;
+esac
 
 for artifact in 1_2_yosys.v 6_final.odb 6_final.def 6_final.v 6_final.sdc 6_final.spef 6_final.gds; do
   test -s "$results_dir/$artifact" || {
@@ -225,6 +258,8 @@ expected_macro_count=$NPC_ASIC_EXPECTED_MACRO_COUNT
 pnr_period_ns=$NPC_ASIC_PNR_PERIOD_NS
 orfs_commit=$NPC_ASIC_ORFS_COMMIT
 orfs_actual_commit=$orfs_actual_commit
+orfs_commit_verification=$orfs_commit_verification
+orfs_image_digest=$NPC_ASIC_ORFS_IMAGE_DIGEST
 orfs_image=$NPC_ASIC_ORFS_IMAGE
 mapped_netlist_sha256=$input_hash
 orfs_import_netlist_sha256=$import_hash

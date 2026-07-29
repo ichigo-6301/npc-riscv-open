@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 from typing import Dict
 
@@ -14,6 +15,10 @@ from summarize_pnr import contract_values, parse_run, sha256_file
 
 class RecoveryError(RuntimeError):
     pass
+
+
+GIT_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+OCI_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 def write_json(path: Path, value: object) -> None:
@@ -49,25 +54,86 @@ def clean_route_gate(summary: dict) -> None:
         raise RecoveryError("source run is not eligible for handoff recovery: " + ", ".join(failures))
 
 
+def runtime_identity(source_run: Path, contract: dict) -> dict:
+    report_path = source_run / "orfs_commit.txt"
+    require_file(report_path, "ORFS runtime identity report")
+    values: Dict[str, str] = {}
+    for line in report_path.read_text(encoding="utf-8", errors="strict").splitlines():
+        if "=" not in line:
+            raise RecoveryError("malformed ORFS runtime identity report")
+        key, value = line.split("=", 1)
+        if key in values:
+            raise RecoveryError(f"duplicate ORFS runtime identity field: {key}")
+        values[key] = value
+    if set(values) != {"actual_commit", "verification"}:
+        raise RecoveryError("malformed ORFS runtime identity report fields")
+
+    expected = contract["orfs_commit"]
+    digest = contract["orfs_image_digest"]
+    image = contract["orfs_image"]
+    if not GIT_COMMIT_RE.fullmatch(expected):
+        raise RecoveryError("source OpenROAD contract has malformed orfs_commit")
+    if not OCI_DIGEST_RE.fullmatch(digest):
+        raise RecoveryError("source OpenROAD contract has malformed orfs_image_digest")
+    if image == "@" + digest or not image.endswith("@" + digest):
+        raise RecoveryError("source OpenROAD image does not match its tracked digest")
+
+    actual = values["actual_commit"]
+    verification = values["verification"]
+    if verification == "git_head":
+        if not GIT_COMMIT_RE.fullmatch(actual) or actual != expected:
+            raise RecoveryError("ORFS runtime Git identity mismatch")
+    elif verification == "image_digest_bound_no_vcs_metadata":
+        if actual != "not_embedded":
+            raise RecoveryError("ORFS digest-bound runtime identity mismatch")
+    else:
+        raise RecoveryError("unsupported ORFS runtime identity verification mode")
+
+    contract_identity = (
+        contract["orfs_actual_commit"], contract["orfs_commit_verification"])
+    if contract_identity not in (("NA", "pending"), (actual, verification)):
+        raise RecoveryError("source OpenROAD contract/runtime identity mismatch")
+    return {
+        "expected_commit": expected,
+        "actual_commit": actual,
+        "verification": verification,
+        "image_digest": digest,
+        "image": image,
+        "report_sha256": sha256_file(report_path),
+    }
+
+
 def copy_input_manifest(source_run: Path, output_run: Path) -> dict:
     source_path = source_run / "input_manifest.json"
     require_file(source_path, "input manifest")
     manifest = json.loads(source_path.read_text(encoding="utf-8"))
     source_input = (source_run / "input").resolve()
     output_input = output_run / "input"
-    shutil.copytree(source_input, output_input)
-    for item in manifest.get("files", {}).values():
-        if not isinstance(item, dict) or not item.get("path"):
-            continue
+    files = manifest.get("files")
+    if not isinstance(files, dict) or not files:
+        raise RecoveryError("source input manifest lacks files")
+    source_files = {}
+    for role, item in files.items():
+        if not isinstance(item, dict) or not item.get("path") or not item.get("sha256"):
+            raise RecoveryError(f"source input manifest has malformed role: {role}")
         old_path = Path(str(item["path"])).resolve()
+        require_file(old_path, f"source input {role}")
+        actual = sha256_file(old_path)
+        if not re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) or actual != item["sha256"]:
+            raise RecoveryError(f"source input manifest hash mismatch: {role}")
+        source_files[role] = old_path
+    shutil.copytree(source_input, output_input)
+    for role, item in files.items():
+        old_path = source_files[role]
         try:
             relative = old_path.relative_to(source_input)
         except ValueError:
             continue
         new_path = output_input / relative
         require_file(new_path, "recovered input")
+        if sha256_file(new_path) != item["sha256"]:
+            raise RecoveryError(f"recovered input hash mismatch: {role}")
         item["path"] = str(new_path)
-        item["sha256"] = sha256_file(new_path)
     write_json(output_run / "input_manifest.json", manifest)
     return manifest
 
@@ -127,13 +193,17 @@ def recover(source_run: Path, output_run: Path) -> dict:
         raise RecoveryError(f"refusing to overwrite recovery run: {output_run}")
     if (source_run / "run.ok").exists():
         raise RecoveryError("source run is already complete; recovery is not applicable")
-    source_summary = parse_run(source_run)
-    clean_route_gate(source_summary)
     contract = contract_values(source_run / "openroad_contract.txt")
     for key in ("design_nickname", "top", "memory_mode", "expected_macro_count",
-                "pnr_period_ns", "orfs_commit", "orfs_image"):
+                "pnr_period_ns", "orfs_commit", "orfs_actual_commit",
+                "orfs_commit_verification", "orfs_image_digest", "orfs_image"):
         if not contract.get(key):
             raise RecoveryError(f"source OpenROAD contract lacks {key}")
+    identity = runtime_identity(source_run, contract)
+    contract["orfs_actual_commit"] = identity["actual_commit"]
+    contract["orfs_commit_verification"] = identity["verification"]
+    source_summary = parse_run(source_run)
+    clean_route_gate(source_summary)
     nickname = contract["design_nickname"]
     top = contract["top"]
     period_ns = float(contract["pnr_period_ns"])
@@ -154,7 +224,7 @@ def recover(source_run: Path, output_run: Path) -> dict:
     output_run.mkdir()
     manifest = copy_input_manifest(source_run, output_run)
     for name in ("floorplan.json", "constant_net_report.txt", "openroad_contract.txt",
-                 "resource_monitor.csv"):
+                 "orfs_commit.txt", "resource_monitor.csv"):
         path = source_run / name
         if path.is_file():
             shutil.copy2(path, output_run / name)
@@ -200,6 +270,7 @@ def recover(source_run: Path, output_run: Path) -> dict:
         "final_sdc": sha256_file(results / "6_final.sdc"),
         "final_gds": sha256_file(results / "6_final.gds"),
         "final_spef": sha256_file(results / "6_final.spef"),
+        "orfs_runtime_identity": identity["report_sha256"],
     }
     recovery_tool_hashes = {
         "recover_pnr_handoff": sha256_file(Path(__file__).resolve()),
@@ -218,6 +289,7 @@ def recover(source_run: Path, output_run: Path) -> dict:
         "orfs_workspace_reused_read_only": True,
         "source_period_ns": source_period,
         "normalized_period_ns": period_ns,
+        "orfs_runtime_identity": identity,
         "source_artifact_sha256": source_hashes,
         "recovery_tool_sha256": recovery_tool_hashes,
         "same_run_artifacts": roles,

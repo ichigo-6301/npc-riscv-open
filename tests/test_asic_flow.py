@@ -23,7 +23,7 @@ from build_a3_cpi_identity import build as build_a3_cpi_identity
 from calculate_floorplan import calculate, calculate_with_macros
 from compare_a3_dc import A3_COMMIT, LEGACY_COMMIT, evaluate as evaluate_a3_dc
 from prepare_pnr_sdc import retarget
-from recover_pnr_handoff import recover as recover_pnr_handoff
+from recover_pnr_handoff import RecoveryError, recover as recover_pnr_handoff
 from sanitize_openroad_sdc import main as sanitize_openroad_sdc
 from summarize_dc import parse_run
 from summarize_pnr import parse_run as parse_pnr_run
@@ -187,7 +187,14 @@ class AsicFlowTests(unittest.TestCase):
                     "extra_defines": [],
                 },
             },
-            "libraries": {}, "orfs": {},
+            "libraries": {},
+            "orfs": {
+                "commit": "a" * 40,
+                "image_digest": "sha256:" + "b" * 64,
+                "platform": "nangate45",
+                "runtime_identity_policy":
+                    asicctl.ORFS_RUNTIME_IDENTITY_POLICY,
+            },
             "profiles": {"rv32im_single_perf": {
                 "source_commit": commit, "top": "cpu_top", "clock_port": "clk",
                 "reset_port": "rst_n", "filelist": "filelists/asic/rv32im_single_perf.f",
@@ -411,6 +418,11 @@ class AsicFlowTests(unittest.TestCase):
             text = output.getvalue()
             self.assertIn("ASIC_PNR_DRY_RUN_PASS", text)
             self.assertIn("ASIC_STA_DRY_RUN_PASS", text)
+            self.assertIn("orfs_commit=" + "a" * 40, text)
+            self.assertIn("orfs_image_digest=sha256:" + "b" * 64, text)
+            self.assertIn(
+                "orfs_identity_policy=" + asicctl.ORFS_RUNTIME_IDENTITY_POLICY,
+                text)
             self.assertIn("dc_mapped_netlist", text)
             self.assertIn("routed_netlist,routed_sdc,openrcx_spef", text)
             self.assertEqual(text.count("required_identity="), 2)
@@ -426,6 +438,32 @@ class AsicFlowTests(unittest.TestCase):
             sta_args.dry_run = False
             with self.assertRaisesRegex(asicctl.AsicError, "real STA requires"):
                 asicctl.sta(root, config, sta_args)
+        finally:
+            temporary.cleanup()
+
+    def test_pnr_dry_run_rejects_absent_or_malformed_orfs_identity(self):
+        temporary, root, config = self.fixture()
+        try:
+            matrix_path = root / "flows/asic/profiles/register_expanded.json"
+            original = json.loads(matrix_path.read_text())
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=True,
+                dc_run="", frequency_mhz=None, build_root="", run_id="",
+            )
+            cases = (
+                ({}, "lacks required fields"),
+                ({**original["orfs"], "commit": "a" * 39}, "full lowercase"),
+                ({**original["orfs"], "image_digest": "sha256:bad"}, "full sha256"),
+                ({**original["orfs"], "runtime_identity_policy": "legacy"},
+                 "policy mismatch"),
+            )
+            for orfs, error in cases:
+                with self.subTest(error=error):
+                    matrix = copy.deepcopy(original)
+                    matrix["orfs"] = orfs
+                    matrix_path.write_text(json.dumps(matrix))
+                    with self.assertRaisesRegex(asicctl.AsicError, error):
+                        asicctl.pnr(root, config, args)
         finally:
             temporary.cleanup()
 
@@ -627,6 +665,9 @@ class AsicFlowTests(unittest.TestCase):
         self.assertIn("git -c safe.directory=/OpenROAD-flow-scripts", runner)
         self.assertIn("actual_orfs_commit", runner)
         self.assertIn("ORFS commit mismatch", runner)
+        self.assertIn("image_digest_bound_no_vcs_metadata", runner)
+        self.assertIn("test -e /OpenROAD-flow-scripts/.git", runner)
+        self.assertIn("VCS metadata is present but HEAD verification failed", runner)
 
     def test_openroad_normalizes_only_dc_constant_nets(self):
         text = (ROOT / "flows/asic/openroad/normalize_dc_constant_nets.tcl").read_text()
@@ -651,6 +692,7 @@ class AsicFlowTests(unittest.TestCase):
         hook.write_text("# fixture\n")
         fake_docker.write_text("#!/usr/bin/env bash\nexit 0\n")
         fake_docker.chmod(0o755)
+        digest = "sha256:" + "0" * 64
         environment = os.environ.copy()
         environment.update({
             "NPC_ASIC_ROOT": str(root),
@@ -663,7 +705,8 @@ class AsicFlowTests(unittest.TestCase):
             "NPC_ASIC_DIE_AREA": "0 0 100 100",
             "NPC_ASIC_CORE_AREA": "10 10 90 90",
             "NPC_ASIC_PLACE_DENSITY": "0.55",
-            "NPC_ASIC_ORFS_IMAGE": "fixture@sha256:" + "0" * 64,
+            "NPC_ASIC_ORFS_IMAGE": "fixture@" + digest,
+            "NPC_ASIC_ORFS_IMAGE_DIGEST": digest,
             "NPC_ASIC_ORFS_COMMIT": commit,
             "NPC_ASIC_MEMORY_MODE": "registers",
             "NPC_ASIC_EXPECTED_MACRO_COUNT": "0",
@@ -684,6 +727,18 @@ class AsicFlowTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 2)
             self.assertIn("full lowercase Git commit", completed.stderr)
 
+    def test_openroad_runner_rejects_untracked_image_digest(self):
+        with tempfile.TemporaryDirectory() as temp:
+            environment, _ = self._openroad_runner_fixture(
+                Path(temp), "0" * 40)
+            environment["NPC_ASIC_ORFS_IMAGE"] = (
+                "fixture@sha256:" + "1" * 64)
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("does not match the tracked repository digest", completed.stderr)
+
     def test_openroad_runner_requires_runtime_identity_report(self):
         with tempfile.TemporaryDirectory() as temp:
             environment, _ = self._openroad_runner_fixture(
@@ -694,7 +749,7 @@ class AsicFlowTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 2)
             self.assertIn("Missing ORFS runtime identity report", completed.stderr)
 
-    def test_openroad_runner_rejects_wrong_runtime_identity_report(self):
+    def test_openroad_runner_rejects_preexisting_runtime_identity_report(self):
         with tempfile.TemporaryDirectory() as temp:
             environment, build = self._openroad_runner_fixture(
                 Path(temp), "0" * 40)
@@ -704,7 +759,7 @@ class AsicFlowTests(unittest.TestCase):
                 ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
                 env=environment, capture_output=True, text=True, check=False)
             self.assertEqual(completed.returncode, 2)
-            self.assertIn("runtime identity report mismatch", completed.stderr)
+            self.assertIn("pre-existing ORFS runtime identity report", completed.stderr)
 
     def test_openroad_runner_rejects_build_root_outside_source_root(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -732,6 +787,7 @@ class AsicFlowTests(unittest.TestCase):
                 "NPC_ASIC_CORE_AREA": "10 10 90 90",
                 "NPC_ASIC_PLACE_DENSITY": "0.55",
                 "NPC_ASIC_ORFS_IMAGE": "fixture@sha256:" + "0" * 64,
+                "NPC_ASIC_ORFS_IMAGE_DIGEST": "sha256:" + "0" * 64,
                 "NPC_ASIC_ORFS_COMMIT": "0" * 40,
                 "NPC_ASIC_MEMORY_MODE": "registers",
                 "NPC_ASIC_EXPECTED_MACRO_COUNT": "0",
@@ -1103,6 +1159,8 @@ class AsicFlowTests(unittest.TestCase):
                 "design_nickname=fixture\ntop=cpu_top\nplatform=nangate45\n"
                 "memory_mode=registers\nexpected_macro_count=0\n"
                 "pnr_period_ns=2.352941176\norfs_commit=" + "a" * 40 + "\n"
+                "orfs_actual_commit=NA\norfs_commit_verification=pending\n"
+                "orfs_image_digest=sha256:" + "b" * 64 + "\n"
                 "orfs_image=fixture@sha256:" + "b" * 64 + "\n"
                 "mapped_netlist_sha256=" + asicctl.sha256_file(mapped) + "\n"
                 "orfs_import_netlist_sha256=NA\n"
@@ -1148,6 +1206,25 @@ class AsicFlowTests(unittest.TestCase):
             (logs / "6_report.json").write_text(json.dumps(final))
             (reports / "5_route_drc.rpt").write_text("")
 
+            with self.assertRaisesRegex(RecoveryError, "runtime identity report"):
+                recover_pnr_handoff(source, output)
+            (source / "orfs_commit.txt").write_text(
+                "actual_commit=wrong\n"
+                "verification=image_digest_bound_no_vcs_metadata\n")
+            with self.assertRaisesRegex(
+                    RecoveryError, "digest-bound runtime identity mismatch"):
+                recover_pnr_handoff(source, output)
+            (source / "orfs_commit.txt").write_text(
+                "actual_commit=not_embedded\n"
+                "verification=image_digest_bound_no_vcs_metadata\n")
+            manifest_path = source / "input_manifest.json"
+            manifest = json.loads(manifest_path.read_text())
+            manifest["files"]["dc_mapped_netlist"]["sha256"] = "0" * 64
+            manifest_path.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(RecoveryError, "input manifest hash mismatch"):
+                recover_pnr_handoff(source, root / "recovered_bad_input_hash")
+            manifest["files"]["dc_mapped_netlist"]["sha256"] = asicctl.sha256_file(mapped)
+            manifest_path.write_text(json.dumps(manifest))
             summary = recover_pnr_handoff(source, output)
             self.assertTrue(summary["route_complete"])
             self.assertFalse((source / "run.ok").exists())
@@ -1158,6 +1235,12 @@ class AsicFlowTests(unittest.TestCase):
             roles = json.loads((output / "same_run_artifacts.json").read_text())
             self.assertIn("routed_def", roles)
             self.assertIn("gds", roles)
+            recovered_contract = (output / "openroad_contract.txt").read_text()
+            self.assertIn("orfs_actual_commit=not_embedded", recovered_contract)
+            self.assertIn(
+                "orfs_commit_verification=image_digest_bound_no_vcs_metadata",
+                recovered_contract)
+            self.assertTrue((output / "orfs_commit.txt").is_file())
 
     def test_sta_summary_requires_setup_hold_coverage_and_parasitics(self):
         with tempfile.TemporaryDirectory() as temp:

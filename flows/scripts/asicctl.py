@@ -42,6 +42,8 @@ HANDOFF_IDENTITY_FIELDS = (
     "implementation_source_sha256",
     "config_sha256",
 )
+ORFS_RUNTIME_IDENTITY_POLICY = (
+    "exact_oci_digest_git_head_when_vcs_metadata_present_v1")
 
 
 class AsicError(RuntimeError):
@@ -88,6 +90,26 @@ def require_handoff_identity(record: dict, expected: dict, label: str) -> None:
                     label, key, record[key], expected[key]
                 )
             )
+
+
+def require_orfs_runtime_identity(matrix: dict) -> dict:
+    orfs = matrix.get("orfs")
+    required = ("commit", "image_digest", "platform", "runtime_identity_policy")
+    if not isinstance(orfs, dict):
+        raise AsicError("ASIC matrix lacks ORFS runtime identity")
+    missing = [key for key in required if not orfs.get(key)]
+    if missing:
+        raise AsicError(
+            "ASIC matrix ORFS identity lacks required fields: " + ",".join(missing))
+    if re.fullmatch(r"[0-9a-f]{40}", str(orfs["commit"])) is None:
+        raise AsicError("ASIC matrix ORFS commit must be a full lowercase Git commit")
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", str(orfs["image_digest"])) is None:
+        raise AsicError("ASIC matrix ORFS image digest must be a full sha256 digest")
+    if orfs["platform"] != "nangate45":
+        raise AsicError("ASIC matrix ORFS platform must be nangate45")
+    if orfs["runtime_identity_policy"] != ORFS_RUNTIME_IDENTITY_POLICY:
+        raise AsicError("ASIC matrix ORFS runtime identity policy mismatch")
+    return orfs
 
 
 def parse_config(path: Path) -> Dict[str, str]:
@@ -1081,13 +1103,16 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
 
 def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     contract = build_contract(root, config_path, args.ooo_mode, args.memory_mode)
+    orfs_identity = require_orfs_runtime_identity(contract["matrix"])
     if args.dry_run:
         predecessor = str(args.dc_run).strip() or "<setup-closed-dc-run>"
         print(
             "ASIC_PNR_DRY_RUN_CONTRACT "
             f"profile={contract['profile']} mode={contract['mode']} "
             f"memory={contract['memory_mode']} macros={contract['expected_macro_count']} "
-            f"dc_run={predecessor}"
+            f"dc_run={predecessor} orfs_commit={orfs_identity['commit']} "
+            f"orfs_image_digest={orfs_identity['image_digest']} "
+            f"orfs_identity_policy={orfs_identity['runtime_identity_policy']}"
         )
         print(
             "required_roles=dc_input_manifest,dc_mapped_netlist,dc_mapped_sdc,"
@@ -1228,7 +1253,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         }
         write_json(pnr_manifest_path, pnr_manifest)
     image = os.environ.get("NPC_ASIC_ORFS_IMAGE", "")
-    digest = str(contract["matrix"]["orfs"]["image_digest"])
+    digest = str(orfs_identity["image_digest"])
     if not image.endswith("@" + digest):
         raise AsicError(f"NPC_ASIC_ORFS_IMAGE must end with @{digest}")
     tool = require_tool(os.environ.get("NPC_ASIC_OPENROAD_RUNNER", "bash"))
@@ -1243,7 +1268,8 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "NPC_ASIC_DIE_AREA": format_box(floorplan["die_area"]),
         "NPC_ASIC_CORE_AREA": format_box(floorplan["core_area"]),
         "NPC_ASIC_PLACE_DENSITY": str(floorplan["place_density"]),
-        "NPC_ASIC_ORFS_COMMIT": str(contract["matrix"]["orfs"]["commit"]),
+        "NPC_ASIC_ORFS_COMMIT": str(orfs_identity["commit"]),
+        "NPC_ASIC_ORFS_IMAGE_DIGEST": digest,
         "NPC_ASIC_MEMORY_MODE": contract["memory_mode"],
         "NPC_ASIC_EXPECTED_MACRO_COUNT": str(contract["expected_macro_count"]),
         "NPC_ASIC_MACRO_LEFS": " ".join(str(path) for path in macro_views["lef"]),
@@ -1269,12 +1295,15 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "expected_macro_count={}\n"
         "pnr_period_ns={:.9f}\n"
         "orfs_commit={}\n"
+        "orfs_actual_commit=NA\n"
+        "orfs_commit_verification=pending\n"
+        "orfs_image_digest={}\n"
         "orfs_image={}\n"
         "mapped_netlist_sha256={}\n"
         "orfs_import_netlist_sha256=NA\n".format(
             nickname, contract["top"], contract["memory_mode"],
             contract["expected_macro_count"], 1000.0 / frequency,
-            contract["matrix"]["orfs"]["commit"], image,
+            orfs_identity["commit"], digest, image,
             sha256_file(mapped_copy)),
         encoding="utf-8",
     )

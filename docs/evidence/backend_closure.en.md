@@ -41,6 +41,9 @@ All four paths share a fixed Nangate45 ORFS academic platform identity:
 - OpenROAD / OpenRCX: `26Q3-463-gbde79242a0`; ORFS commit
   `bea7dcd7be7f26d1328f6058b01cf42bf4352aa2`, with the container digest fixed
   in the machine record.
+  The pinned official image omits `.git`; the public runner therefore enforces
+  the exact OCI digest and additionally verifies `HEAD` when VCS metadata is
+  present, recording either path in the private run contract.
 - NangateOpenCellLibrary typical / 1.1 V / 25 C with a 1 ns Liberty time unit.
 - RC is classified as `PDK_PROVIDED_ACADEMIC_RC` using fixed OpenRCX rules; it
   is not called foundry-calibrated RC.

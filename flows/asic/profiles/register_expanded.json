@@ -68,7 +68,8 @@
   "orfs": {
     "commit": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
     "image_digest": "sha256:5fb6465e18c42bfaa19f0ba40190f1c75cb6118feffd236b13ed8081ff3f573f",
-    "platform": "nangate45"
+    "platform": "nangate45",
+    "runtime_identity_policy": "exact_oci_digest_git_head_when_vcs_metadata_present_v1"
   },
   "clock_uncertainty_setup_ns": 0.1,
   "clock_uncertainty_hold_ns": 0.0,

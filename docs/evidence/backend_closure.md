@@ -36,6 +36,8 @@ cache role 替换为 `176d4fd74da61ec681816630854501b233213982` 的审计版本�
 - Design Compiler / PrimeTime / Library Compiler：`O-2018.06-SP1`。
 - OpenROAD / OpenRCX：`26Q3-463-gbde79242a0`；ORFS commit
   `bea7dcd7be7f26d1328f6058b01cf42bf4352aa2`，容器 digest 在机器证据中固定。
+  官方锁定镜像不保留 `.git`；公开 runner 强制核验精确 OCI digest，并仅在镜像
+  含 VCS metadata 时追加核验 `HEAD`，两种路径均在私有 run contract 中记录。
 - NangateOpenCellLibrary typical / 1.1 V / 25 C，Liberty time unit 为 1 ns。
 - RC 分类为 `PDK_PROVIDED_ACADEMIC_RC`，使用固定 OpenRCX rules；不称为
   foundry-calibrated RC。
