@@ -15,8 +15,9 @@
 | Bounded smoke/regression | 仓库内固定小程序在纯 Verilator runtime 上通过 | `verified` |
 | 本地 NEMU difftest | Profile 匹配的 PC/instruction/GPR commit check | bounded PASS；总体 `partial` |
 | 完整 OpenSBI/Linux | firmware、Sv32 page table、interrupt 和设备路径 | `not_claimed` |
-| 性能 benchmark | hash-locked CoreMark marker 计量与 difftest | Single/Linux `verified`；OoO `provisional` |
-| ASIC/PPA | synthesis、P&R、STA、power、signoff | `not_claimed` |
+| 性能 benchmark | hash-locked CoreMark marker 计量与 difftest | Single 当前 source lock `verified`；Linux `abf66cad` 历史证据；OoO `provisional` |
+| ASIC implementation | DC、P&R、OpenRCX、internal PrimeTime | Single/Linux 四条 fixed point `verified`；OoO `planned` |
+| Electrical / signoff | IO、electrical、macro signoff、OCV/MMMC、power、silicon | `partial` / `not_claimed` |
 
 没有功能覆盖率数据库；`coverage_status` 为 `not_available`。测试条目数量不能
 解释为覆盖率百分比。
@@ -28,7 +29,7 @@
 ```sh
 make <profile>_defconfig
 make showconfig
-make config-check source-check docs-check public-hygiene
+make config-check source-check docs-check implementation-check showcase-check public-hygiene
 make verify-checksums
 make verilator-lint
 make smoke
@@ -52,6 +53,9 @@ Linux Profile 的 `arch_smoke.hex` 是 machine-mode bounded test。它没有覆�
 完整 S-mode trap delegation、Sv32 translated fetch/load/store、page fault、
 OpenSBI 启动或 Linux kernel。
 
+`make opensbi-smoke` 提供显式外部固件入口，但公开仓库未锁定 DTB、参考模型
+或 shutdown 终止协议，因此该入口本身不构成一次已验证的 OpenSBI 执行 claim。
+
 ## 已记录的 deterministic 结果
 
 | Profile / image | Cycles | Commit packets | 结果 |
@@ -67,12 +71,14 @@ OpenSBI 启动或 Linux kernel。
 ## Hash-locked CoreMark 结果
 
 公开 runner 会在结束时输出 `PUBLIC_SIM_PASS cycles=... commit=... commit2=...`。
-当前三个 Profile 都通过 CoreMark self-check、start/stop marker 闭合、good trap
-和 watchdog。公开 runtime 已提供 deterministic AXI Timer/UARTLite；Single 与
-Linux 通过 Profile 匹配的 NEMU difftest，因此其 timed CPI、whole CPI 和
-CoreMark/MHz 标为 `verified`。OoO self-check 和计数通过，但双退休 MMIO packet
-无法使用单退休 skip-and-sync 而不引入顺序歧义，因此保持 `provisional`。精确
-binary/config hash、计数分区和协议边界见[CoreMark 计量证据](evidence/coremark_reproduction.md)。
+证据绑定的三个 source ref 均记录了 CoreMark self-check、start/stop marker 闭合、
+good trap 和 watchdog。公开 runtime 已提供 deterministic AXI Timer/UARTLite。
+Single 在当前 source lock 上通过 Profile 匹配的 NEMU difftest，因此其 timed CPI、
+whole CPI 和 CoreMark/MHz 标为 `verified`。Linux 数值仅在 `abf66cad` 上为
+`historical_verified`；当前 `0fc3de40` source lock 尚待相同 binary/config 的精确复测。
+OoO self-check 和计数通过，但双退休 MMIO packet 无法使用单退休 skip-and-sync 而不引入
+顺序歧义，因此保持 `provisional`。精确 binary/config hash、计数分区和协议边界见
+[CoreMark 计量证据](evidence/coremark_reproduction.md)。
 
 ## 本地 strict difftest
 
@@ -93,16 +99,33 @@ sentinel，所有 committed register write 仍需一致。单发射 Profile 的 
 effect。Single/Linux CoreMark 仅对精确匹配的已知 Timer/UART MMIO 使用
 deterministic skip-and-sync；未知地址和副作用直接失败。
 
+## 后端证据门禁
+
+Single/Linux 的 register-expanded 与 SRAM-macro 流程分别锁定 DC、P&R 和 PT
+period。四条路线必须同时满足：DC link 正常、无 combinational loop/automatic
+arc break/latch/unclocked endpoint、macro/blackbox 数符合配置；placement、CTS、
+detail route、GDS 与 OpenRCX 报告完整；mapped/routed netlist、routed SDC、SPEF 和
+Liberty/DB 的角色 hash 一致；PrimeTime 内部 setup/hold TNS 与 violating path 为
+0。公开 checker 会从 bounded JSON 复核这些字段，而不是读取或分发 raw artifacts。
+
+SRAM 的 P&R 与内部 extracted timing 可以是 `verified`，同时 macro model 为
+`partial_analytical_characterization`、macro physical signoff 为 `not_closed`，
+overall profile 仍为 `partial`。详细 scope 见
+[后端证据](evidence/backend_closure.md)。
+
 ## Fresh-clone 要求
 
 在原生 Linux 临时目录对目标 commit 执行：
 
-1. `verify-checksums`、`docs-check`、source closure 和 hygiene；
+1. `verify-checksums`、`docs-check`、`implementation-check`、`showcase-check`、
+   source closure 和 hygiene；
 2. 三 Profile lint、smoke 与 regression；
 3. 若提供本地 NEMU，运行 bounded difftest；若同时提供 hash-locked CoreMark
    输入，运行 Single/Linux `coremark-difftest` 和 OoO `coremark`；
-4. 检查所有 source-set SHA256；
-5. 确认运行后的 Git worktree 保持 clean。
+4. 对四个 Single/Linux ASIC defconfig 运行 config-check 与 LC/DC/P&R/PT
+   dry-run，不启动商业 EDA；
+5. 检查所有 source-set SHA256；
+6. 确认运行后的 Git worktree 保持 clean。
 
 任一 image/config hash 漂移、固定测试周期或指令数变化、不可解释的协议错误
 或重复运行不一致，都必须保留失败证据并停止性能/PPA 结论。

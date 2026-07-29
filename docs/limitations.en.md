@@ -67,15 +67,28 @@ input hashes, raw result, and fresh-clone reproduction all agree.
   workloads, not a universal CPI guarantee and not a replacement for current
   timed CoreMark CPI.
 - The Single approximately 704 MHz value is arithmetic inference from a
-  negative-WNS 1 ns DC stress run, not 700 MHz closure, maximum frequency,
-  P&R, or silicon performance.
-- Single `184926.124968` is a library-area value under that historical DC
-  setup, not physical die/core area and not directly comparable across memory
-  bindings.
-- The Linux and OoO Profiles have no public frequency, area, or power values.
-- No Profile establishes public P&R, post-route extraction/STA, CDC/RDC, DFT,
-  LEC, power, SRAM macro DRC/LVS/PEX, IO, OCV/MMMC, foundry signoff, or silicon
-  correlation.
+  negative-WNS 1 ns DC stress run, not 700 MHz closure or maximum frequency;
+  it does not replace the source-matched fixed-frequency results below.
+- Single/Linux register-expanded and SRAM-macro modes have four Nangate45
+  academic fixed-frequency points. Their verified scope is top-level
+  placement, CTS, detailed route, route-tool DRC/antenna/connectivity,
+  OpenRCX, and matching PrimeTime internal setup/hold;
+  `evidence:single_linux_nangate45_backend_public`.
+- These points are not Fmax. DC and physical clocks are separate
+  configurations; the higher DC clock is not post-route closure.
+- P&R standard-cell area, macro count, and core footprint are reported
+  separately. SRAM standard-cell area excludes the four macros and cannot be
+  compared alone against register-expanded area.
+- Register-expanded modes retain max-capacitance and external IO drive/delay
+  boundaries. Those electrical/IO caveats are not hidden by lowering the clock
+  and do not invalidate the reported internal setup/hold fixed point.
+- SRAM timing uses OpenRAM analytical FreePDK45 TT/1.0 V/25 C while standard
+  cells use Nangate45 typical/1.1 V/25 C. `RC-004`, macro characterization,
+  macro DRC/LVS/PEX, OCV/MMMC, DFT, formal LEC, and power/PI remain open.
+- OoO register/SRAM backend work remains `planned`, with no published
+  frequency, area, or power result.
+- No Profile claims foundry signoff, full IO/electrical closure, silicon
+  correlation, or an absolute CoreMark score.
 - The OoO public performance path uses internal tagged DPI memory. Its external
   memory synthesis contract excludes some DPI-only precise-store/forwarding
   behavior, so complete synthesis equivalence is not claimed.
@@ -83,8 +96,9 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 ## Evidence and security
 
 - Private benchmark binaries, full logs, host absolute paths, PDKs,
-  Liberty/DB, LEF, GDS, SRAM views, EDA work databases, and credentials are
-  excluded.
+  Liberty/DB, LEF, mapped/routed netlists, SPEF, GDS, SRAM views, EDA work
+  databases, and credentials are excluded. Only bounded summaries, path-free
+  run identities, and SHA256 values are public.
 - A historical value remains `provisional` even if privately verified until
   its public inputs and conditions are reproduced.
 - Source inventory may flag protocol fields such as `mem_req_token` as generic

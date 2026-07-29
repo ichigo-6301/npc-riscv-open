@@ -1,0 +1,158 @@
+{
+  "schema": "npc-riscv-open/showcase-data-v1",
+  "generated_at": "2026-07-29T08:00:00Z",
+  "generator_runtime": "CPython 3.10.12",
+  "generator_compatibility": "Python 3.10 or newer; standard library only",
+  "implementation_evidence": {
+    "id": "single_linux_nangate45_backend_public",
+    "path": "evidence/implementation/nangate45_fixed_points.json",
+    "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+  },
+  "profiles": [
+    {
+      "id": "rv32im_single_perf",
+      "short_name": "Single",
+      "isa": "RV32IM",
+      "microarchitecture": "single-issue in-order",
+      "top": "cpu_top",
+      "rtl_status": "verified",
+      "simulation_status": "verified",
+      "backend": {
+        "registers": "verified_fixed_point",
+        "sram": "verified_fixed_point"
+      }
+    },
+    {
+      "id": "rv32ima_sv32_linux",
+      "short_name": "Linux",
+      "isa": "RV32IMA / M/S / Sv32",
+      "microarchitecture": "single-issue in-order system profile",
+      "top": "cpu_top",
+      "rtl_status": "verified",
+      "simulation_status": "verified_bounded",
+      "backend": {
+        "registers": "verified_fixed_point",
+        "sram": "verified_fixed_point"
+      }
+    },
+    {
+      "id": "rv32im_ooo_4k",
+      "short_name": "OoO",
+      "isa": "RV32IM",
+      "microarchitecture": "dual-dispatch / dual-commit OoO",
+      "top": "ooo_npc_top",
+      "rtl_status": "active_optimization",
+      "simulation_status": "provisional_performance",
+      "backend": {
+        "registers": "planned",
+        "sram": "planned"
+      }
+    }
+  ],
+  "closure_points": [
+    {
+      "id": "rv32im_single_perf.registers",
+      "label": "Single / registers",
+      "profile": "rv32im_single_perf",
+      "memory_mode": "register-expanded",
+      "dc_mhz": 540,
+      "postroute_mhz": 425,
+      "standard_cell_area_mm2": 0.679497,
+      "core_area_mm2": 2.61453,
+      "macro_count": 0,
+      "claim_ids": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area"
+      ]
+    },
+    {
+      "id": "rv32im_single_perf.sram",
+      "label": "Single / SRAM",
+      "profile": "rv32im_single_perf",
+      "memory_mode": "sram-macro",
+      "dc_mhz": 600,
+      "postroute_mhz": 475,
+      "standard_cell_area_mm2": 0.149292,
+      "core_area_mm2": 0.858801,
+      "macro_count": 4,
+      "claim_ids": [
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area"
+      ]
+    },
+    {
+      "id": "rv32ima_sv32_linux.registers",
+      "label": "Linux / registers",
+      "profile": "rv32ima_sv32_linux",
+      "memory_mode": "register-expanded",
+      "dc_mhz": 280,
+      "postroute_mhz": 200,
+      "standard_cell_area_mm2": 0.717964,
+      "core_area_mm2": 2.82504,
+      "macro_count": 0,
+      "claim_ids": [
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area"
+      ]
+    },
+    {
+      "id": "rv32ima_sv32_linux.sram",
+      "label": "Linux / SRAM",
+      "profile": "rv32ima_sv32_linux",
+      "memory_mode": "sram-macro",
+      "dc_mhz": 300,
+      "postroute_mhz": 200,
+      "standard_cell_area_mm2": 0.198085,
+      "core_area_mm2": 1.0495,
+      "macro_count": 4,
+      "claim_ids": [
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "npc_profile_portfolio_asset",
+      "path": "docs/assets/profile_portfolio.svg",
+      "title": "NPC RISC-V profile portfolio",
+      "units": "maturity status",
+      "configuration": "three source-locked profiles by register-expanded and SRAM-macro backend status",
+      "claim_ids": []
+    },
+    {
+      "id": "npc_nangate45_closure_asset",
+      "path": "docs/assets/nangate45_closure_points.svg",
+      "title": "Nangate45 academic fixed-frequency closure points",
+      "units": "MHz and mm2",
+      "configuration": "single and Linux register-expanded/SRAM-macro fixed points",
+      "claim_ids": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area"
+      ]
+    }
+  ],
+  "caption_boundary": "Fixed-frequency Nangate45 academic closure points; not Fmax, complete electrical closure, foundry signoff, or silicon results. SRAM points mix analytical OpenRAM FreePDK45 TT 1.0 V 25 C macro views with Nangate45 typical 1.1 V 25 C standard-cell views."
+}

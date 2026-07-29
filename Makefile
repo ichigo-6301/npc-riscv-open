@@ -15,17 +15,23 @@ PYTHON ?= python3
 FLOWCTL := $(PYTHON) "$(ROOT)/flows/scripts/flowctl.py" --root "$(ROOT)" --config "$(CONFIG)"
 ASICCTL := $(PYTHON) "$(ROOT)/flows/scripts/asicctl.py" --root "$(ROOT)" --config "$(CONFIG)"
 ASIC_OOO_MODE ?= auto
+ASIC_MEMORY_MODE ?= auto
+ASIC_LC_ARGS ?=
 
 -include $(CONFIG)
 
 .DEFAULT_GOAL := help
 .PHONY: help defconfig rv32im_single_perf_defconfig rv32ima_sv32_linux_defconfig \
         rv32im_ooo_4k_defconfig rv32im_single_perf_asic_defconfig \
-        rv32ima_sv32_linux_asic_defconfig rv32im_ooo_4k_asic_defconfig \
+        rv32im_single_perf_sram_asic_defconfig \
+        rv32ima_sv32_linux_asic_defconfig rv32ima_sv32_linux_sram_asic_defconfig \
+        rv32im_ooo_4k_asic_defconfig \
         menuconfig showconfig config-check source-check \
         public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
-        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check verify-checksums \
-        asic-config-check dc-matrix dc-matrix-dry-run pnr pnr-dry-run sta sta-dry-run \
+        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check \
+        implementation-check showcase-check verify-checksums \
+        asic-config-check lc-macros lc-macros-dry-run dc-matrix dc-matrix-dry-run \
+        pnr pnr-dry-run sta sta-dry-run \
         asic-evidence-check a3-dc-eval ci
 
 help:
@@ -45,12 +51,15 @@ help:
 	  '  make performance-check                    Validate tracked performance evidence' \
 	  '  make <profile>_asic_defconfig             Select a register-expanded ASIC Profile' \
 	  '  make asic-config-check                    Validate ASIC source/config closure' \
+	  '  make lc-macros[-dry-run]                  Compile audited OpenRAM Liberty views to DB' \
 	  '  make dc-matrix[-dry-run]                  Run/show the WNS-guided DC frequency scan' \
 	  '  make pnr[-dry-run]                        Run/show mapped-netlist OpenROAD/OpenRCX' \
 	  '  make sta[-dry-run]                        Run/show same-run PrimeTime STA' \
 	  '  make a3-dc-eval                           Evaluate three-way OoO A3 DC evidence' \
 	  '  make runtime-tests                       Run dependency-free control-plane tests' \
 	  '  make docs-check                           Validate bilingual docs and metric references' \
+	  '  make implementation-check                 Validate four bounded ASIC evidence chains' \
+	  '  make showcase-check                       Validate evidence, claims, and generated assets' \
 	  '  make verify-checksums                     Verify the exported SHA256 manifest' \
 	  '' \
 	  'Only profile manifests select RTL, ISA, and memory topology.'
@@ -70,8 +79,14 @@ rv32im_ooo_4k_defconfig:
 rv32im_single_perf_asic_defconfig:
 	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_single_perf_asic_defconfig"
 
+rv32im_single_perf_sram_asic_defconfig:
+	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_single_perf_sram_asic_defconfig"
+
 rv32ima_sv32_linux_asic_defconfig:
 	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32ima_sv32_linux_asic_defconfig"
+
+rv32ima_sv32_linux_sram_asic_defconfig:
+	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32ima_sv32_linux_sram_asic_defconfig"
 
 rv32im_ooo_4k_asic_defconfig:
 	@$(FLOWCTL) defconfig --source "$(ROOT)/configs/rv32im_ooo_4k_asic_defconfig"
@@ -129,25 +144,31 @@ opensbi-smoke:
 	@$(FLOWCTL) opensbi-smoke
 
 asic-config-check:
-	@$(ASICCTL) config-check --ooo-mode "$(ASIC_OOO_MODE)"
+	@$(ASICCTL) config-check --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)"
+
+lc-macros:
+	@$(ASICCTL) lc-macros --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" $(ASIC_LC_ARGS)
+
+lc-macros-dry-run:
+	@$(ASICCTL) lc-macros --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" $(ASIC_LC_ARGS)
 
 dc-matrix:
-	@$(ASICCTL) dc-matrix --ooo-mode "$(ASIC_OOO_MODE)" $(ASIC_DC_ARGS)
+	@$(ASICCTL) dc-matrix --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" $(ASIC_DC_ARGS)
 
 dc-matrix-dry-run:
-	@$(ASICCTL) dc-matrix --dry-run --ooo-mode "$(ASIC_OOO_MODE)" $(ASIC_DC_ARGS)
+	@$(ASICCTL) dc-matrix --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" $(ASIC_DC_ARGS)
 
 pnr:
-	@$(ASICCTL) pnr --ooo-mode "$(ASIC_OOO_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
+	@$(ASICCTL) pnr --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
 
 pnr-dry-run:
-	@$(ASICCTL) pnr --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
+	@$(ASICCTL) pnr --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" --dc-run "$(NPC_ASIC_DC_RUN)" $(ASIC_PNR_ARGS)
 
 sta:
-	@$(ASICCTL) sta --ooo-mode "$(ASIC_OOO_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
+	@$(ASICCTL) sta --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
 
 sta-dry-run:
-	@$(ASICCTL) sta --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
+	@$(ASICCTL) sta --dry-run --ooo-mode "$(ASIC_OOO_MODE)" --memory-mode "$(ASIC_MEMORY_MODE)" --pnr-run "$(NPC_ASIC_PNR_RUN)" $(ASIC_STA_ARGS)
 
 asic-evidence-check:
 	@$(ASICCTL) evidence-check --build-root "$(NPC_ASIC_BUILD_ROOT)"
@@ -167,7 +188,13 @@ docs-check:
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_docs.py" --root "$(ROOT)"
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_performance.py" --root "$(ROOT)"
 
+implementation-check:
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_implementation.py" --root "$(ROOT)"
+
+showcase-check: implementation-check
+	@$(PYTHON) "$(ROOT)/flows/scripts/generate_showcase_assets.py" --root "$(ROOT)" --check
+
 verify-checksums:
 	@cd "$(ROOT)" && sha256sum --check SHA256SUMS
 
-ci: verify-checksums docs-check runtime-tests config-check source-check public-hygiene verilator-lint smoke regression
+ci: verify-checksums docs-check showcase-check runtime-tests config-check source-check public-hygiene verilator-lint smoke regression

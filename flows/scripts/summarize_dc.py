@@ -90,8 +90,31 @@ def parse_run(run: Path) -> dict:
     area = number(r"Design Area:\s*([-+0-9.eE]+)", qor)
     if area is None:
         area = number(r"Total cell area:\s*([-+0-9.eE]+)", read("area.rpt"))
+    memory_mode = values.get("memory_mode", "registers")
     macro_count = metric_int(values, "macro_count")
     blackbox_count = metric_int(values, "blackbox_count")
+    expected_macro_count = metric_int(values, "expected_macro_count")
+    expected_blackbox_count = metric_int(values, "expected_blackbox_count")
+    if expected_macro_count is None and memory_mode == "registers":
+        expected_macro_count = 0
+    if expected_blackbox_count is None and memory_mode == "registers":
+        expected_blackbox_count = 0
+    isolation_revision = values.get("sram_input_isolation_revision")
+    isolation_target_pins = metric_int(values, "sram_input_isolation_target_pin_count")
+    isolation_expected_target_pins = metric_int(
+        values, "sram_input_isolation_expected_target_pin_count")
+    isolation_buffers = metric_int(values, "sram_input_isolation_buffer_count")
+    isolation_expected_buffers = metric_int(
+        values, "sram_input_isolation_expected_buffer_count")
+    if memory_mode == "registers":
+        isolation_revision = isolation_revision or "disabled"
+        isolation_target_pins = 0 if isolation_target_pins is None else isolation_target_pins
+        isolation_expected_target_pins = (
+            0 if isolation_expected_target_pins is None else isolation_expected_target_pins)
+        isolation_buffers = 0 if isolation_buffers is None else isolation_buffers
+        isolation_expected_buffers = (
+            0 if isolation_expected_buffers is None else isolation_expected_buffers)
+    macro_area = metric_float(values, "macro_area")
     cell_count = metric_int(values, "cell_count")
     register_count = metric_int(values, "register_count")
     loops = loop_evidence(check)
@@ -126,21 +149,31 @@ def parse_run(run: Path) -> dict:
     missing_gate_fields = [key for key, value in {
         "period_ns": period, "wns_ns": wns, "tns_ns": tns,
         "violating_paths": violations, "macro_count": macro_count,
-        "blackbox_count": blackbox_count,
+        "blackbox_count": blackbox_count, "expected_macro_count": expected_macro_count,
+        "expected_blackbox_count": expected_blackbox_count,
         "electrical_violations": electrical_violations,
+        "sram_input_isolation_revision": isolation_revision,
+        "sram_input_isolation_target_pin_count": isolation_target_pins,
+        "sram_input_isolation_expected_target_pin_count": isolation_expected_target_pins,
+        "sram_input_isolation_buffer_count": isolation_buffers,
+        "sram_input_isolation_expected_buffer_count": isolation_expected_buffers,
         **required_native,
     }.items() if value is None]
     loop_report_valid = bool(timing_loops) and "unavailable" not in timing_loops.lower()
     closed = bool(
         completed and not missing_gate_fields and loop_report_valid and
         wns >= -0.0005 and tns >= -0.0005 and violations == 0 and
-        macro_count == 0 and blackbox_count == 0 and loops == 0 and auto_arcs == 0 and
+        macro_count == expected_macro_count and
+        blackbox_count == expected_blackbox_count and loops == 0 and auto_arcs == 0 and
         electrical_violations == 0 and check_design_errors == 0 and
         required_native["check_design_ok"] == 1 and
         required_native["check_timing_ok"] == 1 and
         required_native["unresolved_reference_count"] == 0 and
         required_native["latch_count"] == 0 and
-        required_native["unclocked_sync_endpoint_count"] == 0
+        required_native["unclocked_sync_endpoint_count"] == 0 and
+        isolation_target_pins == isolation_expected_target_pins and
+        isolation_buffers == isolation_expected_buffers and
+        (memory_mode != "sram" or isolation_revision not in (None, "", "disabled"))
     )
     return {
         "run": run.name,
@@ -150,6 +183,10 @@ def parse_run(run: Path) -> dict:
         "tns_ns": tns,
         "violating_paths": violations,
         "area": area,
+        "memory_mode": memory_mode,
+        "macro_area": macro_area,
+        "standard_cell_area": (area - macro_area
+                               if area is not None and macro_area is not None else area),
         "cell_count": cell_count,
         "register_count": register_count,
         "clocked_register_count": metric_int(values, "clocked_register_count"),
@@ -157,7 +194,15 @@ def parse_run(run: Path) -> dict:
         "latch_count": required_native["latch_count"],
         "unresolved_reference_count": required_native["unresolved_reference_count"],
         "macro_count": macro_count,
+        "expected_macro_count": expected_macro_count,
         "blackbox_count": blackbox_count,
+        "expected_blackbox_count": expected_blackbox_count,
+        "compile_recipe": values.get("compile_recipe"),
+        "sram_input_isolation_revision": isolation_revision,
+        "sram_input_isolation_target_pin_count": isolation_target_pins,
+        "sram_input_isolation_expected_target_pin_count": isolation_expected_target_pins,
+        "sram_input_isolation_buffer_count": isolation_buffers,
+        "sram_input_isolation_expected_buffer_count": isolation_expected_buffers,
         "check_design_ok": required_native["check_design_ok"],
         "check_timing_ok": required_native["check_timing_ok"],
         "timing_loop_report_valid": loop_report_valid,

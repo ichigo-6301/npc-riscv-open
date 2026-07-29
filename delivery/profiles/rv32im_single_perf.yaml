@@ -2,6 +2,28 @@
   "commit_sha": "f76de57479b798aca7468f999c386bb4cb5fce02",
   "default_run_config": "rv32im_single_perf_smoke",
   "design_config": "rv32im_single_perf",
+  "implementation_results": {
+    "registers": {
+      "electrical_and_io_status": "partial",
+      "implementation_chain_status": "verified",
+      "macro_count": 0,
+      "memory_mode": "register_expanded",
+      "overall_maturity": "partial",
+      "postroute_internal_timing_status": "verified",
+      "synthesis_status": "verified"
+    },
+    "sram": {
+      "electrical_and_io_status": "partial",
+      "implementation_chain_status": "verified",
+      "macro_count": 4,
+      "macro_model_status": "partial_analytical_characterization",
+      "macro_physical_signoff_status": "not_closed",
+      "memory_mode": "sram_macro",
+      "overall_maturity": "partial",
+      "postroute_internal_timing_status": "verified",
+      "synthesis_status": "verified"
+    }
+  },
   "intent": "Single-issue in-order RV32IM performance profile for headless Verilator delivery",
   "kind": "profile",
   "maturity": "development",
@@ -13,6 +35,7 @@
     "headless_verilator": true,
     "native_rtl_preserved": true,
     "nvboard_excluded": true,
+    "verified_implementation_claims": true,
     "verified_performance_claims": true
   },
   "public_filelist": "filelists/rv32im_single_perf.f",
@@ -26,11 +49,12 @@
     "headless_verilator_migration": "verified",
     "isa_tests": "partial",
     "performance_benchmark": "provisional",
-    "physical_design": "not_claimed",
+    "physical_design": "verified",
+    "postroute_sta": "verified",
     "public_fresh_clone": "verified",
     "rtl_regression": "verified",
     "signoff_sta": "not_claimed",
-    "synthesis": "partial"
+    "synthesis": "verified"
   },
   "target_config": "verilator_headless",
   "top_module": "cpu_top",

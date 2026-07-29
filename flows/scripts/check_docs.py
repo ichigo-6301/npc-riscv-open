@@ -19,6 +19,11 @@ CORE_PAIRS = (
     ("docs/simulation.md", "docs/simulation.en.md"),
     ("docs/verification.md", "docs/verification.en.md"),
     ("docs/limitations.md", "docs/limitations.en.md"),
+    ("docs/roadmap.md", "docs/roadmap.en.md"),
+    (
+        "docs/evidence/backend_closure.md",
+        "docs/evidence/backend_closure.en.md",
+    ),
 )
 LEGACY_PAGES = (
     "docs/README.zh-CN.md",

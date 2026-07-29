@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed PrimeTime summary for one D7 post-route run."""
+"""Fail-closed PrimeTime summary for one D8 post-route run."""
 
 import re
 from pathlib import Path
@@ -61,7 +61,7 @@ def parse_run(run: Path) -> dict:
         "unclocked_sync_endpoint_count", "synchronous_endpoint_coverage_percent",
         "max_transition_violation_count", "max_capacitance_violation_count",
         "max_fanout_violation_count", "min_period_violation_count",
-        "min_pulse_width_violation_count", "macro_count", "link_ok",
+        "min_pulse_width_violation_count", "expected_macro_count", "macro_count", "link_ok",
         "read_sdc_ok", "read_parasitics_ok", "check_timing_ok",
     )
     parsed = {key: floating(record, key) for key in numeric_fields}
@@ -70,6 +70,7 @@ def parse_run(run: Path) -> dict:
         "setup_timing.rpt", "hold_timing.rpt", "setup_summary.rpt",
         "hold_summary.rpt", "constraint_violations.rpt",
         "analysis_coverage.rpt", "check_timing.rpt", "parasitic_annotation.rpt",
+        "macro_instances.rpt",
     )
     missing_reports = [name for name in required_reports
                        if not (run / name).is_file() or (run / name).stat().st_size == 0]
@@ -113,13 +114,26 @@ def parse_run(run: Path) -> dict:
         not missing_fields and not missing_reports and not native_errors and
         parsed["link_ok"] == 1 and parsed["read_sdc_ok"] == 1 and
         parsed["read_parasitics_ok"] == 1 and parsed["check_timing_ok"] == 1 and
-        parsed["macro_count"] == 0 and unannotated == 0 and coverage_clean
+        parsed["macro_count"] == parsed["expected_macro_count"] and
+        unannotated == 0 and coverage_clean
     )
     closed = bool(complete and setup_closed and hold_closed and electrical_clean)
+    memory_mode = record.get("memory_mode", "registers")
+    if closed:
+        status = "STA_CLOSED"
+    elif (memory_mode == "sram" and complete and setup_closed and
+          electrical_clean and not hold_closed):
+        status = "SRAM_IMPLEMENTATION_COMPLETE_TIMING_PARTIAL"
+    else:
+        status = "STA_PARTIAL"
     return {
-        "status": "STA_CLOSED" if closed else "STA_PARTIAL",
+        "status": status,
         "top": record.get("top"),
         "analysis": record.get("analysis"),
+        "memory_mode": memory_mode,
+        "expected_macro_count": integer(record, "expected_macro_count"),
+        "macro_count": integer(record, "macro_count"),
+        "macro_minimum_period_contract": record.get("macro_minimum_period_contract", ""),
         "clock_period_ns": parsed["clock_period_ns"],
         "setup_wns_ns": parsed["setup_wns_ns"],
         "setup_tns_ns": parsed["setup_tns_ns"],
@@ -143,6 +157,7 @@ def parse_run(run: Path) -> dict:
         "setup_closed": setup_closed,
         "hold_closed": hold_closed,
         "electrical_clean": electrical_clean,
+        "sta_complete": complete,
         "sta_closed": closed,
         "missing_fields": missing_fields,
         "missing_reports": missing_reports,

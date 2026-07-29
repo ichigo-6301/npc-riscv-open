@@ -59,13 +59,23 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 - OoO 的 `0.912836351` 是有限七项工作负载的 instruction-weighted aggregate
   CPI，不是通用 CPI 保证，也不能替代当前 CoreMark timed CPI。
 - Single 的约 704 MHz 是 1 ns DC stress 出现负 WNS 后的算术推算，不是
-  700 MHz closure、最大频率、P&R 或 silicon 结果。
-- Single 的 `184926.124968` 是该历史 DC 配置下的 library area 数值，不是
-  物理 die/core area，也不能与不同 memory binding 的结果直接比较。
-- Linux 与 OoO Profile 当前没有公开频率、面积或功耗数据。
-- 三个 Profile 均未建立公开 P&R、post-route extraction/STA、CDC/RDC、DFT、
-  LEC、power、SRAM macro DRC/LVS/PEX、IO、OCV/MMMC、foundry signoff 或 silicon
-  correlation。
+  700 MHz closure 或最大频率；它不替代本次 source-matched 固定频率结果。
+- Single/Linux 的 register-expanded 与 SRAM-macro 路线已有四个 Nangate45
+  academic fixed-frequency points。其 verified 范围是 top-level placement、CTS、
+  detail route、route-tool DRC/antenna/connectivity、OpenRCX 和 matching
+  PrimeTime 内部 setup/hold；`evidence:single_linux_nangate45_backend_public`。
+- 这些结果不是 Fmax。DC 与 physical clock 是两个独立配置，DC 较高频率不能
+  表述成 post-route closure。
+- P&R standard-cell area、macro count 和 core footprint 分开报告。SRAM 行的
+  standard-cell area 不包含四个 macro，不能单独与 register-expanded area 比较。
+- register-expanded 路线仍有 max-capacitance 与外部 IO drive/delay 边界；这些
+  电气/IO caveat 不通过降频掩盖，也不否定已报告的内部 setup/hold fixed point。
+- SRAM timing 使用 OpenRAM analytical FreePDK45 TT/1.0 V/25 C，而标准单元是
+  Nangate45 typical/1.1 V/25 C。`RC-004`、macro characterization、macro
+  DRC/LVS/PEX、OCV/MMMC、DFT、formal LEC、power/PI 均未闭合。
+- OoO register/SRAM 后端仍为 `planned`，没有公开频率、面积或功耗数据。
+- 三个 Profile 均不声明 foundry signoff、完整 IO/electrical closure、silicon
+  correlation 或绝对 CoreMark score。
 - OoO 的公开性能路径使用 internal tagged DPI memory；外部 memory synthesis
   contract 不包含所有 DPI-only precise-store/forwarding 行为，因此不声明
   两者完整综合等价。
@@ -73,7 +83,8 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 ## 证据与安全
 
 - 私有 benchmark binary、完整日志、主机绝对路径、PDK、Liberty/DB、LEF、
-  GDS、SRAM view、EDA work database 和 credential 不进入工程。
+  mapped/routed netlist、SPEF、GDS、SRAM view、EDA work database 和 credential
+  不进入工程。公开面只保留 bounded summary、无路径 run identity 和 SHA256。
 - 历史数字即使来自私有已验证记录，在公开输入未复现前仍只能标
   `provisional`。
 - source inventory 可能把 `mem_req_token` 等协议字段误报为 secret；这些是

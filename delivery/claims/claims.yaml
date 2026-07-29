@@ -53,6 +53,294 @@
       "tool": "Verilator 5.008 headless runtime with profile-matched NEMU difftest",
       "unit": "cycles_per_retired_instruction",
       "value": 1.485861312
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "This is a fixed DC setup-closed academic point, not Fmax, P&R closure at 540 MHz, complete IO or electrical closure, foundry signoff, or silicon performance",
+      "configuration": "source f76de57479b798aca7468f999c386bb4cb5fce02; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C; 1.851852 ns DC period",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_registers_nangate45_dc_frequency",
+      "metric": "dc_fixed_frequency",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The register-expanded single-issue profile has a source-matched setup-closed Design Compiler mapped-netlist point at 540 MHz",
+      "status": "verified",
+      "tool": "Synopsys Design Compiler O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 540
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Internal extracted setup and hold only; max-capacitance and external IO checks remain open, and this is not Fmax, complete electrical closure, OCV/MMMC, foundry signoff, or silicon performance",
+      "configuration": "540 MHz DC-mapped netlist; 425 MHz OpenROAD/OpenRCX/PrimeTime point; register-expanded memory; zero macros; typical 1.1 V 25 C; same-run routed netlist, SDC, and SPEF",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_registers_nangate45_postroute_frequency",
+      "metric": "postroute_fixed_frequency",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The register-expanded single-issue profile completes source-matched Nangate45 route, OpenRCX extraction, and PrimeTime internal setup and hold checks at 425 MHz",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0, OpenRCX, and PrimeTime O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 425
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "OpenROAD standard-cell design area at this fixed academic point; it is not die area, power, manufacturable silicon area, or a foundry signoff result",
+      "configuration": "425 MHz OpenROAD routed point; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_registers_nangate45_standard_cell_area",
+      "metric": "pnr_standard_cell_area",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The routed register-expanded single-issue fixed point reports 0.679497 mm2 standard-cell design area",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 0.679497
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Core footprint at this fixed academic placement and routing point; it is not die area, power, foundry-qualified area, or silicon evidence",
+      "configuration": "425 MHz OpenROAD routed point; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_registers_nangate45_core_area",
+      "metric": "pnr_core_area",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The routed register-expanded single-issue fixed point uses a 2.614530 mm2 core footprint",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 2.61453
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Fixed DC setup-closed academic point with mixed-PVT analytical SRAM views; not Fmax, P&R closure at 600 MHz, macro DRC/LVS/PEX, OCV/MMMC, DFT, LEC, power/PI, foundry signoff, or silicon performance",
+      "configuration": "source f76de57479b798aca7468f999c386bb4cb5fce02; four OpenRAM macros; Nangate45 typical 1.1 V 25 C cells plus analytical FreePDK45 TT 1.0 V 25 C macros; 1.666667 ns DC period",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_sram_nangate45_dc_frequency",
+      "metric": "dc_fixed_frequency",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The four-macro SRAM single-issue profile has a source-matched setup-closed Design Compiler mapped-netlist point at 600 MHz",
+      "status": "verified",
+      "tool": "Synopsys Design Compiler O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 600
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Internal extracted setup and hold with analytical FreePDK45 TT 1.0 V 25 C SRAM views mixed with Nangate45 typical 1.1 V 25 C cells; RC-004 remains visible and macro DRC/LVS/PEX, IO/electrical closure, OCV/MMMC, DFT, LEC, power/PI, foundry signoff, and silicon are not claimed",
+      "configuration": "600 MHz DC-mapped netlist; 475 MHz OpenROAD/OpenRCX/PrimeTime point; four macros; same-run routed netlist, SDC, and SPEF",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_sram_nangate45_postroute_frequency",
+      "metric": "postroute_fixed_frequency",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The four-macro SRAM single-issue profile completes source-matched Nangate45 route, OpenRCX extraction, and PrimeTime internal setup and hold checks at 475 MHz",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0, OpenRCX, and PrimeTime O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 475
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Standard-cell design area excludes the four macro interiors and is not directly comparable with register-expanded storage without the memory-model boundary; no macro DRC/LVS/PEX or foundry signoff is claimed",
+      "configuration": "475 MHz OpenROAD routed point; four analytical OpenRAM macros; standard-cell area excludes macro area",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_sram_nangate45_standard_cell_area",
+      "metric": "pnr_standard_cell_area",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The routed four-macro SRAM single-issue fixed point reports 0.149292 mm2 standard-cell design area",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 0.149292
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Academic core footprint containing four abstract macros; analytical macro characterization and macro DRC/LVS/PEX remain incomplete, with no OCV/MMMC, DFT, LEC, power/PI, foundry signoff, or silicon claim",
+      "configuration": "475 MHz OpenROAD routed point; four analytical OpenRAM macros; mixed Nangate45/FreePDK45 timing models",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "single_sram_nangate45_core_area",
+      "metric": "pnr_core_area",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The routed four-macro SRAM single-issue fixed point uses a 0.858801 mm2 core footprint",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 0.858801
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "This is a fixed DC setup-closed academic point, not Fmax, P&R closure at 280 MHz, complete IO or electrical closure, foundry signoff, or silicon performance",
+      "configuration": "source 0fc3de40c4e0b231c65945c9dc1711f084688c04; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C; 3.571429 ns DC period",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_registers_nangate45_dc_frequency",
+      "metric": "dc_fixed_frequency",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The register-expanded Linux/Sv32 profile has a source-matched setup-closed Design Compiler mapped-netlist point at 280 MHz",
+      "status": "verified",
+      "tool": "Synopsys Design Compiler O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 280
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Internal extracted setup and hold only; capacitance, fanout, asynchronous checks, and external IO models remain open, and this is not Fmax, OCV/MMMC, foundry signoff, or silicon performance",
+      "configuration": "280 MHz DC-mapped netlist; 200 MHz OpenROAD/OpenRCX/PrimeTime point; register-expanded memory; zero macros; same-run routed netlist, SDC, and SPEF",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_registers_nangate45_postroute_frequency",
+      "metric": "postroute_fixed_frequency",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The register-expanded Linux/Sv32 profile completes source-matched Nangate45 route, OpenRCX extraction, and PrimeTime internal setup and hold checks at 200 MHz",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0, OpenRCX, and PrimeTime O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 200
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "OpenROAD standard-cell design area at this fixed academic point; it is not die area, power, manufacturable silicon area, or a foundry signoff result",
+      "configuration": "200 MHz OpenROAD routed point; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_registers_nangate45_standard_cell_area",
+      "metric": "pnr_standard_cell_area",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The routed register-expanded Linux/Sv32 fixed point reports 0.717964 mm2 standard-cell design area",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 0.717964
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Core footprint at this fixed academic placement and routing point; it is not die area, power, foundry-qualified area, or silicon evidence",
+      "configuration": "200 MHz OpenROAD routed point; register-expanded memory; zero macros; Nangate45 typical 1.1 V 25 C",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_registers_nangate45_core_area",
+      "metric": "pnr_core_area",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The routed register-expanded Linux/Sv32 fixed point uses a 2.825040 mm2 core footprint",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 2.82504
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Fixed DC setup-closed academic point with mixed-PVT analytical SRAM views; not Fmax, P&R closure at 300 MHz, macro DRC/LVS/PEX, OCV/MMMC, DFT, LEC, power/PI, foundry signoff, or silicon performance",
+      "configuration": "source 0fc3de40c4e0b231c65945c9dc1711f084688c04; four OpenRAM macros; Nangate45 typical 1.1 V 25 C cells plus analytical FreePDK45 TT 1.0 V 25 C macros; 3.333333 ns DC period",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_sram_nangate45_dc_frequency",
+      "metric": "dc_fixed_frequency",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The four-macro SRAM Linux/Sv32 profile has a source-matched setup-closed Design Compiler mapped-netlist point at 300 MHz",
+      "status": "verified",
+      "tool": "Synopsys Design Compiler O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 300
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Internal extracted setup and hold with analytical FreePDK45 TT 1.0 V 25 C SRAM views mixed with Nangate45 typical 1.1 V 25 C cells; RC-004 remains visible and macro DRC/LVS/PEX, IO/electrical closure, OCV/MMMC, DFT, LEC, power/PI, foundry signoff, and silicon are not claimed",
+      "configuration": "300 MHz DC-mapped netlist; 200 MHz OpenROAD/OpenRCX/PrimeTime point; four macros; same-run routed netlist, SDC, and SPEF",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_sram_nangate45_postroute_frequency",
+      "metric": "postroute_fixed_frequency",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The four-macro SRAM Linux/Sv32 profile completes source-matched Nangate45 route, OpenRCX extraction, and PrimeTime internal setup and hold checks at 200 MHz",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0, OpenRCX, and PrimeTime O-2018.06-SP1",
+      "unit": "MHz",
+      "value": 200
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Standard-cell design area excludes the four macro interiors and is not directly comparable with register-expanded storage without the memory-model boundary; no macro DRC/LVS/PEX or foundry signoff is claimed",
+      "configuration": "200 MHz OpenROAD routed point; four analytical OpenRAM macros; standard-cell area excludes macro area",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_sram_nangate45_standard_cell_area",
+      "metric": "pnr_standard_cell_area",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The routed four-macro SRAM Linux/Sv32 fixed point reports 0.198085 mm2 standard-cell design area",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 0.198085
+    },
+    {
+      "benchmark": "Nangate45 academic fixed-frequency backend audit",
+      "caveat": "Academic core footprint containing four abstract macros; analytical macro characterization and macro DRC/LVS/PEX remain incomplete, with no OCV/MMMC, DFT, LEC, power/PI, foundry signoff, or silicon claim",
+      "configuration": "200 MHz OpenROAD routed point; four analytical OpenRAM macros; mixed Nangate45/FreePDK45 timing models",
+      "evidence": [
+        "single_linux_nangate45_backend_public"
+      ],
+      "id": "linux_sram_nangate45_core_area",
+      "metric": "pnr_core_area",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The routed four-macro SRAM Linux/Sv32 fixed point uses a 1.049500 mm2 core footprint",
+      "status": "verified",
+      "tool": "OpenROAD 26Q3-463-gbde79242a0",
+      "unit": "mm2",
+      "value": 1.0495
     }
   ],
   "kind": "claims",

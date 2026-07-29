@@ -2,7 +2,7 @@
   "kind": "nonclaims",
   "nonclaims": [
     {
-      "conditions": "Design Compiler 1.000 ns stress target; setup WNS about -0.42 ns; inferred 704 MHz and area 184926.124968 library units; not timing closure",
+      "conditions": "The historical value is inferred from a negative-WNS 1 GHz DC stress run and is not a closed implementation point",
       "evidence_status": "private_reference_only",
       "historical_reference": {
         "area": 184926.124968,
@@ -25,18 +25,18 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "No public same-run physical handoff or signoff evidence is selected for this project snapshot",
-      "evidence_status": "private_reference_only",
+      "conditions": "The public evidence verifies fixed-frequency Nangate45 academic P&R and internal extracted setup/hold only; max-capacitance, external IO, asynchronous checks, and signoff dimensions remain open",
+      "evidence_status": "public_policy_boundary",
       "id": "single_physical_signoff_not_claimed",
       "profile": "rv32im_single_perf",
       "public": true,
-      "reason": "No public same-run physical handoff or signoff evidence is selected for this project snapshot",
+      "reason": "The public evidence verifies fixed-frequency Nangate45 academic P&R and internal extracted setup/hold only; max-capacitance, external IO, asynchronous checks, and signoff dimensions remain open",
       "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
-      "statement": "P&R, extracted STA, foundry signoff, power, and silicon performance are not claimed",
+      "statement": "Maximum frequency, complete electrical and IO closure, OCV/MMMC, foundry signoff, power integrity, and silicon performance are not claimed",
       "status": "not_claimed"
     },
     {
-      "conditions": "It comes from a 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; no source-matched P&R or signoff evidence is public",
+      "conditions": "It comes from a separate negative-WNS 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; the public standard-cell and core-area claims instead come from the audited register-expanded and four-macro routed fixed points",
       "evidence_status": "private_reference_only",
       "historical_reference": {
         "area": 184926.124968,
@@ -47,24 +47,35 @@
       "id": "single_dc_area_not_claimed",
       "profile": "rv32im_single_perf",
       "public": true,
-      "reason": "It comes from a 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; no source-matched P&R or signoff evidence is public",
+      "reason": "It comes from a separate negative-WNS 1 ns synthesis stress run with a project-local corrected SRAM wrapper database; the public standard-cell and core-area claims instead come from the audited register-expanded and four-macro routed fixed points",
       "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
       "statement": "The historical 184926.124968 DC library-area value is not a public silicon or macro-area claim",
       "status": "not_claimed"
     },
     {
-      "conditions": "No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate",
-      "evidence_status": "private_reference_only",
+      "conditions": "The reviewed source-matched register-expanded physical result is the separate fixed 425 MHz P&R/PT point; historical 500 MHz or 600 MHz rows were not promoted",
+      "evidence_status": "public_policy_boundary",
       "id": "single_register_expanded_500mhz_not_claimed",
       "profile": "rv32im_single_perf",
       "public": true,
-      "reason": "No source-matched closed timing report for that memory binding is selected; it must not be merged with the separate SRAM macro-DB stress estimate",
+      "reason": "The reviewed source-matched register-expanded physical result is the separate fixed 425 MHz P&R/PT point; historical 500 MHz or 600 MHz rows were not promoted",
       "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
       "statement": "Historical register-expanded-memory operation at 500 MHz or 600 MHz is not claimed",
       "status": "not_claimed"
     },
     {
-      "conditions": "Sv32 CoreMark; earlier checkpoint e3a1cc91; approximate historical comparison only; exact cycle, instruction and binary hashes unavailable",
+      "conditions": "The four macro views are OpenRAM analytical FreePDK45 TT at 1.0 V and 25 C, mixed with Nangate45 typical cells at 1.1 V and 25 C; RC-004, OCV/MMMC, DFT, LEC, power/PI, and macro physical signoff remain open",
+      "evidence_status": "public_policy_boundary",
+      "id": "single_sram_macro_signoff_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The four macro views are OpenRAM analytical FreePDK45 TT at 1.0 V and 25 C, mixed with Nangate45 typical cells at 1.1 V and 25 C; RC-004, OCV/MMMC, DFT, LEC, power/PI, and macro physical signoff remain open",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "The single-issue SRAM result does not claim characterized production SRAM timing or macro DRC/LVS/PEX closure",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The value belongs to the earlier frozen source checkpoint and is retained only to show the measured optimization delta",
       "evidence_status": "private_reference_only",
       "historical_reference": {
         "cpi_approx": 1.98,
@@ -73,7 +84,7 @@
       },
       "id": "linux_prior_checkpoint_cpi_not_claimed",
       "profile": "rv32ima_sv32_linux",
-      "profile_source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+      "profile_source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
       "public": true,
       "reason": "The value belongs to the earlier frozen source checkpoint and is retained only to show the measured optimization delta",
       "source_commit": "e3a1cc91c4c00040f7180eec5e385326d9964893",
@@ -82,36 +93,47 @@
     },
     {
       "conditions": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
-      "evidence_status": "private_reference_only",
+      "evidence_status": "public_policy_boundary",
       "id": "linux_full_boot_not_claimed",
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
       "statement": "A complete Linux distribution boot is not claimed",
       "status": "not_claimed"
     },
     {
-      "conditions": "No source-matched implementation evidence has been selected for this profile",
-      "evidence_status": "private_reference_only",
-      "id": "linux_synthesis_not_claimed",
+      "conditions": "The public evidence verifies source-matched fixed-frequency Nangate45 academic DC, P&R, extraction, and internal setup/hold only",
+      "evidence_status": "public_policy_boundary",
+      "id": "linux_backend_signoff_not_claimed",
       "profile": "rv32ima_sv32_linux",
       "public": true,
-      "reason": "No source-matched implementation evidence has been selected for this profile",
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
-      "statement": "Linux-profile synthesis, timing, area, power, P&R, and signoff are not claimed",
+      "reason": "The public evidence verifies source-matched fixed-frequency Nangate45 academic DC, P&R, extraction, and internal setup/hold only",
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "Linux-profile maximum frequency, complete electrical and IO closure, OCV/MMMC, foundry signoff, power integrity, and silicon performance are not claimed",
       "status": "not_claimed"
     },
     {
-      "conditions": "Canonical Sv32 CoreMark; WRITE_ALLOCATE=0/1 diagnostic; the timed marker interval changes by only 245 cycles while the whole-program delta is 54,816 cycles",
+      "conditions": "WRITE_ALLOCATE=1 adds 54,816 whole-program cycles but 54,999 of those cycles occur before the timed marker; the timed interval is 245 cycles shorter rather than slower",
       "evidence_id": "coremark_public_current",
-      "evidence_status": "public_diagnostic_verified",
+      "evidence_status": "public_bounded_evidence",
       "id": "linux_write_allocate_coremark_speedup_not_claimed",
       "profile": "rv32ima_sv32_linux",
       "public": true,
       "reason": "WRITE_ALLOCATE=1 adds 54,816 whole-program cycles but 54,999 of those cycles occur before the timed marker; the timed interval is 245 cycles shorter rather than slower",
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
       "statement": "A one-percent CoreMark-loop speedup from disabling D-cache write allocation is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The four macro views are OpenRAM analytical FreePDK45 TT at 1.0 V and 25 C, mixed with Nangate45 typical cells at 1.1 V and 25 C; RC-004, OCV/MMMC, DFT, LEC, power/PI, and macro physical signoff remain open",
+      "evidence_status": "public_policy_boundary",
+      "id": "linux_sram_macro_signoff_not_claimed",
+      "profile": "rv32ima_sv32_linux",
+      "public": true,
+      "reason": "The four macro views are OpenRAM analytical FreePDK45 TT at 1.0 V and 25 C, mixed with Nangate45 typical cells at 1.1 V and 25 C; RC-004, OCV/MMMC, DFT, LEC, power/PI, and macro physical signoff remain open",
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "statement": "The Linux/Sv32 SRAM result does not claim characterized production SRAM timing or macro DRC/LVS/PEX closure",
       "status": "not_claimed"
     },
     {
@@ -145,7 +167,7 @@
       "status": "provisional"
     },
     {
-      "conditions": "RV32IM; IF/LSU/memory latencies 2/3/2; seed 1; difftest; seven-workload weighted CPI 0.912836351; CoreMark CPI 0.882380204",
+      "conditions": "The public checkout does not contain all exact external workload binaries and has not rerun the matching suite",
       "evidence_status": "private_reference_only",
       "historical_reference": {
         "cycles": 5157299,
@@ -165,7 +187,7 @@
     },
     {
       "conditions": "The private result is a finite seven-workload aggregate and includes workloads above CPI 1",
-      "evidence_status": "private_reference_only",
+      "evidence_status": "public_policy_boundary",
       "id": "ooo_universal_cpi_not_claimed",
       "profile": "rv32im_ooo_4k",
       "public": true,
@@ -176,7 +198,7 @@
     },
     {
       "conditions": "The open-source migration precedes the profile-specific ASIC baseline phase",
-      "evidence_status": "private_reference_only",
+      "evidence_status": "public_policy_boundary",
       "id": "ooo_ppa_timing_not_claimed",
       "profile": "rv32im_ooo_4k",
       "public": true,
@@ -187,24 +209,13 @@
     },
     {
       "conditions": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
-      "evidence_status": "private_reference_only",
+      "evidence_status": "public_policy_boundary",
       "id": "ooo_dpi_synth_equivalence_not_claimed",
       "profile": "rv32im_ooo_4k",
       "public": true,
       "reason": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
       "statement": "Full synthesis equivalence of the internal DPI performance memory path is not claimed",
-      "status": "not_claimed"
-    },
-    {
-      "conditions": "E1 base bee5b918 plus DC compatibility source d3caf5fe; production simulation behavior is unchanged and the NPC_ASIC CSR reset is explicitly expanded; rerun exact binary, config and profile-matched difftest before promotion",
-      "evidence_status": "historical_public_reference_only",
-      "id": "linux_e1_coremark_not_yet_reproduced",
-      "profile": "rv32ima_sv32_linux",
-      "public": true,
-      "reason": "The prior verified marker run is byte-locked to abf66cad and is retained only as historical evidence",
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
-      "statement": "The E1 Linux source plus its DC compatibility commit has no promoted public CoreMark result yet",
       "status": "not_claimed"
     }
   ],

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+  <title id="title">Nangate45 academic fixed-frequency closure points</title>
+  <desc id="desc">Design Compiler and matching post-route PrimeTime frequencies plus core and standard-cell area for Single and Linux register-expanded and SRAM-macro fixed points.</desc>
+  <style>
+    text{font-family:Arial,sans-serif;letter-spacing:0} .title{font-size:31px;font-weight:700;fill:#111827}
+    .subtitle{font-size:16px;fill:#4b5563} .section{font-size:13px;font-weight:700;fill:#6b7280}
+    .row-title{font-size:18px;font-weight:700;fill:#111827} .row-meta{font-size:14px;fill:#6b7280}
+    .bar-value{font-size:13px;font-weight:700;fill:#111827} .bar-value-light{font-size:13px;font-weight:700;fill:#ffffff} .row-rule{stroke:#d1d5db;stroke-width:1}
+    .foot{font-size:13px;fill:#374151}
+  </style>
+  <rect width="1200" height="690" fill="#f8fafc"/>
+  <text x="42" y="48" class="title">Nangate45 academic fixed-frequency closure points</text>
+  <text x="42" y="76" class="subtitle">Source-matched mapped netlist -> OpenROAD route -> OpenRCX SPEF -> PrimeTime setup/hold</text>
+  <rect x="42" y="98" width="1116" height="38" rx="5" fill="#ffffff" stroke="#d1d5db"/>
+  <rect x="62" y="111" width="14" height="14" rx="2" fill="#d97706"/><text x="84" y="123" class="section">DC setup-closed</text>
+  <rect x="220" y="111" width="14" height="14" rx="2" fill="#0f766e"/><text x="242" y="123" class="section">post-route/PT setup + hold</text>
+  <rect x="477" y="111" width="14" height="14" rx="2" fill="#475569"/><text x="499" y="123" class="section">core footprint</text>
+  <rect x="644" y="111" width="14" height="14" rx="2" fill="#be123c"/><text x="666" y="123" class="section">standard-cell design area</text>
+  <text x="284" y="153" class="section">FREQUENCY / 0-650 MHz</text>
+  <text x="800" y="153" class="section">AREA / 0-3.0 mm2</text>
+  <g transform="translate(0 164)">
+    <line x1="42" y1="-18" x2="1158" y2="-18" class="row-rule"/>
+    <text x="42" y="17" class="row-title">Single / registers</text>
+    <text x="42" y="42" class="row-meta">0 macros</text>
+    <rect x="284" y="-1" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="-1" width="324" height="15" rx="3" fill="#d97706"/>
+    <text x="616" y="11" class="bar-value">DC 540 MHz</text>
+    <rect x="284" y="27" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="27" width="255" height="15" rx="3" fill="#0f766e"/>
+    <text x="547" y="39" class="bar-value">P&amp;R/PT 425 MHz</text>
+    <rect x="800" y="-1" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="-1" width="261" height="15" rx="3" fill="#475569"/>
+    <text x="1053" y="11" text-anchor="end" class="bar-value-light">core 2.61453 mm2</text>
+    <rect x="800" y="27" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="27" width="68" height="15" rx="3" fill="#be123c"/>
+    <text x="876" y="39" class="bar-value">std-cell 0.679497 mm2</text>
+  </g>
+  <g transform="translate(0 278)">
+    <line x1="42" y1="-18" x2="1158" y2="-18" class="row-rule"/>
+    <text x="42" y="17" class="row-title">Single / SRAM</text>
+    <text x="42" y="42" class="row-meta">4 macros</text>
+    <rect x="284" y="-1" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="-1" width="360" height="15" rx="3" fill="#d97706"/>
+    <text x="652" y="11" class="bar-value">DC 600 MHz</text>
+    <rect x="284" y="27" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="27" width="285" height="15" rx="3" fill="#0f766e"/>
+    <text x="577" y="39" class="bar-value">P&amp;R/PT 475 MHz</text>
+    <rect x="800" y="-1" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="-1" width="86" height="15" rx="3" fill="#475569"/>
+    <text x="894" y="11" text-anchor="start" class="bar-value">core 0.858801 mm2</text>
+    <rect x="800" y="27" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="27" width="15" height="15" rx="3" fill="#be123c"/>
+    <text x="823" y="39" class="bar-value">std-cell 0.149292 mm2</text>
+  </g>
+  <g transform="translate(0 392)">
+    <line x1="42" y1="-18" x2="1158" y2="-18" class="row-rule"/>
+    <text x="42" y="17" class="row-title">Linux / registers</text>
+    <text x="42" y="42" class="row-meta">0 macros</text>
+    <rect x="284" y="-1" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="-1" width="168" height="15" rx="3" fill="#d97706"/>
+    <text x="460" y="11" class="bar-value">DC 280 MHz</text>
+    <rect x="284" y="27" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="27" width="120" height="15" rx="3" fill="#0f766e"/>
+    <text x="412" y="39" class="bar-value">P&amp;R/PT 200 MHz</text>
+    <rect x="800" y="-1" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="-1" width="283" height="15" rx="3" fill="#475569"/>
+    <text x="1075" y="11" text-anchor="end" class="bar-value-light">core 2.82504 mm2</text>
+    <rect x="800" y="27" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="27" width="72" height="15" rx="3" fill="#be123c"/>
+    <text x="880" y="39" class="bar-value">std-cell 0.717964 mm2</text>
+  </g>
+  <g transform="translate(0 506)">
+    <line x1="42" y1="-18" x2="1158" y2="-18" class="row-rule"/>
+    <text x="42" y="17" class="row-title">Linux / SRAM</text>
+    <text x="42" y="42" class="row-meta">4 macros</text>
+    <rect x="284" y="-1" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="-1" width="180" height="15" rx="3" fill="#d97706"/>
+    <text x="472" y="11" class="bar-value">DC 300 MHz</text>
+    <rect x="284" y="27" width="390" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="284" y="27" width="120" height="15" rx="3" fill="#0f766e"/>
+    <text x="412" y="39" class="bar-value">P&amp;R/PT 200 MHz</text>
+    <rect x="800" y="-1" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="-1" width="105" height="15" rx="3" fill="#475569"/>
+    <text x="913" y="11" text-anchor="start" class="bar-value">core 1.0495 mm2</text>
+    <rect x="800" y="27" width="300" height="15" rx="3" fill="#e5e7eb"/>
+    <rect x="800" y="27" width="20" height="15" rx="3" fill="#be123c"/>
+    <text x="828" y="39" class="bar-value">std-cell 0.198085 mm2</text>
+  </g>
+  <line x1="42" y1="610" x2="1158" y2="610" class="row-rule"/>
+  <text x="42" y="638" class="foot">Fixed points, not Fmax. Route DRC, antenna, and unrouted counts are zero; internal extracted setup/hold passes.</text>
+  <text x="42" y="662" class="foot">SRAM uses analytical OpenRAM FreePDK45 TT/1.0 V/25 C views with Nangate45 typical/1.1 V/25 C cells; macro signoff is open.</text>
+</svg>

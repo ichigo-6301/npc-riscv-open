@@ -422,6 +422,7 @@ module Sv32DCacheBridge (
     wire [31:0] sbuf_forward_data = sbuf_merged_data;
     wire sbuf_conflict_stall = req_load_can_check_sbuf && sbuf_any_overlap && !sbuf_forward_hit;
     wire req_wait_for_sbuf_drain = SBUF_ENABLE && req_atomic_r && sbuf_any_valid;
+    wire sbuf_drain_req_valid = SBUF_ENABLE && sbuf_head_valid && !sbuf_head_sent;
     wire stale_lower_resp_in_req =
         ((state == S_DATA_REQ) || (state == S_PTW_REQ)) &&
         lower_resp_valid && !sbuf_drain_resp_pending;
@@ -434,7 +435,6 @@ module Sv32DCacheBridge (
         !sbuf_forward_hit && !stale_lower_resp_in_req;
     wire req_blocked_by_full_sbuf_store =
         (state == S_DATA_REQ) && req_store_buffer_full;
-    wire sbuf_drain_req_valid = SBUF_ENABLE && sbuf_head_valid && !sbuf_head_sent;
     wire sbuf_drain_grant = sbuf_drain_req_valid &&
         (state != S_PTW_REQ) && ((state != S_DATA_REQ) || req_wait_for_sbuf_drain ||
             stale_lower_resp_in_req || req_blocked_by_full_sbuf_load ||

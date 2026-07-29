@@ -292,6 +292,30 @@ module cpu_top(
     wire ds_stat_fwd_csr_block = 1'b0;
     wire ds_stat_fwd_kill_block = 1'b0;
 `endif
+`else
+    wire ds_stage_block;
+    wire ds_stage_block_reg_hazard;
+    wire ds_stage_block_csr_hazard;
+    wire ds_stage_block_load_use;
+    wire ds_stage_block_ex_raw;
+    wire ds_stage_block_ms_raw;
+    wire ds_stage_block_hidden_raw;
+    wire ds_stat_uses_rs1;
+    wire ds_stat_uses_rs2;
+    wire ds_stat_rs1_match_es;
+    wire ds_stat_rs1_match_ms;
+    wire ds_stat_rs1_match_hidden;
+    wire ds_stat_rs1_match_ws;
+    wire ds_stat_rs2_match_es;
+    wire ds_stat_rs2_match_ms;
+    wire ds_stat_rs2_match_hidden;
+    wire ds_stat_rs2_match_ws;
+    wire ds_stat_csr_counter_hazard;
+    wire ds_stat_rs1_ex_alu_fwd;
+    wire ds_stat_rs2_ex_alu_fwd;
+    wire ds_stat_fwd_load_block;
+    wire ds_stat_fwd_csr_block;
+    wire ds_stat_fwd_kill_block;
 `endif
 `ifdef NPC_M_EXTENSION
     wire ds_mdu_en;
@@ -383,6 +407,31 @@ module cpu_top(
     wire es_stat_old_div_path = 1'b0;
     wire es_stat_old_rem_path = 1'b0;
 `endif
+`else
+    wire es_stage_block;
+    wire es_stage_block_mdu_wait;
+    wire es_stage_block_redirect_wait;
+    wire es_stat_is_mdu;
+    wire es_stat_rs1_mem_alu_fwd;
+    wire es_stat_rs2_mem_alu_fwd;
+    wire es_stat_rs1_wb_fwd;
+    wire es_stat_rs2_wb_fwd;
+    wire es_stat_rs1_load_fwd;
+    wire es_stat_rs2_load_fwd;
+    wire [2:0] es_stat_mdu_op;
+    wire es_stat_mdu_req_fire;
+    wire es_stat_mdu_resp_valid;
+    wire es_stat_mdu_busy;
+    wire es_stat_mdu_result_ready;
+    wire es_stat_fast_mul;
+    wire es_stat_fast_mul_issue;
+    wire es_stat_fast_mul_resp_unused;
+    wire es_stat_fast_mul_kill;
+    wire es_stat_fast_mul_flush_drop;
+    wire es_stat_fast_mul_forward;
+    wire es_stat_fast_mul_stall_wait_ready;
+    wire es_stat_old_div_path;
+    wire es_stat_old_rem_path;
 `endif
     wire es_fast_mul_stat_to_mem;
     wire fast_mul_resp_wb;
@@ -630,6 +679,95 @@ module cpu_top(
     wire stat_exmem_skid_mem_wait = 1'b0;
     wire stat_exmem_skid_mem_release = 1'b0;
 `endif
+`else
+    wire ms_stage_block;
+    wire ms_stage_block_req_phase;
+    wire ms_stage_block_resp_phase;
+    wire ms_stage_block_load;
+    wire ms_stage_block_store;
+    wire ms_stage_block_req_load;
+    wire ms_stage_block_req_store;
+    wire ms_stage_block_resp_load;
+    wire ms_stage_block_resp_store;
+    wire ms_fast_req_fire_trace;
+    wire ms_slow_req_fire_trace;
+    wire ms_slow_req_fwd_dep_fire_trace;
+    wire ms_slow_req_nonfwd_fire_trace;
+    wire ms_stat_load_visible;
+    wire ms_stat_load_aligned;
+    wire ms_stat_load_result_ready;
+    wire ms_stat_load_fault;
+    wire ms_stat_load_signext_ready;
+    wire ms_stat_load_req_fire;
+    wire ms_stat_load_resp_valid;
+    wire ms_stat_load_resp_fire;
+    wire ms_stat_load_data_ready;
+    wire ms_stat_load_signext_data_ready;
+    wire ms_stat_load_to_wb_valid;
+    wire ms_stat_load_split_or_misaligned;
+    wire ms_stat_load_uncached;
+    wire ms_stat_load_atomic;
+    wire ms_stat_load_killed;
+    wire ms_stat_hidden_load;
+    wire ms_stat_load_store_block;
+    wire ms_stat_load_lsu_pending;
+    wire ms_stat_mreq_valid;
+    wire ms_stat_mreq_is_load;
+    wire ms_stat_mreq_is_store;
+    wire ms_stat_mreq_is_atomic;
+    wire ms_stat_mreq_need_mem;
+    wire ms_stat_mreq_fire;
+    wire ms_stat_mreq_misaligned;
+    wire ms_stat_mreq_split;
+    wire ms_stat_mreq_fault;
+    wire ms_stat_mreq_blocked_by_resp;
+    wire ms_stat_mresp_valid;
+    wire ms_stat_mresp_is_load;
+    wire ms_stat_mresp_is_store;
+    wire ms_stat_mresp_is_atomic;
+    wire ms_stat_mresp_resp_valid;
+    wire ms_stat_mresp_resp_fire;
+    wire ms_stat_mresp_split;
+    wire ms_stat_mresp_fault;
+    wire ms_stat_store_visible;
+    wire ms_stat_store_req_fire;
+    wire ms_stat_store_resp_valid;
+    wire ms_stat_store_resp_fire;
+    wire ms_stat_store_aligned;
+    wire ms_stat_store_fault;
+    wire ms_stat_store_split_or_misaligned;
+    wire ms_stat_store_uncached;
+    wire ms_stat_store_atomic;
+    wire ms_stat_store_killed;
+    wire ms_stat_store_buffer_safe;
+    wire ms_stat_store_resp_wait;
+    wire ms_stat_single_outstanding_wait;
+    wire ms_stat_uncached_wait;
+    wire ms_stat_writeback_wait;
+    wire [63:0] stat_exmem_skid_candidate;
+    wire [63:0] stat_exmem_skid_enqueue;
+    wire [63:0] stat_exmem_skid_dequeue;
+    wire [63:0] stat_exmem_skid_full_stall;
+    wire [63:0] stat_exmem_skid_flush_drop;
+    wire [63:0] stat_exmem_skid_blocked_not_safe;
+    wire [63:0] stat_exmem_skid_blocked_branch;
+    wire [63:0] stat_exmem_skid_blocked_mem;
+    wire [63:0] stat_exmem_skid_blocked_csr;
+    wire [63:0] stat_exmem_skid_blocked_exception;
+    wire [63:0] stat_exmem_skid_blocked_div;
+    wire [63:0] stat_exmem_skid_blocked_structural;
+    wire [63:0] stat_exmem_skid_hold_cycles;
+    wire [63:0] stat_exmem_skid_hold_mem_wait_cycles;
+    wire [63:0] stat_exmem_skid_dequeue_after_mem_release;
+    wire [63:0] stat_exmem_skid_dequeue_same_cycle_mem_release;
+    wire [63:0] stat_exmem_skid_dequeue_causes_wb_valid;
+    wire stat_exmem_skid_valid;
+    wire stat_exmem_skid_enqueue_fire;
+    wire stat_exmem_skid_dequeue_fire;
+    wire stat_exmem_skid_dequeue_commit_fire;
+    wire stat_exmem_skid_dequeue_to_mreq_fire;
+    wire stat_exmem_skid_mem_wait;
+    wire stat_exmem_skid_mem_release;
 `endif
     wire hidden_mreq_valid;
     wire hidden_mreq_reg_wen;
@@ -822,6 +960,12 @@ module cpu_top(
 
     // Commit, trap, and CSR policy stays top-owned. These sideband wires keep
     // architectural ownership outside the structural wrappers.
+    wire trap_redirect_valid;
+    wire store_buffer_drain_before_maint /* verilator public_flat */;
+    wire ws_is_fencei;
+    wire fencei_maint_active;
+    wire fencei_commit_fire;
+    wire flush_mem;
 `ifdef NPC_USE_DPI
     wire ws_is_semihosting_ebreak = semihosting_ebreak_match(ws_pc);
 `else
@@ -841,7 +985,6 @@ module cpu_top(
         (csr_commit_valid && trap_redirect_valid && !ws_is_mret && !ws_is_sret);
 
     wire trap_kill_side_effect;
-    wire trap_redirect_valid;
     wire trap_redirect_async;
     wire [31:0] trap_redirect_pc;
     wire priv_upd_we;
@@ -964,7 +1107,6 @@ module cpu_top(
     wire [31:0] dbus_resp_exc_tval;
     wire dbus_store_buffer_empty /* verilator public_flat */;
     wire dbus_store_buffer_busy /* verilator public_flat */;
-    wire store_buffer_drain_before_maint /* verilator public_flat */;
     wire [2:0] dbg_dcache_bridge_state /* verilator public_flat */;
     wire dbg_dcache_bridge_drop_resp /* verilator public_flat */;
     wire dbg_dcache_bridge_req_write /* verilator public_flat */;
@@ -1159,6 +1301,56 @@ module cpu_top(
     wire [63:0] dcache_stat_uncached_access;
     wire [63:0] dcache_stat_writeback_cycle;
 `endif
+`else
+    wire [63:0] icache_stat_access = 64'd0;
+    wire [63:0] icache_stat_hit = 64'd0;
+    wire [63:0] icache_stat_miss = 64'd0;
+    wire [63:0] icache_stat_refill_req = 64'd0;
+    wire [63:0] icache_stat_refill_resp = 64'd0;
+    wire [63:0] icache_stat_refill_bypass = 64'd0;
+    wire [63:0] icache_stat_req_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_hit_resp_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_miss_wait_cycle = 64'd0;
+    wire [63:0] icache_stat_uncached_access = 64'd0;
+    wire [63:0] icache_pipe_req_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_req_valid_not_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_ready_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_data_valid_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_block_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_state_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_data_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_resp_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_cpu_cycle = 64'd0;
+    wire [63:0] icache_pipe_ready_block_maint_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_idle_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_refill_cycle = 64'd0;
+    wire [63:0] icache_pipe_state_uncached_cycle = 64'd0;
+    wire [63:0] icache_pipe_hit_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_miss_fire_cycle = 64'd0;
+    wire [63:0] icache_pipe_refill_busy_cycle = 64'd0;
+    wire [63:0] icache_pipe_resp_fifo_full_cycle = 64'd0;
+    wire [63:0] dcache_stat_access = 64'd0;
+    wire [63:0] dcache_stat_load_access = 64'd0;
+    wire [63:0] dcache_stat_store_access = 64'd0;
+    wire [63:0] dcache_stat_load_hit = 64'd0;
+    wire [63:0] dcache_stat_load_miss = 64'd0;
+    wire [63:0] dcache_stat_store_hit = 64'd0;
+    wire [63:0] dcache_stat_store_miss = 64'd0;
+    wire [63:0] dcache_stat_refill_req = 64'd0;
+    wire [63:0] dcache_stat_refill_resp = 64'd0;
+    wire [63:0] dcache_stat_write_req = 64'd0;
+    wire [63:0] dcache_stat_write_resp = 64'd0;
+    wire [63:0] dcache_stat_refill_ld_bypass = 64'd0;
+    wire [63:0] dcache_stat_refill_store_merge = 64'd0;
+    wire [63:0] dcache_stat_req_wait_cycle = 64'd0;
+    wire [63:0] dcache_stat_hit_resp_wait_cycle = 64'd0;
+    wire [63:0] dcache_stat_miss_wait_cycle = 64'd0;
+    wire [63:0] dcache_stat_uncached_access = 64'd0;
+    wire [63:0] dcache_stat_writeback_cycle = 64'd0;
 `endif
 
     wire [63:0] dhitopt_candidate_count;
@@ -1334,10 +1526,10 @@ module cpu_top(
     wire ws_is_atomic_instr = (ws_instr[6:0] == 7'b0101111);
     wire ws_has_mem_side_effect = ws_is_store_instr || ws_is_atomic_instr;
     wire ws_is_fence = (ws_instr[6:0] == 7'b0001111) && (ws_instr[14:12] == 3'b000);
-    wire ws_is_fencei = (ws_instr == 32'h0000100f);
+    assign ws_is_fencei = (ws_instr == 32'h0000100f);
     wire ws_is_sfence_vma = (ws_instr[6:0] == 7'b1110011) &&
         (ws_instr[14:12] == 3'b000) && (ws_instr[31:25] == 7'b0001001);
-    wire fencei_maint_active = (fencei_state_r != FENCEI_IDLE);
+    assign fencei_maint_active = (fencei_state_r != FENCEI_IDLE);
     assign store_buffer_drain_before_maint = dbus_store_buffer_busy &&
         (ws_is_fence || ws_is_fencei || ws_is_sfence_vma ||
             (ws_is_csr_instr && (ws_csr_idx == 12'h180)));
@@ -1348,7 +1540,7 @@ module cpu_top(
         ((ws_is_csr_instr && (ws_csr_idx == 12'h180)) || ws_is_sfence_vma);
     wire tlb_flush_all = vm_flush_start;
     wire cache_maint_start = fencei_start || vm_flush_start;
-    wire fencei_commit_fire = (fencei_state_r == FENCEI_WAIT_ICACHE) && icache_maint_inv_done && fencei_commit_pending_r;
+    assign fencei_commit_fire = (fencei_state_r == FENCEI_WAIT_ICACHE) && icache_maint_inv_done && fencei_commit_pending_r;
     assign dcache_maint_flush_req = (fencei_state_r == FENCEI_WAIT_DCACHE);
     assign icache_maint_inv_req = (fencei_state_r == FENCEI_WAIT_ICACHE);
 
@@ -1425,7 +1617,7 @@ module cpu_top(
     assign pipe_clear_valid = redirect_clear_valid || stop_clear_valid;
     wire flush_id = pipe_clear_valid || trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active;
     wire flush_ex = trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active;
-    wire flush_mem = trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active;
+    assign flush_mem = trap_redirect_valid || fencei_start || vm_flush_start || fencei_maint_active;
     assign stop_fetch =
 `ifndef NPC_USE_DPI
         cpu_halted ||

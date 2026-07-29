@@ -1,11 +1,16 @@
 import importlib.util
 import copy
 import csv
+import hashlib
+import io
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,9 +20,11 @@ sys.path.insert(0, str(SCRIPTS))
 import asicctl
 import flowctl
 from build_a3_cpi_identity import build as build_a3_cpi_identity
-from calculate_floorplan import calculate
+from calculate_floorplan import calculate, calculate_with_macros
 from compare_a3_dc import A3_COMMIT, LEGACY_COMMIT, evaluate as evaluate_a3_dc
 from prepare_pnr_sdc import retarget
+from recover_pnr_handoff import recover as recover_pnr_handoff
+from sanitize_openroad_sdc import main as sanitize_openroad_sdc
 from summarize_dc import parse_run
 from summarize_pnr import parse_run as parse_pnr_run
 from summarize_sta import parse_run as parse_sta_run
@@ -110,29 +117,84 @@ class AsicFlowTests(unittest.TestCase):
         (root / "filelists/asic").mkdir(parents=True)
         (root / "provenance").mkdir()
         (root / "rtl").mkdir()
-        (root / "rtl/top.sv").write_text(
+        top = root / "rtl/top.sv"
+        top.write_text(
             "module cpu_top(input clk, input rst_n, "
             "output [31:0] ibus_axi_araddr, input [31:0] ibus_axi_rdata, "
             "output [31:0] dbus_axi_awaddr, input [31:0] dbus_axi_rdata); "
             "endmodule\n"
         )
+        sram_top = root / "rtl/sram_top.sv"
+        sram_top.write_text(
+            "module cpu_top(input clk, input rst_n, "
+            "output [31:0] ibus_axi_araddr, input [31:0] ibus_axi_rdata, "
+            "output [31:0] dbus_axi_awaddr, input [31:0] dbus_axi_rdata); "
+            "wire sram_binding = 1'b1; endmodule\n"
+        )
         define = "+define+NPC_ASIC\n+define+NPC_USE_DPI\n" if dpi else "+define+NPC_ASIC\n"
         (root / "filelists/asic/rv32im_single_perf.f").write_text(
             define + "rtl/top.sv\n")
+        (root / "filelists/asic/rv32im_single_perf_registers.f").write_text(
+            define + "rtl/top.sv\n")
+        (root / "filelists/asic/rv32im_single_perf_sram.f").write_text(
+            define + "rtl/sram_top.sv\n")
         (root / "flows/asic/constraints/internal_clock.sdc").write_text(
             "create_clock -name npc_clk -period 2.0 [get_ports clk]\n")
         commit = "f76de57479b798aca7468f999c386bb4cb5fce02"
+        base_digest = hashlib.sha256(top.read_bytes()).hexdigest()
+        sram_digest = hashlib.sha256(sram_top.read_bytes()).hexdigest()
+        register_source_set = asicctl.sha256_json({
+            "source_commit": commit,
+            "entries": [["rtl/top.sv", base_digest]],
+        })
+        sram_source_set = asicctl.sha256_json({
+            "source_commit": commit,
+            "entries": [["rtl/top.sv", sram_digest]],
+        })
         (root / "provenance/source_allowlist.json").write_text(json.dumps({
             "project_id": "npc-riscv-open", "snapshot_id": "v0.1.0",
             "profiles": [{"profile_id": "rv32im_single_perf", "source_commit": commit,
-                          "entries": [{"destination": "rtl/top.sv", "sha256": "0" * 64}]}],
+                          "implementation_source_sets": {
+                              "registers": {"source_set_sha256": register_source_set},
+                              "sram": {"source_set_sha256": sram_source_set},
+                          },
+                          "memory_mode_overlays": [{
+                              "destination": "rtl/sram_top.sv",
+                              "logical_destination": "rtl/top.sv",
+                              "sha256": sram_digest,
+                              "bytes": sram_top.stat().st_size,
+                              "roles": ["asic_sram"],
+                              "source_commit": "1" * 40,
+                              "memory_mode": "sram",
+                              "comparison": "FUNCTIONAL_TOKEN_DIFFERENCE_NPC_ASIC_SRAM",
+                              "overlay_reason": "fixture audited SRAM binding",
+                          }],
+                          "entries": [{
+                              "destination": "rtl/top.sv",
+                              "sha256": base_digest,
+                              "bytes": top.stat().st_size,
+                              "roles": ["simulation", "asic"],
+                              "source_commit": commit,
+                          }]}],
         }))
         (root / "flows/asic/profiles/register_expanded.json").write_text(json.dumps({
-            "schema": "npc-riscv-open/asic-register-expanded-v1",
+            "schema": "npc-riscv-open/asic-dual-memory-v1",
+            "memory_modes": {
+                "registers": {
+                    "allowed_profiles": ["rv32im_single_perf"],
+                    "expected_macro_count": 0,
+                    "expected_blackbox_count": 0,
+                    "extra_defines": [],
+                },
+            },
             "libraries": {}, "orfs": {},
             "profiles": {"rv32im_single_perf": {
                 "source_commit": commit, "top": "cpu_top", "clock_port": "clk",
                 "reset_port": "rst_n", "filelist": "filelists/asic/rv32im_single_perf.f",
+                "filelists_by_memory_mode": {
+                    "registers": "filelists/asic/rv32im_single_perf_registers.f",
+                    "sram": "filelists/asic/rv32im_single_perf_sram.f",
+                },
                 "dc_frequencies_mhz": [800, 700],
             }},
         }))
@@ -143,6 +205,7 @@ class AsicFlowTests(unittest.TestCase):
             "# CONFIG_NPC_PROFILE_RV32IM_OOO_4K is not set\n"
             'CONFIG_NPC_PROFILE_ID="rv32im_single_perf"\n'
             "CONFIG_NPC_ASIC_REGISTER_EXPANDED=y\n"
+            'CONFIG_NPC_ASIC_MEMORY_MODE="registers"\n'
         )
         return temporary, root, config
 
@@ -167,6 +230,363 @@ class AsicFlowTests(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def test_config_contract_selects_explicit_sram_mode(self):
+        temporary, root, config = self.fixture()
+        try:
+            matrix_path = root / "flows/asic/profiles/register_expanded.json"
+            matrix = json.loads(matrix_path.read_text())
+            matrix["memory_modes"]["sram"] = {
+                "allowed_profiles": ["rv32im_single_perf"],
+                "expected_macro_count": 4,
+                "expected_blackbox_count": 0,
+                "extra_defines": ["NPC_ASIC_SRAM"],
+            }
+            matrix_path.write_text(json.dumps(matrix))
+            config.write_text(config.read_text().replace(
+                'CONFIG_NPC_ASIC_MEMORY_MODE="registers"',
+                'CONFIG_NPC_ASIC_MEMORY_MODE="sram"'))
+            contract = asicctl.build_contract(root, config, "auto", "sram")
+            self.assertEqual(contract["memory_mode"], "sram")
+            self.assertEqual(contract["expected_macro_count"], 4)
+            self.assertEqual(contract["expected_blackbox_count"], 0)
+        finally:
+            temporary.cleanup()
+
+    def test_source_role_hash_drift_is_rejected(self):
+        temporary, root, config = self.fixture()
+        try:
+            contract = asicctl.build_contract(root, config, "auto")
+            self.assertRegex(contract["source_role_sha256"], r"^[0-9a-f]{64}$")
+            (root / "rtl/top.sv").write_text(
+                (root / "rtl/top.sv").read_text() + "// unreviewed drift\n")
+            with self.assertRaisesRegex(asicctl.AsicError, "source role SHA256 mismatch"):
+                asicctl.build_contract(root, config, "auto")
+        finally:
+            temporary.cleanup()
+
+    def test_memory_modes_have_distinct_implementation_source_identity(self):
+        temporary, root, config = self.fixture()
+        try:
+            registers = asicctl.build_contract(root, config, "auto")
+            matrix_path = root / "flows/asic/profiles/register_expanded.json"
+            matrix = json.loads(matrix_path.read_text())
+            matrix["memory_modes"]["sram"] = {
+                "allowed_profiles": ["rv32im_single_perf"],
+                "expected_macro_count": 4,
+                "expected_blackbox_count": 0,
+                "extra_defines": ["NPC_ASIC_SRAM"],
+                "macros": {},
+            }
+            matrix["profiles"]["rv32im_single_perf"]["sram_dc_frequencies_mhz"] = [700, 200]
+            matrix_path.write_text(json.dumps(matrix))
+            config.write_text(config.read_text().replace(
+                'CONFIG_NPC_ASIC_MEMORY_MODE="registers"',
+                'CONFIG_NPC_ASIC_MEMORY_MODE="sram"'))
+            sram = asicctl.build_contract(root, config, "auto")
+            self.assertNotEqual(registers["source_role_sha256"], sram["source_role_sha256"])
+            self.assertNotEqual(registers["source_set_sha256"], sram["source_set_sha256"])
+            self.assertNotEqual(
+                registers["implementation_source_sha256"],
+                sram["implementation_source_sha256"])
+        finally:
+            temporary.cleanup()
+
+    def test_single_linux_source_locks_and_four_asic_defconfigs(self):
+        matrix = json.loads((
+            ROOT / "flows/asic/profiles/register_expanded.json").read_text())
+        expected = {
+            "rv32im_single_perf": "f76de57479b798aca7468f999c386bb4cb5fce02",
+            "rv32ima_sv32_linux": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+        }
+        self.assertEqual(
+            {profile: matrix["profiles"][profile]["source_commit"] for profile in expected},
+            expected)
+        self.assertEqual(
+            matrix["profiles"]["rv32im_single_perf"]["pnr_frequencies_mhz"],
+            {"registers": 425, "sram": 475},
+        )
+        self.assertEqual(
+            matrix["profiles"]["rv32ima_sv32_linux"]["pnr_frequencies_mhz"],
+            {"registers": 200, "sram": 200},
+        )
+        for profile, mode in (
+                ("rv32im_single_perf", "registers"),
+                ("rv32im_single_perf", "sram"),
+                ("rv32ima_sv32_linux", "registers"),
+                ("rv32ima_sv32_linux", "sram")):
+            suffix = "_sram" if mode == "sram" else ""
+            config = asicctl.parse_config(
+                ROOT / f"configs/{profile}{suffix}_asic_defconfig")
+            self.assertEqual(asicctl.selected_profile(config), profile)
+            self.assertEqual(config["CONFIG_NPC_ASIC_MEMORY_MODE"], mode)
+
+    def test_single_overlay_and_linux_source_identity_are_explicit(self):
+        manifest_path = ROOT / "provenance/source_allowlist.json"
+        if not manifest_path.is_file():
+            manifest_path = ROOT / "export/source_allowlist.json"
+        manifest = json.loads(manifest_path.read_text())
+        profiles = {item["profile_id"]: item for item in manifest["profiles"]}
+        single = profiles["rv32im_single_perf"]
+        linux = profiles["rv32ima_sv32_linux"]
+        self.assertEqual(
+            single["source_commit"], "f76de57479b798aca7468f999c386bb4cb5fce02")
+        self.assertEqual(
+            linux["source_commit"], "0fc3de40c4e0b231c65945c9dc1711f084688c04")
+        overlays = single.get("memory_mode_overlays", [])
+        self.assertEqual(len(overlays), 3)
+        self.assertEqual(
+            {item["source_commit"] for item in overlays},
+            {"176d4fd74da61ec681816630854501b233213982"})
+        self.assertTrue(all(item.get("overlay_reason") for item in overlays))
+        self.assertEqual(
+            {item.get("comparison") for item in overlays},
+            {"FUNCTIONAL_TOKEN_DIFFERENCE_NPC_ASIC_SRAM"},
+        )
+        self.assertEqual(
+            single["implementation_source_sets"]["registers"]["source_set_sha256"],
+            "8124c7d9d41959d0827af3c4f54c4154b90a4a116e46074e197afe207c751f12",
+        )
+        self.assertEqual(
+            single["implementation_source_sets"]["sram"]["source_set_sha256"],
+            "d5296a9dbba4a47ef061b286d6fac90a49770b7a2d46f72f05a12dfbfc2bfccb",
+        )
+
+    def test_lc_output_contract_is_timestamped_and_non_mutating_for_dry_run(self):
+        temporary, root, config = self.fixture()
+        try:
+            matrix_path = root / "flows/asic/profiles/register_expanded.json"
+            matrix = json.loads(matrix_path.read_text())
+            matrix["memory_modes"]["sram"] = {
+                "allowed_profiles": ["rv32im_single_perf"],
+                "expected_macro_count": 4,
+                "expected_blackbox_count": 0,
+                "extra_defines": ["NPC_ASIC_SRAM"],
+                "macros": {"macro_a": {"expected_instances": 4}},
+            }
+            matrix["profiles"]["rv32im_single_perf"]["sram_dc_frequencies_mhz"] = [700, 200]
+            matrix_path.write_text(json.dumps(matrix))
+            config.write_text(config.read_text().replace(
+                'CONFIG_NPC_ASIC_MEMORY_MODE="registers"',
+                'CONFIG_NPC_ASIC_MEMORY_MODE="sram"'))
+            args = mock.Mock(ooo_mode="auto", memory_mode="auto", output="", dry_run=True)
+            output = io.StringIO()
+            with mock.patch.dict(os.environ, {"NPC_ASIC_LC_OUTPUT": ""}), \
+                    mock.patch("sys.stdout", new=output):
+                self.assertEqual(asicctl.lc_macros(root, config, args), 0)
+            self.assertIn("ASIC_LC_MACROS_DRY_RUN_PASS", output.getvalue())
+            self.assertIn("YYYYMMDDTHHMMSSZ", output.getvalue())
+            self.assertFalse((root / "build").exists())
+            with mock.patch.dict(os.environ, {"NPC_ASIC_LC_OUTPUT": ""}):
+                with self.assertRaisesRegex(asicctl.AsicError, "requires explicit"):
+                    asicctl.resolve_lc_output(root, "", False)
+                valid = asicctl.resolve_lc_output(
+                    root, "build/asic/lc/20260729T120000Z", False)
+                self.assertEqual(valid, root / "build/asic/lc/20260729T120000Z")
+                with self.assertRaisesRegex(asicctl.AsicError, "UTC timestamp"):
+                    asicctl.resolve_lc_output(root, "build/asic/lc/latest", False)
+                valid.mkdir(parents=True)
+                args.output = str(valid)
+                args.dry_run = False
+                with mock.patch("sys.stdout", new=io.StringIO()):
+                    with self.assertRaisesRegex(asicctl.AsicError, "refusing to overwrite"):
+                        asicctl.lc_macros(root, config, args)
+        finally:
+            temporary.cleanup()
+
+    def test_pnr_sta_dry_run_contracts_need_no_handoff_and_do_not_write(self):
+        temporary, root, config = self.fixture()
+        try:
+            pnr_args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=True,
+                dc_run="", frequency_mhz=None, build_root="", run_id="",
+            )
+            sta_args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=True,
+                pnr_run="", build_root="", run_id="",
+            )
+            output = io.StringIO()
+            with mock.patch("sys.stdout", new=output):
+                self.assertEqual(asicctl.pnr(root, config, pnr_args), 0)
+                self.assertEqual(asicctl.sta(root, config, sta_args), 0)
+            text = output.getvalue()
+            self.assertIn("ASIC_PNR_DRY_RUN_PASS", text)
+            self.assertIn("ASIC_STA_DRY_RUN_PASS", text)
+            self.assertIn("dc_mapped_netlist", text)
+            self.assertIn("routed_netlist,routed_sdc,openrcx_spef", text)
+            self.assertEqual(text.count("required_identity="), 2)
+            for key in (
+                    "source_set_sha256", "source_role_sha256",
+                    "implementation_source_sha256", "config_sha256"):
+                self.assertIn(key, text)
+            self.assertFalse((root / "build").exists())
+
+            pnr_args.dry_run = False
+            with self.assertRaisesRegex(asicctl.AsicError, "real P&R requires"):
+                asicctl.pnr(root, config, pnr_args)
+            sta_args.dry_run = False
+            with self.assertRaisesRegex(asicctl.AsicError, "real STA requires"):
+                asicctl.sta(root, config, sta_args)
+        finally:
+            temporary.cleanup()
+
+    def test_dc_to_pnr_rejects_wholesale_source_identity_deletion(self):
+        temporary, root, config = self.fixture()
+        try:
+            contract = asicctl.build_contract(root, config, "auto")
+            dc_run = root / "build/dc/fixture/dc_425mhz"
+            dc_run.mkdir(parents=True)
+            manifest = {
+                "schema": "npc-riscv-open/d8-dc-input-v1",
+                "profile": contract["profile"],
+                "mode": contract["mode"],
+                "memory_mode": contract["memory_mode"],
+                "source_commit": contract["source_commit"],
+                "source_set_sha256": contract["source_set_sha256"],
+                "source_role_sha256": contract["source_role_sha256"],
+                "implementation_source_sha256":
+                    contract["implementation_source_sha256"],
+                "config_sha256": contract["config_sha256"],
+            }
+            for key in (
+                    "source_set_sha256", "source_role_sha256",
+                    "implementation_source_sha256", "config_sha256"):
+                manifest.pop(key)
+            (dc_run.parent / "input_manifest.json").write_text(
+                json.dumps(manifest))
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                dc_run=str(dc_run), frequency_mhz=None, build_root="", run_id="",
+            )
+            with self.assertRaisesRegex(
+                    asicctl.AsicError,
+                    "missing required identity fields: source_set_sha256"):
+                asicctl.pnr(root, config, args)
+        finally:
+            temporary.cleanup()
+
+    def test_pnr_to_sta_rejects_wholesale_source_identity_deletion(self):
+        temporary, root, config = self.fixture()
+        try:
+            contract = asicctl.build_contract(root, config, "auto")
+            pnr_run = root / "build/pnr/fixture"
+            pnr_run.mkdir(parents=True)
+            manifest = {
+                "schema": "npc-riscv-open/d8-pnr-input-v1",
+                "profile": contract["profile"],
+                "mode": contract["mode"],
+                "memory_mode": contract["memory_mode"],
+                "source_commit": contract["source_commit"],
+                "source_set_sha256": contract["source_set_sha256"],
+                "source_role_sha256": contract["source_role_sha256"],
+                "implementation_source_sha256":
+                    contract["implementation_source_sha256"],
+                "config_sha256": contract["config_sha256"],
+            }
+            for key in (
+                    "source_set_sha256", "source_role_sha256",
+                    "implementation_source_sha256", "config_sha256"):
+                manifest.pop(key)
+            (pnr_run / "input_manifest.json").write_text(json.dumps(manifest))
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                pnr_run=str(pnr_run), build_root="", run_id="",
+            )
+            with self.assertRaisesRegex(
+                    asicctl.AsicError,
+                    "missing required identity fields: source_set_sha256"):
+                asicctl.sta(root, config, args)
+        finally:
+            temporary.cleanup()
+
+    def test_linux_dc_dry_run_states_final_timer_contract(self):
+        contract = {
+            "profile": "rv32ima_sv32_linux",
+            "mode": "default",
+            "memory_mode": "registers",
+            "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+            "frequencies_mhz": [280, 200],
+            "navigation_quantum_mhz": 10,
+            "pnr_frequency_mhz": 200,
+        }
+        args = mock.Mock(
+            ooo_mode="auto", memory_mode="auto", dry_run=True,
+            frequencies="", timer_clock_hz=None, build_root="", run_id="",
+        )
+        output = io.StringIO()
+        with mock.patch.object(asicctl, "build_contract", return_value=contract), \
+                mock.patch("sys.stdout", new=output):
+            self.assertEqual(asicctl.dc_matrix(ROOT, ROOT / ".config", args), 0)
+        self.assertIn(
+            'ASIC_DC_ARGS="--timer-clock-hz 200000000" make dc-matrix',
+            output.getvalue(),
+        )
+
+        args.timer_clock_hz = 200000000
+        output = io.StringIO()
+        with mock.patch.object(asicctl, "build_contract", return_value=contract), \
+                mock.patch("sys.stdout", new=output):
+            self.assertEqual(asicctl.dc_matrix(ROOT, ROOT / ".config", args), 0)
+        self.assertIn(
+            "linux_timer_contract=explicit timer_clock_hz=200000000",
+            output.getvalue(),
+        )
+
+    def test_register_lc_and_predecessor_free_backend_dry_runs_pass(self):
+        temporary, root, config = self.fixture()
+        try:
+            common = {"ooo_mode": "auto", "memory_mode": "auto", "dry_run": True}
+            output = io.StringIO()
+            with mock.patch("sys.stdout", new=output):
+                self.assertEqual(
+                    asicctl.lc_macros(
+                        root, config, mock.Mock(**common, output="")
+                    ),
+                    0,
+                )
+                self.assertEqual(
+                    asicctl.pnr(
+                        root,
+                        config,
+                        mock.Mock(
+                            **common, dc_run="", frequency_mhz=None,
+                            build_root="", run_id=""
+                        ),
+                    ),
+                    0,
+                )
+                self.assertEqual(
+                    asicctl.sta(
+                        root,
+                        config,
+                        mock.Mock(**common, pnr_run="", build_root="", run_id=""),
+                    ),
+                    0,
+                )
+            text = output.getvalue()
+            self.assertIn("ASIC_LC_MACROS_DRY_RUN_NOT_APPLICABLE", text)
+            self.assertIn("dc_run=<setup-closed-dc-run>", text)
+            self.assertIn("pnr_run=<route-clean-pnr-run>", text)
+            self.assertFalse((root / "build").exists())
+        finally:
+            temporary.cleanup()
+
+    def test_linux_sram_profile_uses_exact_xpm_leaf_binding(self):
+        matrix = json.loads((
+            ROOT / "flows/asic/profiles/register_expanded.json").read_text())
+        self.assertIn(
+            "rv32ima_sv32_linux", matrix["memory_modes"]["sram"]["allowed_profiles"])
+        self.assertEqual(
+            matrix["profiles"]["rv32ima_sv32_linux"]["sram_dc_frequencies_mhz"],
+            [400, 200])
+        config = (ROOT / "configs/rv32ima_sv32_linux_sram_asic_defconfig").read_text()
+        self.assertIn('CONFIG_NPC_ASIC_MEMORY_MODE="sram"', config)
+        xpm = (ROOT / "rtl/asic/xpm_register_models.sv").read_text()
+        self.assertIn("NPC_ASIC_SRAM", xpm)
+        self.assertIn("npc_icache_data_1r1w_512x32 u_macro", xpm)
+        self.assertIn("npc_dcache_data_1r1w_512x32_b8 u_macro", xpm)
+        self.assertIn("npc_unsupported_sram_xpm_sdpram_configuration", xpm)
+        self.assertIn("npc_unsupported_sram_xpm_tdpram_configuration", xpm)
+
     def test_floorplan_uses_required_area_formula_and_site_snap(self):
         result = calculate(300000.0)
         self.assertGreaterEqual(result["computed_core_area_um2"], 300000.0 * 1.25 / 0.30)
@@ -175,12 +595,194 @@ class AsicFlowTests(unittest.TestCase):
         self.assertAlmostEqual((y1 - y0) / 1.4, round((y1 - y0) / 1.4), places=6)
         self.assertEqual(result["place_density"], 0.55)
 
+    def test_macro_floorplan_preserves_count_channel_and_boundary(self):
+        macros = {
+            "macro_a": {"expected_instances": 2, "width_um": 158.695, "height_um": 427.77},
+            "macro_b": {"expected_instances": 2, "width_um": 158.695, "height_um": 427.77},
+        }
+        result = calculate_with_macros(250000.0, macros)
+        placements = result["macro_placements"]
+        self.assertEqual(len(placements), 4)
+        self.assertEqual(result["macro_halo_um"], 20.0)
+        self.assertEqual(result["macro_channel_um"], 30.0)
+        x0, y0, x1, y1 = result["core_area"]
+        for placement in placements:
+            self.assertGreaterEqual(placement["x_um"] - x0, 40.0)
+            self.assertGreaterEqual(placement["y_um"] - y0, 40.0)
+            self.assertGreaterEqual(x1 - placement["x_um"] - placement["width_um"], 40.0)
+            self.assertGreaterEqual(y1 - placement["y_um"] - placement["height_um"], 40.0)
+        for left, right in zip(placements, placements[1:]):
+            self.assertAlmostEqual(
+                right["x_um"] - left["x_um"] - left["width_um"], 30.0)
+
+    def test_openroad_contract_consumes_macro_views_and_hooks(self):
+        config = (ROOT / "flows/asic/openroad/config.mk").read_text()
+        for name in ("ADDITIONAL_LEFS", "ADDITIONAL_LIBS", "ADDITIONAL_GDS",
+                     "MACRO_PLACEMENT_TCL", "PRE_PDN_TCL", "PRE_GLOBAL_ROUTE_TCL",
+                     "HOLD_SLACK_MARGIN"):
+            self.assertIn(name, config)
+        runner = (ROOT / "flows/asic/openroad/run.sh").read_text()
+        self.assertIn("NPC_ASIC_EXPECTED_MACRO_COUNT", runner)
+        self.assertIn("FAIL_HANDOFF_IDENTITY", runner)
+        self.assertIn("git -c safe.directory=/OpenROAD-flow-scripts", runner)
+        self.assertIn("actual_orfs_commit", runner)
+        self.assertIn("ORFS commit mismatch", runner)
+
+    def test_openroad_normalizes_only_dc_constant_nets(self):
+        text = (ROOT / "flows/asic/openroad/normalize_dc_constant_nets.tcl").read_text()
+        self.assertIn("foreach net [$block getNets]", text)
+        self.assertIn("{(^|/)(one_|zero_)$}", text)
+        self.assertIn("foreach name [lsort -dictionary $constant_names]", text)
+        self.assertIn("$net setSigType SIGNAL", text)
+        self.assertNotIn("setSigType SIGNAL", text.replace("$net setSigType SIGNAL", ""))
+        self.assertNotIn("VDD", text)
+        self.assertNotIn("VSS", text)
+
+    def _openroad_runner_fixture(self, base, commit):
+        root = base / "source"
+        build = root / "build"
+        root.mkdir()
+        netlist = root / "mapped.v"
+        sdc = root / "mapped.sdc"
+        hook = root / "normalize.tcl"
+        fake_docker = root / "fake-docker"
+        netlist.write_text("module cpu_top; endmodule\n")
+        sdc.write_text("create_clock -period 2.0 [get_ports clk]\n")
+        hook.write_text("# fixture\n")
+        fake_docker.write_text("#!/usr/bin/env bash\nexit 0\n")
+        fake_docker.chmod(0o755)
+        environment = os.environ.copy()
+        environment.update({
+            "NPC_ASIC_ROOT": str(root),
+            "NPC_ASIC_BUILD_ROOT": str(build),
+            "NPC_ASIC_TOP": "cpu_top",
+            "NPC_ASIC_DESIGN_NICKNAME": "fixture",
+            "NPC_ASIC_MAPPED_NETLIST": str(netlist),
+            "NPC_ASIC_PNR_SDC": str(sdc),
+            "NPC_ASIC_PNR_PERIOD_NS": "2.0",
+            "NPC_ASIC_DIE_AREA": "0 0 100 100",
+            "NPC_ASIC_CORE_AREA": "10 10 90 90",
+            "NPC_ASIC_PLACE_DENSITY": "0.55",
+            "NPC_ASIC_ORFS_IMAGE": "fixture@sha256:" + "0" * 64,
+            "NPC_ASIC_ORFS_COMMIT": commit,
+            "NPC_ASIC_MEMORY_MODE": "registers",
+            "NPC_ASIC_EXPECTED_MACRO_COUNT": "0",
+            "NPC_ASIC_HOLD_SLACK_MARGIN": "0.0",
+            "NPC_ASIC_PRE_GLOBAL_ROUTE_TCL": str(hook),
+            "NPC_ASIC_CONSTANT_NET_REPORT": str(build / "constant_net_report.txt"),
+            "NPC_ASIC_DOCKER": str(fake_docker),
+        })
+        return environment, build
+
+    def test_openroad_runner_rejects_malformed_orfs_commit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            environment, _ = self._openroad_runner_fixture(
+                Path(temp), "0" * 39)
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("full lowercase Git commit", completed.stderr)
+
+    def test_openroad_runner_requires_runtime_identity_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            environment, _ = self._openroad_runner_fixture(
+                Path(temp), "0" * 40)
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("Missing ORFS runtime identity report", completed.stderr)
+
+    def test_openroad_runner_rejects_wrong_runtime_identity_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            environment, build = self._openroad_runner_fixture(
+                Path(temp), "0" * 40)
+            build.mkdir()
+            (build / "orfs_commit.txt").write_text("1" * 40 + "\n")
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("runtime identity report mismatch", completed.stderr)
+
+    def test_openroad_runner_rejects_build_root_outside_source_root(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            root = base / "source"
+            build = base / "build"
+            root.mkdir()
+            build.mkdir()
+            netlist = root / "mapped.v"
+            sdc = root / "mapped.sdc"
+            hook = root / "normalize.tcl"
+            netlist.write_text("module cpu_top; endmodule\n")
+            sdc.write_text("create_clock -period 2.0 [get_ports clk]\n")
+            hook.write_text("# fixture\n")
+            environment = os.environ.copy()
+            environment.update({
+                "NPC_ASIC_ROOT": str(root),
+                "NPC_ASIC_BUILD_ROOT": str(build),
+                "NPC_ASIC_TOP": "cpu_top",
+                "NPC_ASIC_DESIGN_NICKNAME": "fixture",
+                "NPC_ASIC_MAPPED_NETLIST": str(netlist),
+                "NPC_ASIC_PNR_SDC": str(sdc),
+                "NPC_ASIC_PNR_PERIOD_NS": "2.0",
+                "NPC_ASIC_DIE_AREA": "0 0 100 100",
+                "NPC_ASIC_CORE_AREA": "10 10 90 90",
+                "NPC_ASIC_PLACE_DENSITY": "0.55",
+                "NPC_ASIC_ORFS_IMAGE": "fixture@sha256:" + "0" * 64,
+                "NPC_ASIC_ORFS_COMMIT": "0" * 40,
+                "NPC_ASIC_MEMORY_MODE": "registers",
+                "NPC_ASIC_EXPECTED_MACRO_COUNT": "0",
+                "NPC_ASIC_HOLD_SLACK_MARGIN": "0.0",
+                "NPC_ASIC_PRE_GLOBAL_ROUTE_TCL": str(hook),
+                "NPC_ASIC_CONSTANT_NET_REPORT": str(build / "constant_net_report.txt"),
+            })
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn(
+                "NPC_ASIC_BUILD_ROOT must be below NPC_ASIC_ROOT",
+                completed.stderr)
+
     def test_pnr_sdc_retargets_exactly_one_clock(self):
         source = "create_clock [get_ports clk] -name npc_clk -period 1.250000\n"
         result = retarget(source, 2.0)
         self.assertIn("-period 2.000000000", result)
         with self.assertRaisesRegex(ValueError, "exactly one"):
             retarget(source + source, 2.0)
+
+    def test_routed_sdc_accepts_orfs_rounding_and_restores_exact_period(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "routed.sdc"
+            output = root / "primetime.sdc"
+            source.write_text(
+                "current_design cpu_top\n"
+                "create_clock -name npc_clk -period 2.3529 [get_ports {clk}]\n"
+            )
+            with mock.patch.object(sys, "argv", [
+                    "sanitize_openroad_sdc.py", "--input", str(source),
+                    "--output", str(output), "--expected-period-ns", "2.352941176"]):
+                self.assertEqual(sanitize_openroad_sdc(), 0)
+            self.assertIn("-period 2.352941176", output.read_text())
+
+    def test_routed_sdc_rejects_value_outside_orfs_rounding_interval(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "routed.sdc"
+            output = root / "primetime.sdc"
+            source.write_text(
+                "current_design cpu_top\n"
+                "create_clock -name npc_clk -period 2.3528 [get_ports {clk}]\n"
+            )
+            with mock.patch.object(sys, "argv", [
+                    "sanitize_openroad_sdc.py", "--input", str(source),
+                    "--output", str(output), "--expected-period-ns", "2.352941176"]):
+                with self.assertRaisesRegex(SystemExit, "period mismatch"):
+                    sanitize_openroad_sdc()
 
     def test_dc_constraint_uses_native_capacitance_and_bounded_fanout(self):
         text = (ROOT / "flows/asic/constraints/internal_clock.sdc").read_text()
@@ -192,6 +794,33 @@ class AsicFlowTests(unittest.TestCase):
         text = (ROOT / "flows/asic/dc/run.tcl").read_text()
         self.assertIn("set check_timing_ok [check_timing]", text)
         self.assertNotIn("check_timing -verbose", text)
+
+    def test_dc_recipe_runs_incremental_cleanup_after_compile_ultra(self):
+        text = (ROOT / "flows/asic/dc/run.tcl").read_text()
+        compile_ultra = text.index("compile_ultra")
+        cleanup = text.index("compile -incremental_mapping", compile_ultra)
+        isolation = text.index("apply_sram_icache_write_data_isolation", cleanup)
+        reports = text.index("set check_design_ok", isolation)
+        self.assertLess(compile_ultra, cleanup)
+        self.assertLess(cleanup, isolation)
+        self.assertLess(isolation, reports)
+        self.assertIn("set compile_recipe compile_ultra_then_incremental_mapping_v1", text)
+        self.assertIn(
+            "compile_ultra_then_incremental_mapping_then_sram_icache_din_isolation_v2",
+            text)
+
+    def test_dc_sram_input_isolation_is_exact_and_fail_closed(self):
+        text = (ROOT / "flows/asic/dc/sram_input_isolation.tcl").read_text()
+        self.assertIn("ref_name == npc_icache_data_1r1w_512x32", text)
+        self.assertIn("name =~ din0*", text)
+        self.assertIn("!= 64", text)
+        self.assertIn("!= 32", text)
+        self.assertIn("set_dont_touch $inserted_buf_cells true", text)
+        self.assertIn("compile -incremental_mapping", text)
+        self.assertNotIn("clk0", text)
+        self.assertNotIn("clk1", text)
+        controller = (ROOT / "flows/scripts/asicctl.py").read_text()
+        self.assertIn('"sram_input_isolation_hook"', controller)
 
     def test_ooo_wrapper_binds_a3_only_for_a3_source(self):
         text = (ROOT / "rtl/wrappers/rv32im_ooo_4k_sim_top.sv").read_text()
@@ -260,6 +889,48 @@ class AsicFlowTests(unittest.TestCase):
             (run / "timing_loops.rpt").write_text("No timing loops found\n")
             self.assertIn("tns_ns", parse_run(run)["missing_gate_fields"])
             self.assertFalse(parse_run(run)["setup_closed"])
+
+    def test_dc_sram_summary_requires_input_isolation_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            (run / "run.ok").write_text("ok\n")
+            (run / "cpu_top_mapped.v").write_text("module cpu_top; endmodule\n")
+            contract = (
+                "top=cpu_top\nmemory_mode=sram\nclock_period_ns=2.0\n"
+                "expected_macro_count=4\nmacro_count=4\n"
+                "expected_blackbox_count=0\nblackbox_count=0\n"
+                "cell_count=100\nregister_count=20\nclocked_register_count=20\n"
+                "unclocked_sync_endpoint_count=0\nlatch_count=0\n"
+                "unresolved_reference_count=0\ncheck_design_ok=1\ncheck_timing_ok=1\n"
+                "setup_wns_ns=0.05\nsetup_tns_ns=0.0\nsetup_violation_count=0\n"
+                "hold_wns_ns=0.02\nhold_tns_ns=0.0\nhold_violation_count=0\n"
+                "max_transition_violation_count=0\nmax_capacitance_violation_count=0\n"
+                "max_fanout_violation_count=0\nmin_period_violation_count=0\n"
+                "min_pulse_width_violation_count=0\n"
+            )
+            (run / "run_contract.txt").write_text(contract)
+            (run / "qor.rpt").write_text(
+                "Critical Path Slack: 0.05\nTotal Negative Slack: 0.00\n"
+                "No. of Violating Paths: 0\nDesign Area: 1000.0\n")
+            (run / "timing.rpt").write_text(
+                "Startpoint: a_reg\nEndpoint: b_reg\nPath Group: npc_clk\n"
+                "  data arrival time 1.80\n  slack (MET) 0.05\n")
+            for name in ("constraints.rpt", "check_design.rpt", "check_timing.rpt",
+                         "dc.log", "disabled_timing.rpt", "timing_loops.rpt"):
+                (run / name).write_text(
+                    "No timing loops found\n" if name == "timing_loops.rpt" else "clean\n")
+            missing = parse_run(run)
+            self.assertFalse(missing["setup_closed"])
+            self.assertIn(
+                "sram_input_isolation_buffer_count", missing["missing_gate_fields"])
+            (run / "run_contract.txt").write_text(contract +
+                "compile_recipe=compile_ultra_then_incremental_mapping_then_sram_icache_din_isolation_v2\n"
+                "sram_input_isolation_revision=single_icache_write_data_shared_buf_x16_v1\n"
+                "sram_input_isolation_target_pin_count=64\n"
+                "sram_input_isolation_expected_target_pin_count=64\n"
+                "sram_input_isolation_buffer_count=32\n"
+                "sram_input_isolation_expected_buffer_count=32\n")
+            self.assertTrue(parse_run(run)["setup_closed"])
 
     def test_dc_frequency_navigation_quantizes_below_wns_estimate(self):
         row = {
@@ -368,13 +1039,16 @@ class AsicFlowTests(unittest.TestCase):
             handoff = run / "handoff"
             for directory in (results, logs, reports, handoff):
                 directory.mkdir(parents=True, exist_ok=True)
+            (run / "constant_net_report.txt").write_text(
+                "found=1\nnormalized=1\nalready_signal=0\n")
             for path in (
                 results / "1_2_yosys.v", handoff / (top + "_postroute.odb"),
                 handoff / (top + "_postroute.def"), handoff / (top + "_postroute.v"),
                 handoff / (top + "_postroute.sdc"), handoff / (top + "_postroute.spef"),
                 handoff / (top + ".gds"), reports / "5_route_drc.rpt",
             ):
-                path.write_text("fixture\n")
+                path.write_text(
+                    "" if path == reports / "5_route_drc.rpt" else "fixture\n")
             route = {
                 "detailedroute__route__drc_errors": 0,
                 "detailedroute__antenna__violating__nets": 0,
@@ -401,11 +1075,96 @@ class AsicFlowTests(unittest.TestCase):
             (logs / "5_2_route.json").write_text(json.dumps(route))
             self.assertFalse(parse_pnr_run(run)["route_complete"])
 
+    def test_pnr_handoff_recovery_preserves_source_and_promotes_clean_orfs(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source"
+            output = root / "recovered"
+            nickname = "fixture"
+            top = "cpu_top"
+            source.mkdir()
+            (source / "input").mkdir()
+            mapped = source / "input/cpu_top_mapped.v"
+            mapped.write_text("module cpu_top; endmodule\n")
+            (source / "input_manifest.json").write_text(json.dumps({
+                "schema": "npc-riscv-open/d8-pnr-input-v1",
+                "profile": "rv32im_single_perf",
+                "mode": "default",
+                "memory_mode": "registers",
+                "expected_macro_count": 0,
+                "pnr_frequency_mhz": 425,
+                "files": {
+                    "dc_mapped_netlist": {
+                        "path": str(mapped), "sha256": asicctl.sha256_file(mapped),
+                    },
+                },
+            }))
+            (source / "openroad_contract.txt").write_text(
+                "design_nickname=fixture\ntop=cpu_top\nplatform=nangate45\n"
+                "memory_mode=registers\nexpected_macro_count=0\n"
+                "pnr_period_ns=2.352941176\norfs_commit=" + "a" * 40 + "\n"
+                "orfs_image=fixture@sha256:" + "b" * 64 + "\n"
+                "mapped_netlist_sha256=" + asicctl.sha256_file(mapped) + "\n"
+                "orfs_import_netlist_sha256=NA\n"
+            )
+            (source / "constant_net_report.txt").write_text(
+                "found=1\nnormalized=1\nalready_signal=0\n")
+            (source / "floorplan.json").write_text("{}\n")
+            (source / "openroad.log").write_text("wrapper period mismatch\n")
+            (source / "exit_status.txt").write_text("1\n")
+            (source / "summary.json").write_text("{}\n")
+            results = source / "orfs/results/nangate45" / nickname / "base"
+            logs = source / "orfs/logs/nangate45" / nickname / "base"
+            reports = source / "orfs/reports/nangate45" / nickname / "base"
+            for directory in (results, logs, reports):
+                directory.mkdir(parents=True)
+            for name in (
+                    "1_2_yosys.v", "6_final.v", "6_final.odb", "6_final.def",
+                    "6_final.spef", "6_final.gds"):
+                (results / name).write_text(mapped.read_text())
+            (results / "6_final.sdc").write_text(
+                "current_design cpu_top\n"
+                "create_clock -name npc_clk -period 2.3529 [get_ports {clk}]\n")
+            route = {
+                "detailedroute__route__drc_errors": 0,
+                "detailedroute__antenna__violating__nets": 0,
+                "detailedroute__antenna__violating__pins": 0,
+                "detailedroute__flow__errors__count": 0,
+            }
+            final = {
+                "finish__flow__errors__count": 0,
+                "finish__design__instance__count__macros": 0,
+                "finish__timing__drv__max_slew": 0,
+                "finish__timing__drv__max_cap": 0,
+                "finish__timing__drv__max_fanout": 0,
+                "finish__timing__setup__ws": 0.1,
+                "finish__timing__setup__tns": 0,
+                "finish__timing__hold__ws": 0.02,
+                "finish__timing__hold__tns": 0,
+                "finish__timing__drv__setup_violation_count": 0,
+                "finish__timing__drv__hold_violation_count": 0,
+            }
+            (logs / "5_2_route.json").write_text(json.dumps(route))
+            (logs / "6_report.json").write_text(json.dumps(final))
+            (reports / "5_route_drc.rpt").write_text("")
+
+            summary = recover_pnr_handoff(source, output)
+            self.assertTrue(summary["route_complete"])
+            self.assertFalse((source / "run.ok").exists())
+            self.assertTrue((output / "run.ok").is_file())
+            self.assertTrue((output / "orfs").is_symlink())
+            recovered_sdc = (output / "handoff/cpu_top_postroute.sdc").read_text()
+            self.assertIn("-period 2.352941176", recovered_sdc)
+            roles = json.loads((output / "same_run_artifacts.json").read_text())
+            self.assertIn("routed_def", roles)
+            self.assertIn("gds", roles)
+
     def test_sta_summary_requires_setup_hold_coverage_and_parasitics(self):
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp)
             (run / "run_contract.txt").write_text(
-                "top=cpu_top\nanalysis=postroute_extracted_internal_timing\nmacro_count=0\n"
+                "top=cpu_top\nanalysis=postroute_extracted_internal_timing\n"
+                "memory_mode=registers\nexpected_macro_count=0\nmacro_count=0\n"
                 "clock_period_ns=2.0\nlink_ok=1\nread_sdc_ok=1\nread_parasitics_ok=1\n"
                 "check_timing_ok=1\nsetup_wns_ns=0.1\nsetup_tns_ns=0.0\n"
                 "setup_violation_count=0\nhold_wns_ns=0.02\nhold_tns_ns=0.0\n"
@@ -418,6 +1177,7 @@ class AsicFlowTests(unittest.TestCase):
                 "setup_timing.rpt", "hold_timing.rpt", "setup_summary.rpt",
                 "hold_summary.rpt", "constraint_violations.rpt", "analysis_coverage.rpt",
                 "check_timing.rpt",
+                "macro_instances.rpt",
             ):
                 (run / name).write_text("clean\n")
             (run / "parasitic_annotation.rpt").write_text("All parasitics are annotated\n")
@@ -426,6 +1186,14 @@ class AsicFlowTests(unittest.TestCase):
             (run / "run_contract.txt").write_text(
                 (run / "run_contract.txt").read_text().replace("hold_wns_ns=0.02", "hold_wns_ns=-0.01"))
             self.assertFalse(parse_sta_run(run)["sta_closed"])
+            sram_contract = (run / "run_contract.txt").read_text()
+            sram_contract = sram_contract.replace(
+                "memory_mode=registers\nexpected_macro_count=0\nmacro_count=0",
+                "memory_mode=sram\nexpected_macro_count=4\nmacro_count=4")
+            (run / "run_contract.txt").write_text(sram_contract)
+            self.assertEqual(
+                parse_sta_run(run)["status"],
+                "SRAM_IMPLEMENTATION_COMPLETE_TIMING_PARTIAL")
 
     def test_evidence_check_rejects_empty_root(self):
         with tempfile.TemporaryDirectory() as temp:

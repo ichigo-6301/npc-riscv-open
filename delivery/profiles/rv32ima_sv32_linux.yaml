@@ -1,7 +1,29 @@
 {
-  "commit_sha": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+  "commit_sha": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
   "default_run_config": "rv32ima_sv32_linux_smoke",
   "design_config": "rv32ima_sv32_linux",
+  "implementation_results": {
+    "registers": {
+      "electrical_and_io_status": "partial",
+      "implementation_chain_status": "verified",
+      "macro_count": 0,
+      "memory_mode": "register_expanded",
+      "overall_maturity": "partial",
+      "postroute_internal_timing_status": "verified",
+      "synthesis_status": "verified"
+    },
+    "sram": {
+      "electrical_and_io_status": "partial",
+      "implementation_chain_status": "verified",
+      "macro_count": 4,
+      "macro_model_status": "partial_analytical_characterization",
+      "macro_physical_signoff_status": "not_closed",
+      "memory_mode": "sram_macro",
+      "overall_maturity": "partial",
+      "postroute_internal_timing_status": "verified",
+      "synthesis_status": "verified"
+    }
+  },
   "intent": "Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation",
   "kind": "profile",
   "maturity": "development",
@@ -13,12 +35,13 @@
     "headless_verilator": true,
     "native_rtl_preserved": true,
     "nvboard_excluded": true,
+    "verified_implementation_claims": true,
     "verified_performance_claims": false
   },
   "public_filelist": "filelists/rv32ima_sv32_linux.f",
   "schema_version": "1.0.0",
   "snapshot_id": "v0.1.0",
-  "source_ref": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+  "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
   "source_root": "npc",
   "source_set": "rv32ima_sv32_linux",
   "stages": {
@@ -28,11 +51,12 @@
     "linux_boot": "partial",
     "opensbi_smoke": "partial",
     "performance_benchmark": "provisional",
-    "physical_design": "not_claimed",
+    "physical_design": "verified",
+    "postroute_sta": "verified",
     "public_fresh_clone": "verified",
     "rtl_regression": "verified",
     "signoff_sta": "not_claimed",
-    "synthesis": "not_claimed"
+    "synthesis": "verified"
   },
   "target_config": "verilator_headless",
   "top_module": "cpu_top",
