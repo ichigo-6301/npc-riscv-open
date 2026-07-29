@@ -196,7 +196,8 @@ def recover(source_run: Path, output_run: Path) -> dict:
     contract = contract_values(source_run / "openroad_contract.txt")
     for key in ("design_nickname", "top", "memory_mode", "expected_macro_count",
                 "pnr_period_ns", "orfs_commit", "orfs_actual_commit",
-                "orfs_commit_verification", "orfs_image_digest", "orfs_image"):
+                "orfs_commit_verification", "orfs_image_digest", "orfs_image",
+                "mapped_netlist_sha256", "orfs_import_netlist_sha256"):
         if not contract.get(key):
             raise RecoveryError(f"source OpenROAD contract lacks {key}")
     identity = runtime_identity(source_run, contract)
@@ -236,7 +237,13 @@ def recover(source_run: Path, output_run: Path) -> dict:
     mapped = Path(manifest["files"]["dc_mapped_netlist"]["path"])
     require_file(mapped, "DC mapped netlist")
     imported = output_run / "orfs/results/nangate45" / nickname / "base/1_2_yosys.v"
-    if sha256_file(mapped) != sha256_file(imported):
+    mapped_hash = sha256_file(mapped)
+    imported_hash = sha256_file(imported)
+    if contract["mapped_netlist_sha256"] != mapped_hash:
+        raise RecoveryError("source OpenROAD contract mapped netlist hash mismatch")
+    if contract["orfs_import_netlist_sha256"] not in ("NA", imported_hash):
+        raise RecoveryError("source OpenROAD contract ORFS import hash mismatch")
+    if mapped_hash != imported_hash:
         raise RecoveryError("FAIL_HANDOFF_IDENTITY: mapped netlist differs from ORFS import")
 
     handoff = output_run / "handoff"
@@ -255,8 +262,8 @@ def recover(source_run: Path, output_run: Path) -> dict:
 
     roles = same_run_artifacts(output_run, top, mapped, imported)
     write_json(output_run / "same_run_artifacts.json", roles)
-    contract["mapped_netlist_sha256"] = sha256_file(mapped)
-    contract["orfs_import_netlist_sha256"] = sha256_file(imported)
+    contract["mapped_netlist_sha256"] = mapped_hash
+    contract["orfs_import_netlist_sha256"] = imported_hash
     contract["handoff_recovery"] = "postprocess_only_no_physical_rerun"
     (output_run / "openroad_contract.txt").write_text(
         "".join(f"{key}={value}\n" for key, value in contract.items()),

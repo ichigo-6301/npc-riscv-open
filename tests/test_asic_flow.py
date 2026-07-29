@@ -1225,6 +1225,21 @@ class AsicFlowTests(unittest.TestCase):
                 recover_pnr_handoff(source, root / "recovered_bad_input_hash")
             manifest["files"]["dc_mapped_netlist"]["sha256"] = asicctl.sha256_file(mapped)
             manifest_path.write_text(json.dumps(manifest))
+            contract_path = source / "openroad_contract.txt"
+            contract_text = contract_path.read_text()
+            contract_path.write_text(contract_text.replace(
+                "mapped_netlist_sha256=" + asicctl.sha256_file(mapped),
+                "mapped_netlist_sha256=" + "0" * 64))
+            with self.assertRaisesRegex(
+                    RecoveryError, "contract mapped netlist hash mismatch"):
+                recover_pnr_handoff(source, root / "recovered_bad_contract_mapped_hash")
+            contract_path.write_text(contract_text.replace(
+                "orfs_import_netlist_sha256=NA",
+                "orfs_import_netlist_sha256=" + "0" * 64))
+            with self.assertRaisesRegex(
+                    RecoveryError, "contract ORFS import hash mismatch"):
+                recover_pnr_handoff(source, root / "recovered_bad_contract_import_hash")
+            contract_path.write_text(contract_text)
             summary = recover_pnr_handoff(source, output)
             self.assertTrue(summary["route_complete"])
             self.assertFalse((source / "run.ok").exists())
