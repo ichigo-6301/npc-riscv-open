@@ -17,8 +17,8 @@
 
 | Profile | ISA / 微架构 | 公开 RTL 与 runtime | Register-expanded 后端 | SRAM-macro 后端 |
 | --- | --- | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM，5 级单发射顺序流水线 | source closure、lint、smoke/regression 与固定 CoreMark/NEMU 路径已验证 | `verified` fixed point | `verified` fixed point |
-| `rv32ima_sv32_linux` | RV32IMA，M/S + Sv32，单发射 | source closure 与 bounded 体系结构回归已验证；提供外部镜像驱动的 OpenSBI 入口，payload-bound execution 仍为 `partial`，完整 Linux boot 不声明 | `verified` fixed point | `verified` fixed point |
+| `rv32im_single_perf` | RV32IM，5 级单发射顺序流水线 | 当前仿真/ASIC 已验证；历史 XC7Z100 200 MHz implementation 已验证，UART/ILA 板级观测为 `partial` | `verified` fixed point | `verified` fixed point |
+| `rv32ima_sv32_linux` | RV32IMA，M/S + Sv32，单发射 | 当前 bounded 回归已验证；`e3a1cc91` 历史 OpenSBI→S-mode→Linux shell 已验证，`0fc3de40` 尚未深跑复验 | `verified` fixed point | `verified` fixed point |
 | `rv32im_ooo_4k` | RV32IM，双 dispatch/issue/complete/commit OoO | 默认旗舰；RTL 与公开 runtime 可运行，性能 claim 仍为 `provisional` | `planned / TODO` | `planned / TODO` |
 
 `verified` 在这里仅表示固定频率的 Nangate45 academic physical implementation 与 internal extracted setup/hold STA。它不表示 Fmax、完整 IO/电气闭合、foundry signoff 或 silicon result。
@@ -74,6 +74,22 @@ SRAM 行使用 OpenRAM analytical FreePDK45 TT / 1.0 V / 25 C macro view 与 Nan
 
 `CoreMark/MHz` 是固定 marker 区间内每百万仿真周期完成的 iteration 数，不是绝对 CoreMark score，也不假设已实现时钟。完整计数、binary/config hash 与复现合同见[性能页](docs/performance.md)和[CoreMark 证据](docs/evidence/coremark_reproduction.md)。
 
+### 系统与历史 FPGA 证据
+
+<!-- evidence:linux_coremark_history_public -->
+<!-- evidence:linux_boot_history_public -->
+<!-- evidence:ooo_historical_optimization_public -->
+<!-- evidence:single_xc7z100_history_public -->
+
+| 路径 | 已记录结果 | 成熟度边界 |
+| --- | --- | --- |
+| Linux/Sv32 优化 | historical whole CPI `8.587098694 → 1.725944902`，同 benchmark family 约 `4.9753x` | comparison `partial`；当前 `0fc3de40` 未按同输入复跑 |
+| Linux 系统启动 | DTB→OpenSBI→S-mode→Linux 6.6.141→initramfs shell | `verified` 于历史 `e3a1cc91` |
+| OoO 前端/预测 | frontend-empty `53.76%→23.29%`，redirect/control completion `59.38%→17.73%` | 历史 seven-workload、组合环整改前；当前性能不继承 |
+| XC7Z100 | 三个历史快照均完成 200 MHz routed timing；早期快照有 UART/ILA CoreMark 观测 | implementation/timing `verified`；board/workload binding `partial`；后续 Forwarding/BTB-PHT 未上板声明 |
+
+计算公式、source ref、报告 hash 与非声明边界见[历史性能证据](docs/evidence/performance_history.md)和[系统/FPGA 证据](docs/evidence/system_fpga_history.md)。
+
 ## Canonical top 与 filelist
 
 每次构建只选择一套 source set。三个 wrapper 都提供相同名称的 `npc_public_sim_top`，但只能与同一行的 filelist 配对。
@@ -122,8 +138,8 @@ make sta-dry-run
 
 ## 文档导航
 
-[三 Profile 架构](docs/architecture.md) · [仿真与 difftest](docs/simulation.md) · [性能与实现数据](docs/performance.md) · [验证矩阵](docs/verification.md) · [ASIC 流程合同](docs/asic-implementation.md) · [后端证据](docs/evidence/backend_closure.md) · [完整限制](docs/limitations.md) · [后续路线](docs/roadmap.md) · [文档索引](docs/README.md)
+[三 Profile 架构](docs/architecture.md) · [仿真与 difftest](docs/simulation.md) · [性能与实现数据](docs/performance.md) · [历史性能证据](docs/evidence/performance_history.md) · [系统/FPGA 证据](docs/evidence/system_fpga_history.md) · [验证矩阵](docs/verification.md) · [ASIC 流程合同](docs/asic-implementation.md) · [后端证据](docs/evidence/backend_closure.md) · [完整限制](docs/limitations.md) · [后续路线](docs/roadmap.md) · [文档索引](docs/README.md)
 
 ## 限制与后续
 
-完整 Linux distribution boot、FPGA/board、coverage closure 和 silicon 结果均不声明。Single/Linux 后续工作集中在外部 IO、电气例外、SRAM characterization 与 macro signoff；OoO 当前继续做 RTL 优化，其 register/SRAM 综合与后端流程保持 `planned/TODO`。新增结果只有在 source/config、工具/库和 same-run artifact identity 全部闭合后才会提升成熟度。
+历史 Linux boot 和 XC7Z100 implementation/board observation 已按 source snapshot 分层公开；当前 Linux source 的深跑复验、当前 Single source 的重新上板、coverage closure 和 silicon 结果仍不声明。Single/Linux 后续工作集中在 source-matched 系统复验、外部 IO、电气例外、SRAM characterization 与 macro signoff；OoO 当前继续做无环 RTL 优化，其 register/SRAM 综合与后端流程保持 `planned/TODO`。

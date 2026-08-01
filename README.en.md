@@ -17,8 +17,8 @@ The three Profiles are independent source locks, not one parameterized RTL desig
 
 | Profile | ISA / microarchitecture | Public RTL and runtime | Register-expanded backend | SRAM-macro backend |
 | --- | --- | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM, five-stage single-issue in order | Source closure, lint, smoke/regression, and fixed CoreMark/NEMU path verified | `verified` fixed point | `verified` fixed point |
-| `rv32ima_sv32_linux` | RV32IMA, M/S + Sv32, single issue | Source closure and bounded architecture regression verified; an external-image OpenSBI entrypoint is provided, while payload-bound execution remains `partial` and complete Linux boot is not claimed | `verified` fixed point | `verified` fixed point |
+| `rv32im_single_perf` | RV32IM, five-stage single-issue in order | Current simulation/ASIC verified; historical XC7Z100 200 MHz implementation verified, with UART/ILA board observation `partial` | `verified` fixed point | `verified` fixed point |
+| `rv32ima_sv32_linux` | RV32IMA, M/S + Sv32, single issue | Current bounded regression verified; historical `e3a1cc91` OpenSBI→S-mode→Linux shell verified, while `0fc3de40` has not repeated the deep boot | `verified` fixed point | `verified` fixed point |
 | `rv32im_ooo_4k` | RV32IM, dual dispatch/issue/complete/commit OoO | Default flagship; RTL and public runtime execute, while performance claims remain `provisional` | `planned / TODO` | `planned / TODO` |
 
 Here, `verified` means only a fixed-frequency Nangate45 academic physical implementation with internal extracted setup/hold STA. It does not mean Fmax, complete IO/electrical closure, foundry signoff, or a silicon result.
@@ -74,6 +74,22 @@ The SRAM rows use analytical OpenRAM FreePDK45 TT / 1.0 V / 25 C macro views wit
 
 `CoreMark/MHz` is iterations per million simulated cycles within the fixed marker interval. It is neither an absolute CoreMark score nor an implemented-clock assumption. Complete counters, binary/config hashes, and reproduction contracts are in [Performance](docs/performance.en.md) and the [CoreMark evidence](docs/evidence/coremark_reproduction.en.md).
 
+### System And Historical FPGA Evidence
+
+<!-- evidence:linux_coremark_history_public -->
+<!-- evidence:linux_boot_history_public -->
+<!-- evidence:ooo_historical_optimization_public -->
+<!-- evidence:single_xc7z100_history_public -->
+
+| Path | Recorded result | Maturity boundary |
+| --- | --- | --- |
+| Linux/Sv32 optimization | Historical whole CPI `8.587098694 → 1.725944902`, approximately `4.9753x` in the same benchmark family | comparison `partial`; current `0fc3de40` not rerun with the same input |
+| Linux system boot | DTB→OpenSBI→S-mode→Linux 6.6.141→initramfs shell | `verified` at historical `e3a1cc91` |
+| OoO frontend/prediction | frontend-empty `53.76%→23.29%`; redirects/control completion `59.38%→17.73%` | historical seven-workload, before loop remediation; not inherited by current performance |
+| XC7Z100 | Three historical snapshots complete 200 MHz routed timing; the early snapshot has UART/ILA CoreMark observation | implementation/timing `verified`; board/workload binding `partial`; later forwarding/BTB-PHT board runs not claimed |
+
+See [historical performance evidence](docs/evidence/performance_history.en.md) and [system/FPGA evidence](docs/evidence/system_fpga_history.en.md) for formulas, source refs, report hashes, and nonclaims.
+
 ## Canonical Top And Filelist
 
 Each build selects exactly one source set. All three wrappers expose a module named `npc_public_sim_top`, but each must be paired with the filelist on the same row.
@@ -122,8 +138,8 @@ Real EDA runs require user-supplied tools, PDK/library/macro views, and ignored 
 
 ## Documentation
 
-[Three-Profile architecture](docs/architecture.en.md) · [Simulation and difftest](docs/simulation.en.md) · [Performance and implementation data](docs/performance.en.md) · [Verification matrix](docs/verification.en.md) · [ASIC flow contract](docs/asic-implementation.en.md) · [Backend evidence](docs/evidence/backend_closure.en.md) · [Complete limitations](docs/limitations.en.md) · [Roadmap](docs/roadmap.en.md) · [Documentation index](docs/README.en.md)
+[Three-Profile architecture](docs/architecture.en.md) · [Simulation and difftest](docs/simulation.en.md) · [Performance and implementation data](docs/performance.en.md) · [Historical performance evidence](docs/evidence/performance_history.en.md) · [System/FPGA evidence](docs/evidence/system_fpga_history.en.md) · [Verification matrix](docs/verification.en.md) · [ASIC flow contract](docs/asic-implementation.en.md) · [Backend evidence](docs/evidence/backend_closure.en.md) · [Complete limitations](docs/limitations.en.md) · [Roadmap](docs/roadmap.en.md) · [Documentation index](docs/README.en.md)
 
 ## Limitations And Roadmap
 
-A complete Linux distribution boot, FPGA/board validation, coverage closure, and silicon results are not claimed. Single/Linux follow-up work focuses on external IO, electrical exceptions, SRAM characterization, and macro signoff. OoO remains under RTL optimization, with register/SRAM synthesis and backend stages marked `planned/TODO`. A future result advances only after source/config, tool/library, and same-run artifact identity all close.
+Historical Linux boot and XC7Z100 implementation/board observations are now reported per source snapshot. A deep boot on the current Linux source, revalidation of the current Single source on the board, coverage closure, and silicon results remain unclaimed. Single/Linux follow-up covers source-matched system reruns, external IO, electrical exceptions, SRAM characterization, and macro signoff. OoO remains under no-loop RTL optimization, with register/SRAM synthesis and backend stages `planned/TODO`.

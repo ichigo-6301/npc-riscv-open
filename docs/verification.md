@@ -14,7 +14,8 @@
 | 静态检查 | 三个 Profile 的 Verilator lint/elaboration | `verified` |
 | Bounded smoke/regression | 仓库内固定小程序在纯 Verilator runtime 上通过 | `verified` |
 | 本地 NEMU difftest | Profile 匹配的 PC/instruction/GPR commit check | bounded PASS；总体 `partial` |
-| 完整 OpenSBI/Linux | firmware、Sv32 page table、interrupt 和设备路径 | `not_claimed` |
+| OpenSBI/Linux 系统启动 | DTB、M→S、Linux 6.6.141、`/init`、initramfs shell | `e3a1cc91` 历史快照 `verified`；当前 `0fc3de40` 未深跑复验 |
+| XC7Z100 FPGA | synthesis、routed implementation、timing、bitstream、板级观测、workload | 三个历史快照分层记录；当前 `f76de574` 上板 `not_claimed` |
 | 性能 benchmark | hash-locked CoreMark marker 计量与 difftest | Single 当前 source lock `verified`；Linux `abf66cad` 历史证据；OoO `provisional` |
 | ASIC implementation | DC、P&R、OpenRCX、internal PrimeTime | Single/Linux 四条 fixed point `verified`；OoO `planned` |
 | Electrical / signoff | IO、electrical、macro signoff、OCV/MMMC、power、silicon | `partial` / `not_claimed` |
@@ -29,7 +30,7 @@
 ```sh
 make <profile>_defconfig
 make showconfig
-make config-check source-check docs-check implementation-check showcase-check public-hygiene
+make config-check source-check docs-check evidence-check showcase-check public-hygiene
 make verify-checksums
 make verilator-lint
 make smoke
@@ -51,10 +52,24 @@ Profile ABI。构建后 Git 状态只允许被正确忽略的 `.config`、`build
 
 Linux Profile 的 `arch_smoke.hex` 是 machine-mode bounded test。它没有覆盖
 完整 S-mode trap delegation、Sv32 translated fetch/load/store、page fault、
-OpenSBI 启动或 Linux kernel。
+OpenSBI 启动或 Linux kernel；这描述的是当前公开 bounded image 的覆盖范围，
+不否定 `e3a1cc91` 历史快照已经记录的完整启动链。
 
 `make opensbi-smoke` 提供显式外部固件入口，但公开仓库未锁定 DTB、参考模型
 或 shutdown 终止协议，因此该入口本身不构成一次已验证的 OpenSBI 执行 claim。
+
+## 历史系统与 FPGA 快照
+
+Linux 历史日志在 `e3a1cc91` 记录了 DTB 载入、OpenSBI、M→S 交接、Linux
+`6.6.141`、`/init` 与 initramfs shell marker。原始日志不公开，只发布 hash 和
+bounded marker 摘要；当前 ASIC source lock `0fc3de40` 尚未重新执行约一小时的
+完整启动，因此不得把该结论改写为 current-source verification。
+
+Single 的 XC7Z100 证据按八个成熟度维度拆分。2026-05-07 原始五级核具备
+200 MHz routed timing、bitstream 与 UART/ILA 板级观测，但板级镜像绑定为
+`partial`；2026-05-12 forwarding 和 2026-05-15 forwarding+BTB/PHT 快照只验证
+200 MHz synthesis/implementation/timing。后两目录中的 XSA 是 5 月 7 日旧文件，
+不能升级其 bitstream 或板级状态。详见[系统与 FPGA 历史证据](evidence/system_fpga_history.md)。
 
 ## 已记录的 deterministic 结果
 
@@ -117,7 +132,7 @@ overall profile 仍为 `partial`。详细 scope 见
 
 在原生 Linux 临时目录对目标 commit 执行：
 
-1. `verify-checksums`、`docs-check`、`implementation-check`、`showcase-check`、
+1. `verify-checksums`、`docs-check`、`evidence-check`、`showcase-check`、
    source closure 和 hygiene；
 2. 三 Profile lint、smoke 与 regression；
 3. 若提供本地 NEMU，运行 bounded difftest；若同时提供 hash-locked CoreMark

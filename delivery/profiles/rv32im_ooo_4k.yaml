@@ -16,6 +16,15 @@
       "synthesis_status": "planned"
     }
   },
+  "historical_evidence": {
+    "optimization_epoch": {
+      "current_loop_free_rtl_inheritance": "not_claimed",
+      "evidence_id": "ooo_historical_optimization_public",
+      "epoch": "pre_combinational_loop_remediation",
+      "scope": "seven-workload historical simulation",
+      "status": "verified_historical_mechanism_metrics"
+    }
+  },
   "intent": "Dual-dispatch dual-commit RV32IM out-of-order performance profile with 4 KiB instruction and data structures",
   "kind": "profile",
   "maturity": "development",

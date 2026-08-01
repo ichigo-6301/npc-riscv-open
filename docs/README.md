@@ -10,9 +10,9 @@
 
 | Profile | 架构定位 | 当前公开验证状态 |
 | --- | --- | --- |
-| `rv32im_single_perf` | RV32IM 五级顺序单发射 | source closure、回归与 hash-locked CoreMark+difftest 已验证 |
-| `rv32ima_sv32_linux` | RV32IMA M/S + Sv32 五级顺序单发射 | source closure 与 bounded 架构回归已验证；OpenSBI 入口为 `partial`；`abf66cad` CoreMark+difftest 仅作历史证据；完整 Linux 未声明 |
-| `rv32im_ooo_4k` | RV32IM 双发射、双退休 OoO | source closure、双宽回归已验证；CoreMark 因双退休 MMIO difftest 边界为 provisional |
+| `rv32im_single_perf` | RV32IM 五级顺序单发射 | 当前仿真/ASIC verified；历史 XC7Z100 200 MHz implementation verified，板级 UART/ILA `partial` |
+| `rv32ima_sv32_linux` | RV32IMA M/S + Sv32 五级顺序单发射 | 当前 bounded 仿真/ASIC verified；`e3a1cc91` 启动至 Linux shell verified，当前 source 未深跑复验 |
+| `rv32im_ooo_4k` | RV32IM 双发射、双退休 OoO | 当前 RTL/performance provisional；历史优化独立记录；backend planned |
 
 三套 RTL 不是同一套参数化实现。构建系统每次只编译一个 source set，公共
 wrapper 只统一 commit、halt 和 debug 观测接口。
@@ -26,6 +26,8 @@ wrapper 只统一 commit、halt 和 debug 观测接口。
 - [验证说明](verification.md)：测试范围、现有结果和未覆盖边界。
 - [双 memory ASIC 实现流程](asic-implementation.md)：LC、DC、OpenROAD/OpenRCX、PrimeTime 和证据门禁。
 - [后端闭合证据](evidence/backend_closure.md)：四条 Single/Linux 固定频率实现点的 bounded evidence。
+- [性能优化历史证据](evidence/performance_history.md)：Linux approximate A/B 与 OoO 历史优化纪元。
+- [系统与 FPGA 历史证据](evidence/system_fpga_history.md)：Linux 启动链与 XC7Z100 分层快照。
 - [限制说明](limitations.md)：尚未建立的功能、PPA 和系统级结论。
 - [后续路线](roadmap.md)：按 Profile 分开的未完成工作和状态升级门禁。
 

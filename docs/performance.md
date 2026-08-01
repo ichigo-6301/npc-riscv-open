@@ -46,6 +46,16 @@ watchdog；Single/Linux 还通过 Profile 匹配的 NEMU difftest。OoO 没有�
 
 ## Linux 私有/公开同步
 
+### 历史优化 A/B
+
+同一 Sv32 CoreMark benchmark family 的 whole-program no-TLB 计数为
+`27,929,341 / 3,252,477 = 8.587098694 CPI`（`evidence:linux_coremark_history_public`）。
+优化后为 `5,613,603 / 3,252,481 = 1.725944902 CPI`（`evidence:linux_coremark_history_public`）；同频执行效率约
+`4.9753x`（`evidence:linux_coremark_history_public`）。
+该 A/B 为 `partial`：基线 binary hash 缺失且两次退休指令相差 4 条；当前
+`0fc3de40` 也未按相同输入复跑。因此简历可使用“约 8.59→1.73、约 4.98x”，
+不可包装成严格同 binary A/B。见[性能优化历史证据](evidence/performance_history.md)。
+
 下表的历史 CoreMark evidence 锁定 RTL commit
 `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`；当前公开 Profile 与 ASIC source
 lock 已前移到 `0fc3de40c4e0b231c65945c9dc1711f084688c04`。两套 source point
@@ -94,6 +104,13 @@ Linux 较早 checkpoint `e3a1cc91c4c00040f7180eec5e385326d9964893` 只有约
 CoreMark CPI 1.98 的历史记录（`nonclaim:linux_prior_checkpoint_cpi_not_claimed`）；
 它既不是当前公开 source lock `0fc3de40` 的结果，也不是上述 `abf66cad`
 CoreMark evidence point。
+
+历史 OoO 优化在组合环整改前的 seven-workload 仿真纪元中，使前端空泡率
+`53.76%→23.29%`（分母为 total dispatch slots），并沿预测链将控制重定向率
+`59.38%→24.84%→22.66%→17.73%`（分母为 control completions）。这些数字只
+说明历史机制效果，不继承到当前无环 RTL，也不是后端结果；完整 ref 与定义见
+[性能优化历史证据](evidence/performance_history.md)
+（`evidence:ooo_historical_optimization_public`）。
 
 ## Nangate45 academic fixed-frequency points
 

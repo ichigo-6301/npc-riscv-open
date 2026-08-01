@@ -24,6 +24,21 @@
       "synthesis_status": "verified"
     }
   },
+  "historical_evidence": {
+    "linux_boot": {
+      "current_source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "current_source_status": "not_reverified",
+      "evidence_id": "linux_boot_history_public",
+      "historical_source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "historical_status": "verified",
+      "last_marker": "initramfs_shell_ready"
+    },
+    "performance_ab": {
+      "evidence_id": "linux_coremark_history_public",
+      "scope": "same benchmark family; baseline binary hash unavailable",
+      "status": "partial"
+    }
+  },
   "intent": "Single-issue in-order RV32IMA M/S-mode and Sv32 profile for bounded OpenSBI-oriented headless simulation",
   "kind": "profile",
   "maturity": "development",

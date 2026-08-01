@@ -15,7 +15,8 @@ and zero protocol errors.
 | Static checks | Verilator lint/elaboration for all Profiles | `verified` |
 | Bounded smoke/regression | checked-in small programs pass on the headless runtime | `verified` |
 | Local NEMU difftest | Profile-matched PC/instruction/GPR commit check | bounded PASS; overall `partial` |
-| Complete OpenSBI/Linux | firmware, Sv32 page tables, interrupts, and devices | `not_claimed` |
+| OpenSBI/Linux system boot | DTB, M-to-S handoff, Linux 6.6.141, `/init`, and initramfs shell | historical snapshot `e3a1cc91` `verified`; current `0fc3de40` not deeply rerun |
+| XC7Z100 FPGA | synthesis, routed implementation, timing, bitstream, board observation, and workload | three historical snapshots reported by layer; current `f76de574` board run `not_claimed` |
 | Performance benchmarks | hash-locked CoreMark marker accounting and difftest | Single current source lock `verified`; Linux historical evidence at `abf66cad`; OoO `provisional` |
 | ASIC implementation | DC, P&R, OpenRCX, and internal PrimeTime | four Single/Linux fixed points `verified`; OoO `planned` |
 | Electrical / signoff | IO, electrical, macro signoff, OCV/MMMC, power, and silicon | `partial` / `not_claimed` |
@@ -30,7 +31,7 @@ Run for every Profile:
 ```sh
 make <profile>_defconfig
 make showconfig
-make config-check source-check docs-check implementation-check showcase-check public-hygiene
+make config-check source-check docs-check evidence-check showcase-check public-hygiene
 make verify-checksums
 make verilator-lint
 make smoke
@@ -53,11 +54,29 @@ contain only correctly ignored `.config`, `build/`, and `flows/local/` output.
 The Linux Profile `arch_smoke.hex` is a bounded machine-mode test. It does not
 cover complete S-mode delegation, translated Sv32 fetch/load/store, page
 faults, OpenSBI startup, or a Linux kernel.
+This describes the current checked-in bounded image, not the complete boot
+chain historically recorded at `e3a1cc91`.
 
 `make opensbi-smoke` provides an explicit external-firmware entrypoint, but
 the public repository does not lock a DTB, reference model, or shutdown
 termination protocol. The entrypoint alone is therefore not a verified
 OpenSBI-execution claim.
+
+## Historical system and FPGA snapshots
+
+The Linux log at `e3a1cc91` records DTB loading, OpenSBI, the M-to-S handoff,
+Linux `6.6.141`, `/init`, and initramfs-shell markers. The raw log remains
+private; only its hash and bounded marker summary are published. The current
+ASIC source lock `0fc3de40` has not repeated the approximately one-hour deep
+boot, so this evidence is not current-source verification.
+
+Single XC7Z100 evidence is split across all eight maturity dimensions. The
+2026-05-07 original five-stage snapshot has 200 MHz routed timing, a bitstream,
+and UART/ILA board observations, with board-image binding marked `partial`.
+The 2026-05-12 forwarding and 2026-05-15 forwarding+BTB/PHT snapshots verify
+only 200 MHz synthesis, implementation, and timing. Their XSA files are copies
+from May 7 and cannot promote bitstream or board status. See
+[System and FPGA history](evidence/system_fpga_history.en.md).
 
 ## Recorded deterministic results
 
@@ -128,7 +147,7 @@ macro model is `partial_analytical_characterization`, macro physical signoff is
 
 For the target commit in a native-Linux temporary directory:
 
-1. run `verify-checksums`, `docs-check`, `implementation-check`,
+1. run `verify-checksums`, `docs-check`, `evidence-check`,
    `showcase-check`, source closure, and hygiene;
 2. run lint, smoke, and regression for all three Profiles;
 3. run bounded difftest when local NEMU is supplied; when hash-locked CoreMark

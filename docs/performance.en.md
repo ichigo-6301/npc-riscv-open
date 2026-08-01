@@ -51,6 +51,18 @@ row remains provisional.
 
 ## Linux private/public parity
 
+### Historical optimization A/B
+
+Whole-program counters from the same Sv32 CoreMark benchmark family record a
+no-TLB point of `27,929,341 / 3,252,477 = 8.587098694 CPI` (`evidence:linux_coremark_history_public`).
+The optimized point is `5,613,603 / 3,252,481 = 1.725944902 CPI` (`evidence:linux_coremark_history_public`). Same-clock
+execution efficiency is approximately `4.9753x` (`evidence:linux_coremark_history_public`).
+This A/B is `partial`: the baseline
+binary hash is unavailable, retired counts differ by four, and current
+`0fc3de40` has not been rerun with the same inputs. Resume wording may round it
+to "about 8.59 to 1.73, about 4.98x," but must not call it a strict same-binary
+A/B. See [Performance optimization history](evidence/performance_history.en.md).
+
 The historical CoreMark evidence in the table locks RTL commit
 `abf66cad0f9ad02efc8beb641d4005adeaeeae0b`; the current public Profile and ASIC
 source lock have moved to `0fc3de40c4e0b231c65945c9dc1711f084688c04`.
@@ -104,6 +116,15 @@ The earlier Linux checkpoint `e3a1cc91c4c00040f7180eec5e385326d9964893`
 has only an approximate historical CoreMark CPI of 1.98 (`nonclaim:linux_prior_checkpoint_cpi_not_claimed`); it is neither a result of the
 current public `0fc3de40` source lock nor the `abf66cad` CoreMark evidence point
 above.
+
+In the historical pre-loop-remediation seven-workload simulation epoch, OoO
+frontend-empty rate moved from `53.76%` to `23.29%` using total dispatch slots
+as the denominator. The branch-prediction chain moved redirects per control
+completion through `59.38%`, `24.84%`, `22.66%`, and `17.73%`. These values
+describe historical mechanism effects only; they do not transfer to current
+loop-free RTL or any backend result. See
+[Performance optimization history](evidence/performance_history.en.md)
+(`evidence:ooo_historical_optimization_public`).
 
 ## Nangate45 academic fixed-frequency points
 

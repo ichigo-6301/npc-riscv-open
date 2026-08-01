@@ -8,6 +8,9 @@
 
 ## `rv32im_single_perf`
 
+- 在当前 `f76de574` source lock 上重新生成同源 bitstream 并保留 Hardware
+  Manager programmed-image transcript、UART/ILA 与 workload identity；在此之前
+  历史板级观测保持 `partial`。
 - 复核外部 IO drive/load 与 input/output delay，并把内部时序和完整 IO 时序分开。
 - 对 max-capacitance 等电气例外建立对象级修复或审阅记录；不通过降频掩盖。
 - 为 SRAM macro 补充实际 characterization、macro DRC/LVS/PEX、OCV/MMMC、DFT、
@@ -18,7 +21,8 @@
 - 在 `0fc3de40` source lock 上复跑相同 hash 的 CoreMark 输入，决定历史
   `abf66cad` CPI 是否可以提升为当前 Profile claim。
 - 扩展 OpenSBI/S-mode/Sv32 page-fault 的 bounded regression；完整 Linux
-  distribution boot 仍需外部 image、DTB 和可审计的板级 memory map。
+  启动应在当前 `0fc3de40` 上用锁定的 OpenSBI/Linux/DTB/initramfs 输入深跑复验；
+  历史 `e3a1cc91` 启动结论不自动迁移。
 - 后端后续项与 Single 相同：IO、电气例外、macro signoff、OCV/MMMC、DFT、LEC
   和 power integrity。
 

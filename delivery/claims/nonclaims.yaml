@@ -92,14 +92,15 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
-      "evidence_status": "public_policy_boundary",
-      "id": "linux_full_boot_not_claimed",
+      "conditions": "A historical e3a1cc91 run reached the initramfs shell, but the current 0fc3de40 source lock has not repeated the deep boot with the same external firmware, kernel and DTB",
+      "evidence_id": "linux_boot_history_public",
+      "evidence_status": "historical_verified_current_not_reverified",
+      "id": "linux_current_source_deep_boot_not_reverified",
       "profile": "rv32ima_sv32_linux",
       "public": true,
-      "reason": "The checked-in flow covers bounded architectural and OpenSBI-oriented entry points only; Linux images remain external",
+      "reason": "The historical boot must not be promoted to the current source lock without an exact rerun",
       "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
-      "statement": "A complete Linux distribution boot is not claimed",
+      "statement": "A complete Linux boot on the current 0fc3de40 source lock is not claimed",
       "status": "not_claimed"
     },
     {
@@ -216,6 +217,66 @@
       "reason": "The historical synthesis lint uses an external-memory contract that excludes internal-DPI-only precise store and forwarding behavior",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
       "statement": "Full synthesis equivalence of the internal DPI performance memory path is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The current f76de574 source lock has simulation and ASIC evidence but was not rebuilt and reprogrammed in the historical XC7Z100 SoC project",
+      "evidence_id": "single_xc7z100_history_public",
+      "evidence_status": "historical_snapshot_only",
+      "id": "single_current_source_fpga_board_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "Historical source manifests cannot be relabeled as the current Git source lock",
+      "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+      "statement": "Current f76de574 FPGA implementation or board validation is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The forwarding and predictor projects have source-bound synthesis, implementation and timing reports but no bitstream from the matching run and no board capture",
+      "evidence_id": "single_xc7z100_history_public",
+      "evidence_status": "implementation_timing_only",
+      "id": "single_forward_predict_board_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "A copied older XSA does not prove a later routed design was programmed",
+      "source_commit": "multiple_historical_source_manifests",
+      "statement": "Board execution of the forwarding or 128-entry BTB/PHT snapshots is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "UART and ILA captures are available, but no preserved Hardware Manager transcript names the exact programmed bitstream hash",
+      "evidence_id": "single_xc7z100_history_public",
+      "evidence_status": "partial_board_binding",
+      "id": "single_fpga_exact_programmed_image_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The board observation cannot be upgraded beyond partial without exact programmed-image identity",
+      "source_commit": "22b79e835c05ea34c7628997d2e2880c85065eea24ad125c66b9b52a6669ae48",
+      "statement": "Exact Hardware Manager programmed-image binding is not claimed",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The historical UART text uses a project-specific timer and reports a Marks field; the run is retained only as a board workload marker",
+      "evidence_id": "single_xc7z100_history_public",
+      "evidence_status": "partial_workload_observation",
+      "id": "single_fpga_standard_coremark_score_not_claimed",
+      "profile": "rv32im_single_perf",
+      "public": true,
+      "reason": "The board timer and run contract do not satisfy a standardized absolute CoreMark score claim",
+      "source_commit": "22b79e835c05ea34c7628997d2e2880c85065eea24ad125c66b9b52a6669ae48",
+      "statement": "The historical UART Marks value is not claimed as a standardized CoreMark score",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The frontend and branch ratios belong to historical simulation checkpoints before the combinational-loop remediation and causal-ownership refactor",
+      "evidence_id": "ooo_historical_optimization_public",
+      "evidence_status": "historical_verified_epoch_limited",
+      "id": "ooo_historical_ab_not_current_no_loop",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "Historical performance counters cannot be inherited by the current structurally remediated RTL without a matching rerun",
+      "source_commit": "multiple_historical_refs",
+      "statement": "The historical frontend and redirect percentages are not claimed as current no-loop RTL performance or backend evidence",
       "status": "not_claimed"
     }
   ],

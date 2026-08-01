@@ -24,6 +24,14 @@ CORE_PAIRS = (
         "docs/evidence/backend_closure.md",
         "docs/evidence/backend_closure.en.md",
     ),
+    (
+        "docs/evidence/performance_history.md",
+        "docs/evidence/performance_history.en.md",
+    ),
+    (
+        "docs/evidence/system_fpga_history.md",
+        "docs/evidence/system_fpga_history.en.md",
+    ),
 )
 LEGACY_PAGES = (
     "docs/README.zh-CN.md",

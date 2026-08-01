@@ -24,13 +24,17 @@ input hashes, raw result, and fresh-clone reproduction all agree.
 - The project is a CPU plus a headless Verilator runtime, not a complete
   synthesizable SoC.
 - NVBoard, VGA, PS2, keyboard, GPIO, FPGA projects, and board tops are absent.
+  This does not erase layered evidence from external historical Vivado
+  projects; it means those projects are not directly reproducible here.
 - AXI UARTLite and AXI Timer have deterministic Verilator `runtime-only`
   models but are not synthesizable RTL peripherals; AXI INTC remains NEMU/AM
   `reference-only`.
 - The Linux Profile contains RTL `AclintTimer`, but OpenSBI, a Linux kernel,
   DTB, root filesystem, and complete board memory map are not bundled.
 - The bounded Linux image covers machine-mode RV32IMA/LRSC/CSR/trap behavior;
-  it does not prove complete S-mode delegation, Sv32 page faults, or Linux boot.
+  by itself it does not prove S-mode delegation, Sv32 page faults, or Linux
+  boot. A historical `e3a1cc91` log verifies the DTB/OpenSBI/Linux 6.6.141/
+  initramfs-shell chain, but current `0fc3de40` has not been deeply rerun.
 - OpenSBI, Linux, AM, NEMU, compilers, and user programs are external. Users
   obtain matching versions and comply with their licenses.
 
@@ -63,6 +67,12 @@ input hashes, raw result, and fresh-clone reproduction all agree.
   The `WRITE_ALLOCATE=1` whole CPI `1.742798498` is dominated by pre-marker
   overhead and is not an approximately one-percent CoreMark-loop difference
   (`linux_write_allocate_coremark_speedup_not_claimed`).
+- Linux whole CPI `8.587098694` to `1.725944902`, approximately `4.9753x`, is
+  a `partial` same-benchmark-family A/B. The baseline binary hash is missing
+  and retired counts differ by four, so it is not a strict same-binary result.
+- OoO frontend-empty and control-redirect improvements belong to the
+  historical pre-loop-remediation seven-workload simulation epoch. They do not
+  transfer to current loop-free RTL or ASIC results.
 - OoO `0.912836351` is an instruction-weighted aggregate CPI for seven finite
   workloads, not a universal CPI guarantee and not a replacement for current
   timed CoreMark CPI.
@@ -87,6 +97,13 @@ input hashes, raw result, and fresh-clone reproduction all agree.
   macro DRC/LVS/PEX, OCV/MMMC, DFT, formal LEC, and power/PI remain open.
 - OoO register/SRAM backend work remains `planned`, with no published
   frequency, area, or power result.
+- Historical FPGA results are layered per source snapshot. The original
+  five-stage core has only `partial` UART/ILA board binding; forwarding and
+  predictor snapshots verify 200 MHz routed timing only. Current `f76de574`
+  reboarding and later-snapshot bitstream/board/workload results are not claimed.
+- All three FPGA routes have zero routing errors but 4/6/6 DRC warnings, so
+  none is called DRC-clean. The copied older XSA in the two later directories
+  is not bitstream or board evidence for those snapshots.
 - No Profile claims foundry signoff, full IO/electrical closure, silicon
   correlation, or an absolute CoreMark score.
 - The OoO public performance path uses internal tagged DPI memory. Its external
@@ -99,8 +116,9 @@ input hashes, raw result, and fresh-clone reproduction all agree.
   Liberty/DB, LEF, mapped/routed netlists, SPEF, GDS, SRAM views, EDA work
   databases, and credentials are excluded. Only bounded summaries, path-free
   run identities, and SHA256 values are public.
-- A historical value remains `provisional` even if privately verified until
-  its public inputs and conditions are reproduced.
+- Historical values retain an exact `historical_verified`, `partial`, or
+  `provisional` snapshot boundary until public inputs and current-source
+  conditions are reproduced; they never auto-promote to current-source claims.
 - Source inventory may flag protocol fields such as `mem_req_token` as generic
   secrets. They are typed transaction identifiers; real credentials or
   secret-like values must still fail closed.

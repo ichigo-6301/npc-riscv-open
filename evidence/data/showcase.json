@@ -1,6 +1,6 @@
 {
   "schema": "npc-riscv-open/showcase-data-v1",
-  "generated_at": "2026-07-29T08:00:00Z",
+  "generated_at": "2026-08-01T12:00:00Z",
   "generator_runtime": "CPython 3.10.12",
   "generator_compatibility": "Python 3.10 or newer; standard library only",
   "implementation_evidence": {
@@ -8,6 +8,28 @@
     "path": "evidence/implementation/nangate45_fixed_points.json",
     "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
   },
+  "historical_evidence": [
+    {
+      "id": "linux_coremark_history_public",
+      "path": "evidence/performance/linux_coremark_ab.json",
+      "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+    },
+    {
+      "id": "linux_boot_history_public",
+      "path": "evidence/system/linux_boot.json",
+      "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+    },
+    {
+      "id": "ooo_historical_optimization_public",
+      "path": "evidence/performance/ooo_frontend_branch_ab.json",
+      "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+    },
+    {
+      "id": "single_xc7z100_history_public",
+      "path": "evidence/fpga/single_xc7z100_history.json",
+      "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
+    }
+  ],
   "profiles": [
     {
       "id": "rv32im_single_perf",
@@ -17,6 +39,7 @@
       "top": "cpu_top",
       "rtl_status": "verified",
       "simulation_status": "verified",
+      "history_note": "XC7Z100: 200 MHz routed; board UART/ILA partial",
       "backend": {
         "registers": "verified_fixed_point",
         "sram": "verified_fixed_point"
@@ -30,6 +53,7 @@
       "top": "cpu_top",
       "rtl_status": "verified",
       "simulation_status": "verified_bounded",
+      "history_note": "Linux shell verified historically; current source not rerun",
       "backend": {
         "registers": "verified_fixed_point",
         "sram": "verified_fixed_point"
@@ -43,6 +67,7 @@
       "top": "ooo_npc_top",
       "rtl_status": "active_optimization",
       "simulation_status": "provisional_performance",
+      "history_note": "Historical optimization predates loop remediation",
       "backend": {
         "registers": "planned",
         "sram": "planned"
@@ -126,7 +151,11 @@
       "title": "NPC RISC-V profile portfolio",
       "units": "maturity status",
       "configuration": "three source-locked profiles by register-expanded and SRAM-macro backend status",
-      "claim_ids": []
+      "claim_ids": [
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
+      ]
     },
     {
       "id": "npc_nangate45_closure_asset",

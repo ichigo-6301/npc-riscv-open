@@ -21,13 +21,16 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 ## 系统与软件
 
 - 工程是 CPU + headless Verilator runtime，不是完整可综合 SoC。
-- NVBoard、VGA、PS2、keyboard、GPIO、FPGA project 和板级 top 均不包含。
+- NVBoard、VGA、PS2、keyboard、GPIO、FPGA project 和板级 top 均不包含；
+  这不否定外部历史 Vivado 工程的分层证据，只表示该工程不可由本仓库直接复现。
 - AXI UARTLite 和 AXI Timer 有 deterministic Verilator `runtime-only` 模型，
   但不是可综合 RTL 外设；AXI INTC 仍为 NEMU/AM `reference-only`。
 - Linux Profile 内部包含 `AclintTimer`，但仓库不携带 OpenSBI、Linux kernel、
   DTB、rootfs 或完整板级 memory map。
 - 当前 bounded Linux image 只覆盖 machine-mode RV32IMA/LRSC/CSR/trap，不能
-  证明完整 S-mode delegation、Sv32 page fault 或 Linux boot。
+  单独证明 S-mode delegation、Sv32 page fault 或 Linux boot。`e3a1cc91` 历史
+  日志已证明 DTB/OpenSBI/Linux 6.6.141/initramfs shell 链，但当前 `0fc3de40`
+  尚未深跑复验。
 - OpenSBI、Linux、AM、NEMU、编译器和用户程序均为外部依赖，使用者负责取得
   正确版本和遵守各自许可证。
 
@@ -56,6 +59,11 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
 - Linux 私有/公开 timed 区间已精确同步为 CPI `1.725375105`。`WRITE_ALLOCATE=1`
   的 whole CPI `1.742798498` 主要由 start marker 前开销造成，不能表述为
   CoreMark 主循环约 1% 的差异（`linux_write_allocate_coremark_speedup_not_claimed`）。
+- Linux no-TLB 到优化版的 whole CPI `8.587098694→1.725944902`、约 `4.9753x`
+  仅是同 benchmark-family 的 `partial` A/B；基线 binary hash 缺失且退休数相差
+  4 条，不能称严格同 binary 对比。
+- OoO 的前端空泡率和控制重定向率改善来自组合环整改前的历史 seven-workload
+  仿真纪元；不得继承为当前无环 RTL 性能或 ASIC 结果。
 - OoO 的 `0.912836351` 是有限七项工作负载的 instruction-weighted aggregate
   CPI，不是通用 CPI 保证，也不能替代当前 CoreMark timed CPI。
 - Single 的约 704 MHz 是 1 ns DC stress 出现负 WNS 后的算术推算，不是
@@ -74,6 +82,11 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
   Nangate45 typical/1.1 V/25 C。`RC-004`、macro characterization、macro
   DRC/LVS/PEX、OCV/MMMC、DFT、formal LEC、power/PI 均未闭合。
 - OoO register/SRAM 后端仍为 `planned`，没有公开频率、面积或功耗数据。
+- FPGA 历史结果按 source snapshot 分层：原始五级核仅有 `partial` 板级
+  UART/ILA 绑定；forwarding 与 predictor 快照只验证 200 MHz routed timing。
+  当前 `f76de574` 重新上板、后两快照 bitstream/board/workload 均不声明。
+- 三条 FPGA route 均有 0 routing error，但有 4/6/6 条 DRC warning，不能称
+  DRC-clean；后两目录中的旧 XSA 不能作为后续 bitstream 或上板证据。
 - 三个 Profile 均不声明 foundry signoff、完整 IO/electrical closure、silicon
   correlation 或绝对 CoreMark score。
 - OoO 的公开性能路径使用 internal tagged DPI memory；外部 memory synthesis
@@ -86,7 +99,8 @@ fresh-clone 复现全部匹配，某项结果才可能从 `provisional` 或 `not
   mapped/routed netlist、SPEF、GDS、SRAM view、EDA work database 和 credential
   不进入工程。公开面只保留 bounded summary、无路径 run identity 和 SHA256。
 - 历史数字即使来自私有已验证记录，在公开输入未复现前仍只能标
-  `provisional`。
+  `provisional` 或保持精确的 `historical_verified`/`partial` snapshot 边界；
+  不能自动升级为当前 source claim。
 - source inventory 可能把 `mem_req_token` 等协议字段误报为 secret；这些是
   typed transaction identifiers。真正的 credential 或 secret-like value
   仍必须 fail closed。

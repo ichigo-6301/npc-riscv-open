@@ -28,7 +28,7 @@ ASIC_LC_ARGS ?=
         rv32im_ooo_4k_asic_defconfig \
         menuconfig showconfig config-check source-check \
         public-hygiene sim-dry-run verilator-lint sim smoke regression difftest difftest-prepare \
-        coremark coremark-difftest performance-check opensbi-smoke runtime-tests docs-check \
+        coremark coremark-difftest performance-check evidence-check opensbi-smoke runtime-tests docs-check \
         implementation-check showcase-check verify-checksums \
         asic-config-check lc-macros lc-macros-dry-run dc-matrix dc-matrix-dry-run \
         pnr pnr-dry-run sta sta-dry-run \
@@ -49,6 +49,7 @@ help:
 	  '  make difftest                            Run strict difftest using the local adapter' \
 	  '  make coremark / coremark-difftest         Run hash-locked external CoreMark inputs' \
 	  '  make performance-check                    Validate tracked performance evidence' \
+	  '  make evidence-check                       Validate performance, system, FPGA, and ASIC evidence' \
 	  '  make <profile>_asic_defconfig             Select a register-expanded ASIC Profile' \
 	  '  make asic-config-check                    Validate ASIC source/config closure' \
 	  '  make lc-macros[-dry-run]                  Compile audited OpenRAM Liberty views to DB' \
@@ -140,6 +141,9 @@ coremark-difftest:
 performance-check:
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_performance.py" --root "$(ROOT)"
 
+evidence-check: performance-check implementation-check
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_historical_evidence.py" --root "$(ROOT)"
+
 opensbi-smoke:
 	@$(FLOWCTL) opensbi-smoke
 
@@ -187,11 +191,12 @@ runtime-tests:
 docs-check:
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_docs.py" --root "$(ROOT)"
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_performance.py" --root "$(ROOT)"
+	@$(PYTHON) "$(ROOT)/flows/scripts/check_historical_evidence.py" --root "$(ROOT)"
 
 implementation-check:
 	@$(PYTHON) "$(ROOT)/flows/scripts/check_implementation.py" --root "$(ROOT)"
 
-showcase-check: implementation-check
+showcase-check: evidence-check
 	@$(PYTHON) "$(ROOT)/flows/scripts/generate_showcase_assets.py" --root "$(ROOT)" --check
 
 verify-checksums:

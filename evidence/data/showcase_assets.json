@@ -2,12 +2,16 @@
   "assets": [
     {
       "caveat": "Fixed-frequency Nangate45 academic closure points; not Fmax, complete electrical closure, foundry signoff, or silicon results. SRAM points mix analytical OpenRAM FreePDK45 TT 1.0 V 25 C macro views with Nangate45 typical 1.1 V 25 C standard-cell views.",
-      "claim_ids": [],
+      "claim_ids": [
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
+      ],
       "configuration": "three source-locked profiles by register-expanded and SRAM-macro backend status",
       "id": "npc_profile_portfolio_asset",
       "path": "docs/assets/profile_portfolio.svg",
-      "sha256": "95033c464e48fea295e0d00d8b0bad0b5e072af9af8f6454895e05991c904de8",
-      "size_bytes": 5292,
+      "sha256": "49889d789e8558d408e73b641e8aca3adf20c45d9cd986042b5cc9db4a2b5fc5",
+      "size_bytes": 5356,
       "title": "NPC RISC-V profile portfolio",
       "type": "generated_svg",
       "units": "maturity status"
@@ -42,7 +46,7 @@
       "units": "MHz and mm2"
     }
   ],
-  "generated_at": "2026-07-29T08:00:00Z",
+  "generated_at": "2026-08-01T12:00:00Z",
   "generator": {
     "command": "python3 flows/scripts/generate_showcase_assets.py --write",
     "compatibility": "Python 3.10 or newer; standard library only",
@@ -51,7 +55,7 @@
       "mode": "write"
     },
     "path": "flows/scripts/generate_showcase_assets.py",
-    "sha256": "996d3ee8fc04f83f7643a20680e4eee063bbec62104fcd48faa228a7a38971bb",
+    "sha256": "d8268c804cc112a9e279ac5b4f5ac1da20ca6b2631ce4d6e17ea24ad7be4c01e",
     "tool_versions": {
       "python": "CPython 3.10.12"
     }
@@ -61,12 +65,32 @@
     {
       "id": "npc_showcase_data_public",
       "path": "evidence/data/showcase.json",
-      "sha256": "cc68feb48042a0255f7ae6c28320194b70bc52b3a38d69c51d34ab22b229561b"
+      "sha256": "11dff889b69cd35f9cd75f4b81c6f251b214511cc01d25d3ec8e65c8641bbed6"
     },
     {
       "id": "single_linux_nangate45_backend_public",
       "path": "evidence/implementation/nangate45_fixed_points.json",
       "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+    },
+    {
+      "id": "linux_coremark_history_public",
+      "path": "evidence/performance/linux_coremark_ab.json",
+      "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+    },
+    {
+      "id": "linux_boot_history_public",
+      "path": "evidence/system/linux_boot.json",
+      "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+    },
+    {
+      "id": "ooo_historical_optimization_public",
+      "path": "evidence/performance/ooo_frontend_branch_ab.json",
+      "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+    },
+    {
+      "id": "single_xc7z100_history_public",
+      "path": "evidence/fpga/single_xc7z100_history.json",
+      "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
     }
   ]
 }

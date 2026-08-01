@@ -24,6 +24,17 @@
       "synthesis_status": "verified"
     }
   },
+  "historical_evidence": {
+    "fpga": {
+      "current_source_board_status": "not_claimed",
+      "evidence_id": "single_xc7z100_history_public",
+      "historical_board_observation_status": "partial",
+      "historical_implementation_status": "verified",
+      "part": "xc7z100ffg900-2",
+      "routed_frequency_mhz": 200,
+      "scope": "three source-separated Vivado 2022.2 snapshots"
+    }
+  },
   "intent": "Single-issue in-order RV32IM performance profile for headless Verilator delivery",
   "kind": "profile",
   "maturity": "development",

@@ -29,7 +29,7 @@
     <rect x="214" y="224" width="92" height="29" rx="4" fill="#ccfbf1"/>
     <text x="260" y="244" text-anchor="middle" class="status" fill="#0f766e">VERIFIED</text>
     <line x1="24" y1="276" x2="306" y2="276" class="rule"/>
-    <text x="24" y="306" class="note">P&amp;R + extracted internal STA</text>
+    <text x="24" y="306" class="note">XC7Z100: 200 MHz routed; board UART/ILA partial</text>
     <text x="24" y="329" class="muted">foundry signoff not claimed</text>
   </g>
   <g transform="translate(414 126)">
@@ -48,7 +48,7 @@
     <rect x="214" y="224" width="92" height="29" rx="4" fill="#ccfbf1"/>
     <text x="260" y="244" text-anchor="middle" class="status" fill="#0f766e">VERIFIED</text>
     <line x1="24" y1="276" x2="306" y2="276" class="rule"/>
-    <text x="24" y="306" class="note">P&amp;R + extracted internal STA</text>
+    <text x="24" y="306" class="note">Linux shell verified historically; current source not rerun</text>
     <text x="24" y="329" class="muted">foundry signoff not claimed</text>
   </g>
   <g transform="translate(786 126)">
@@ -67,7 +67,7 @@
     <rect x="214" y="224" width="92" height="29" rx="4" fill="#fef3c7"/>
     <text x="260" y="244" text-anchor="middle" class="status" fill="#92400e">PLANNED</text>
     <line x1="24" y1="276" x2="306" y2="276" class="rule"/>
-    <text x="24" y="306" class="note">backend results remain TODO</text>
+    <text x="24" y="306" class="note">Historical optimization predates loop remediation</text>
     <text x="24" y="329" class="muted">foundry signoff not claimed</text>
   </g>
   <rect x="42" y="497" width="1116" height="38" rx="5" fill="#111827"/>

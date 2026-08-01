@@ -82,24 +82,47 @@
         "linux_sram_nangate45_dc_frequency",
         "linux_sram_nangate45_postroute_frequency",
         "linux_sram_nangate45_standard_cell_area",
-        "linux_sram_nangate45_core_area"
+        "linux_sram_nangate45_core_area",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
       ],
       "configuration": "Three Profile by two memory-mode maturity matrix and four audited backend points",
-      "generated_time": "2026-07-29T08:00:00Z",
+      "generated_time": "2026-08-01T12:00:00Z",
       "id": "npc_showcase_data_public",
       "path": "../evidence/data/showcase.json",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "cc68feb48042a0255f7ae6c28320194b70bc52b3a38d69c51d34ab22b229561b",
-      "size_bytes": 5524,
-      "snapshot_id": "v0.1.0",
+      "sha256": "11dff889b69cd35f9cd75f4b81c6f251b214511cc01d25d3ec8e65c8641bbed6",
+      "size_bytes": 6747,
+      "snapshot_id": "resume-2026-08",
       "source_evidence": [
-        "single_linux_nangate45_backend_public"
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
       ],
       "source_files": [
         {
           "path": "../evidence/implementation/nangate45_fixed_points.json",
           "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+        },
+        {
+          "path": "../evidence/performance/linux_coremark_ab.json",
+          "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+        },
+        {
+          "path": "../evidence/system/linux_boot.json",
+          "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+        },
+        {
+          "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+          "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+        },
+        {
+          "path": "../evidence/fpga/single_xc7z100_history.json",
+          "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
         }
       ],
       "source_ref": "multiple_source_locked_commits",
@@ -125,10 +148,13 @@
         "linux_sram_nangate45_dc_frequency",
         "linux_sram_nangate45_postroute_frequency",
         "linux_sram_nangate45_standard_cell_area",
-        "linux_sram_nangate45_core_area"
+        "linux_sram_nangate45_core_area",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
       ],
       "configuration": "Deterministic profile portfolio and fixed-point PPA SVG generation",
-      "generated_time": "2026-07-29T08:00:00Z",
+      "generated_time": "2026-08-01T12:00:00Z",
       "generator": {
         "command": "python3 flows/scripts/generate_showcase_assets.py --write",
         "parameters": {
@@ -136,7 +162,7 @@
           "mode": "write"
         },
         "path": "../flows/scripts/generate_showcase_assets.py",
-        "sha256": "996d3ee8fc04f83f7643a20680e4eee063bbec62104fcd48faa228a7a38971bb",
+        "sha256": "d8268c804cc112a9e279ac5b4f5ac1da20ca6b2631ce4d6e17ea24ad7be4c01e",
         "tool_versions": {
           "python": "CPython 3.10.12"
         }
@@ -145,21 +171,41 @@
       "path": "../evidence/data/showcase_assets.json",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "b2adbfb1b3276ff97574a71dfac279f7e2e924ecd4183b087d804811528d66ff",
-      "size_bytes": 3264,
-      "snapshot_id": "v0.1.0",
+      "sha256": "5c635adfefcab6a8b0a12914a3021612e18eb6c2f80709f950a3773c028442ba",
+      "size_bytes": 4223,
+      "snapshot_id": "resume-2026-08",
       "source_evidence": [
         "npc_showcase_data_public",
-        "single_linux_nangate45_backend_public"
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
       ],
       "source_files": [
         {
           "path": "../evidence/data/showcase.json",
-          "sha256": "cc68feb48042a0255f7ae6c28320194b70bc52b3a38d69c51d34ab22b229561b"
+          "sha256": "11dff889b69cd35f9cd75f4b81c6f251b214511cc01d25d3ec8e65c8641bbed6"
         },
         {
           "path": "../evidence/implementation/nangate45_fixed_points.json",
           "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+        },
+        {
+          "path": "../evidence/performance/linux_coremark_ab.json",
+          "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+        },
+        {
+          "path": "../evidence/system/linux_boot.json",
+          "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+        },
+        {
+          "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+          "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+        },
+        {
+          "path": "../evidence/fpga/single_xc7z100_history.json",
+          "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
         }
       ],
       "source_ref": "multiple_source_locked_commits",
@@ -176,21 +222,28 @@
         "linux_registers_nangate45_dc_frequency",
         "linux_registers_nangate45_postroute_frequency",
         "linux_sram_nangate45_dc_frequency",
-        "linux_sram_nangate45_postroute_frequency"
+        "linux_sram_nangate45_postroute_frequency",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
       ],
       "configuration": "Three source-locked Profiles by register-expanded and SRAM-macro backend status",
-      "generated_time": "2026-07-29T08:00:00Z",
+      "generated_time": "2026-08-01T12:00:00Z",
       "id": "npc_profile_portfolio_asset",
       "path": "../docs/assets/profile_portfolio.svg",
       "project_id": "npc-riscv-open",
       "provenance_id": "npc_showcase_asset_provenance_public",
       "public": true,
-      "sha256": "95033c464e48fea295e0d00d8b0bad0b5e072af9af8f6454895e05991c904de8",
-      "size_bytes": 5292,
-      "snapshot_id": "v0.1.0",
+      "sha256": "49889d789e8558d408e73b641e8aca3adf20c45d9cd986042b5cc9db4a2b5fc5",
+      "size_bytes": 5356,
+      "snapshot_id": "resume-2026-08",
       "source_evidence_ids": [
         "npc_showcase_data_public",
-        "single_linux_nangate45_backend_public"
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
       ],
       "source_ref": "multiple_source_locked_commits",
       "status": "verified",
@@ -218,7 +271,7 @@
         "linux_sram_nangate45_core_area"
       ],
       "configuration": "Four Nangate45 academic fixed points with DC and post-route frequency plus standard-cell and core area",
-      "generated_time": "2026-07-29T08:00:00Z",
+      "generated_time": "2026-08-01T12:00:00Z",
       "id": "npc_nangate45_closure_asset",
       "path": "../docs/assets/nangate45_closure_points.svg",
       "project_id": "npc-riscv-open",
@@ -226,7 +279,7 @@
       "public": true,
       "sha256": "2593ab5e5de50d13c82ada76fb46426633ef28844a1cc61e9fa3e9b801cf0b06",
       "size_bytes": 6768,
-      "snapshot_id": "v0.1.0",
+      "snapshot_id": "resume-2026-08",
       "source_evidence_ids": [
         "npc_showcase_data_public",
         "single_linux_nangate45_backend_public"
@@ -235,6 +288,98 @@
       "status": "verified",
       "tool": "flows/scripts/generate_showcase_assets.py",
       "type": "generated_showcase_svg"
+    },
+    {
+      "caveat": "Historical same-benchmark-family comparison; baseline binary hash is unavailable, retired counts differ by four, and current 0fc3de40 has not been rerun",
+      "claims": [
+        "linux_historical_no_tlb_whole_cpi",
+        "linux_historical_optimized_whole_cpi",
+        "linux_historical_approx_speedup"
+      ],
+      "configuration": "Sv32 whole-program reset-to-ebreak CoreMark comparison",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "linux_coremark_history_public",
+      "path": "../evidence/performance/linux_coremark_ab.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443",
+      "size_bytes": 3066,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "multiple_historical_refs",
+      "status": "partial",
+      "tool": "Historical RTL simulation counters and bounded public CoreMark summary",
+      "type": "bounded_historical_performance_summary"
+    },
+    {
+      "caveat": "Verified for e3a1cc91 only; current 0fc3de40 has not repeated the deep boot",
+      "claims": [
+        "linux_historical_boot_to_initramfs_shell"
+      ],
+      "configuration": "DTB load, OpenSBI M-mode, S-mode handoff, Linux 6.6.141 /init and initramfs shell",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "linux_boot_history_public",
+      "path": "../evidence/system/linux_boot.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325",
+      "size_bytes": 1590,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "status": "verified",
+      "tool": "Headless RTL simulation with profile-matched NEMU difftest",
+      "type": "bounded_historical_system_boot_summary"
+    },
+    {
+      "caveat": "Historical seven-workload simulation before combinational-loop remediation; not current no-loop RTL, FPGA, ASIC or silicon evidence",
+      "claims": [
+        "ooo_historical_frontend_empty_baseline_percent",
+        "ooo_historical_frontend_empty_s9b_percent",
+        "ooo_historical_redirect_direct_jal_percent",
+        "ooo_historical_redirect_btfnt_percent",
+        "ooo_historical_redirect_btb_bht_percent",
+        "ooo_historical_redirect_jalr_ras_percent"
+      ],
+      "configuration": "Frozen seven-workload historical frontend and branch-prediction stages",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "ooo_historical_optimization_public",
+      "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089",
+      "size_bytes": 2872,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "multiple_historical_refs",
+      "status": "verified",
+      "tool": "Historical RTL simulation, difftest suite and performance counters",
+      "type": "bounded_historical_microarchitecture_summary"
+    },
+    {
+      "caveat": "Three historical uncommitted source snapshots are separate; board/workload observation is partial and later forwarding/predictor snapshots have implementation/timing only",
+      "claims": [
+        "single_fpga_original_routed_frequency",
+        "single_fpga_original_setup_wns",
+        "single_fpga_original_hold_whs",
+        "single_fpga_historical_board_observation",
+        "single_fpga_forward_routed_frequency",
+        "single_fpga_forward_setup_wns",
+        "single_fpga_forward_hold_whs",
+        "single_fpga_predict_routed_frequency",
+        "single_fpga_predict_setup_wns",
+        "single_fpga_predict_hold_whs"
+      ],
+      "configuration": "Vivado 2022.2 XC7Z100 historical board, forwarding and 128-entry BTB/PHT snapshots",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "single_xc7z100_history_public",
+      "path": "../evidence/fpga/single_xc7z100_history.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de",
+      "size_bytes": 7368,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "historical_source_manifests",
+      "status": "partial",
+      "tool": "Vivado 2022.2 routed reports, bitstream identity, UART and ILA captures",
+      "type": "bounded_layered_fpga_history_summary"
     }
   ],
   "kind": "evidence_manifest",

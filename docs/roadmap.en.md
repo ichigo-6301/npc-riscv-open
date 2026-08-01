@@ -10,6 +10,9 @@ as future targets.
 
 ## `rv32im_single_perf`
 
+- Rebuild a source-matched bitstream for current `f76de574` and retain a
+  Hardware Manager programmed-image transcript plus UART/ILA and workload
+  identity. Historical board observation remains `partial` until then.
 - Add explicit external IO drive/load and input/output delay models while
   keeping internal timing separate from full-IO timing.
 - Resolve or review max-capacitance and other electrical exceptions by exact
@@ -21,9 +24,9 @@ as future targets.
 
 - Rerun the same hash-locked CoreMark input at source lock `0fc3de40` before
   promoting the historical `abf66cad` CPI to a current Profile claim.
-- Extend bounded OpenSBI, S-mode, and Sv32 page-fault regressions. A complete
-  Linux distribution boot still requires an external image, DTB, and audited
-  board memory map.
+- Extend bounded OpenSBI, S-mode, and Sv32 page-fault regressions, then rerun a
+  deep boot at current `0fc3de40` with locked OpenSBI/Linux/DTB/initramfs inputs.
+  The historical `e3a1cc91` boot result does not transfer automatically.
 - Continue the same backend work as Single: IO, electrical exceptions, macro
   signoff, OCV/MMMC, DFT, LEC, and power integrity.
 

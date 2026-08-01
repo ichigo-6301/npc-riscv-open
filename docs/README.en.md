@@ -11,9 +11,9 @@ conditions.
 
 | Profile | Architecture | Current public validation state |
 | --- | --- | --- |
-| `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, regression, and hash-locked CoreMark+difftest verified |
-| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | source closure and bounded architecture regression are verified; the OpenSBI entrypoint remains `partial`; the `abf66cad` CoreMark+difftest row is historical; complete Linux is not claimed |
-| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure and dual-width regression verified; CoreMark provisional at the dual-retire MMIO difftest boundary |
+| `rv32im_single_perf` | Five-stage, single-issue RV32IM | current simulation/ASIC verified; historical XC7Z100 200 MHz implementation verified with `partial` UART/ILA board observation |
+| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | current bounded simulation/ASIC verified; `e3a1cc91` boot to Linux shell verified, current source not deeply rerun |
+| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | current RTL/performance provisional; historical optimization recorded separately; backend planned |
 
 The three RTL sets are not one parameterized implementation. One build compiles
 one source set, while the public wrappers normalize only commit, halt, and
@@ -34,6 +34,10 @@ debug observation.
   OpenROAD/OpenRCX, PrimeTime, and evidence gates.
 - [Backend closure evidence](evidence/backend_closure.en.md): bounded evidence
   for the four Single/Linux fixed-frequency implementation points.
+- [Performance optimization history](evidence/performance_history.en.md):
+  approximate Linux A/B and the historical OoO optimization epoch.
+- [System and FPGA history](evidence/system_fpga_history.en.md): Linux boot
+  lineage and layered XC7Z100 snapshots.
 - [Limitations](limitations.en.md): unestablished feature, PPA, and system-level
   conclusions.
 - [Roadmap](roadmap.en.md): unfinished work and maturity promotion gates by

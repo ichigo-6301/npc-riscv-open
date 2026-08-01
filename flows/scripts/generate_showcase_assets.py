@@ -28,6 +28,12 @@ POINT_IDS = (
     "rv32ima_sv32_linux.registers",
     "rv32ima_sv32_linux.sram",
 )
+HISTORICAL_EVIDENCE_IDS = (
+    "linux_coremark_history_public",
+    "linux_boot_history_public",
+    "ooo_historical_optimization_public",
+    "single_xc7z100_history_public",
+)
 
 
 def read_object(path: Path) -> dict:
@@ -103,6 +109,19 @@ def validate_data(root: Path, data: dict) -> dict:
             )
         )
     evidence_points = evidence.get("closure_points", {})
+    historical = data.get("historical_evidence")
+    if not isinstance(historical, list) or tuple(item.get("id") for item in historical) != HISTORICAL_EVIDENCE_IDS:
+        raise ValueError("showcase data must contain the ordered historical evidence set")
+    for item in historical:
+        historical_path = root / str(item.get("path", ""))
+        if not historical_path.is_file():
+            raise ValueError("historical evidence path missing for {}".format(item.get("id")))
+        actual = sha256_file(historical_path)
+        if item.get("sha256") != actual:
+            raise ValueError("historical evidence SHA256 drift for {}".format(item.get("id")))
+    for profile in profiles:
+        if not isinstance(profile.get("history_note"), str) or not profile["history_note"]:
+            raise ValueError("showcase profile history note missing for {}".format(profile.get("id")))
     for point in points:
         point_id = point["id"]
         evidence_point = evidence_points.get(point_id)
@@ -143,11 +162,7 @@ def profile_portfolio_svg(data: dict) -> str:
             profile["backend"]["registers"]
         )
         sram_label, sram_fg, sram_bg = status_style(profile["backend"]["sram"])
-        active_note = (
-            "P&R + extracted internal STA"
-            if registers_label == "VERIFIED"
-            else "backend results remain TODO"
-        )
+        active_note = profile["history_note"]
         cards.append(
             """  <g transform="translate({x} 126)">
     <rect width="330" height="342" rx="6" fill="#ffffff" stroke="#d1d5db"/>
@@ -347,6 +362,13 @@ def provenance(root: Path, data: dict, assets: dict[str, str]) -> dict:
                 "path": source["path"],
                 "sha256": source["sha256"],
             },
+        ] + [
+            {
+                "id": item["id"],
+                "path": item["path"],
+                "sha256": item["sha256"],
+            }
+            for item in data["historical_evidence"]
         ],
         "assets": records,
     }
