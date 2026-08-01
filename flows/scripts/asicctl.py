@@ -19,7 +19,7 @@ from calculate_floorplan import calculate, calculate_with_macros, format_box
 from compare_a3_dc import run as compare_a3_dc
 from prepare_pnr_sdc import retarget
 from summarize_dc import parse_run
-from summarize_pnr import parse_run as parse_pnr_run
+from summarize_pnr import contract_values as pnr_contract_values, parse_run as parse_pnr_run
 from summarize_sta import parse_run as parse_sta_run
 
 
@@ -1130,9 +1130,8 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     dc_run = Path(args.dc_run).resolve()
     dc_input_path = dc_run.parent / "input_manifest.json"
     dc_input = load_json(dc_input_path)
-    if dc_input.get("schema") not in (
-            "npc-riscv-open/d7-dc-input-v1", "npc-riscv-open/d8-dc-input-v1"):
-        raise AsicError("P&R requires a recognized DC input manifest")
+    if dc_input.get("schema") != "npc-riscv-open/d8-dc-input-v1":
+        raise AsicError("P&R requires a D8 DC input manifest with complete identity")
     dc_identity = {
         "profile": contract["profile"],
         "mode": contract["mode"],
@@ -1143,12 +1142,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "implementation_source_sha256": contract["implementation_source_sha256"],
         "config_sha256": contract["config_sha256"],
     }
-    identity_input = dict(dc_input)
-    if (dc_input["schema"] == "npc-riscv-open/d7-dc-input-v1" and
-            "memory_mode" not in identity_input):
-        # D7 predates dual-memory handoff and can only represent registers.
-        identity_input["memory_mode"] = "registers"
-    require_handoff_identity(identity_input, dc_identity, "DC input")
+    require_handoff_identity(dc_input, dc_identity, "DC input")
     libraries = contract["matrix"]["libraries"]
     if (dc_input.get("liberty_sha256") != libraries["liberty_sha256"] or
             dc_input.get("db_sha256") != libraries["db_sha256"]):
@@ -1532,7 +1526,7 @@ def evidence_check(path: Path) -> int:
     errors: List[str] = []
     manifests = list(root.rglob("input_manifest.json"))
     if not manifests:
-        errors.append(f"{root}: no D7 input manifests found")
+        errors.append(f"{root}: no ASIC input manifests found")
     for manifest_path in manifests:
         try:
             record = load_json(manifest_path)
@@ -1572,9 +1566,33 @@ def evidence_check(path: Path) -> int:
         manifest_path = same_path.parent / "input_manifest.json"
         manifest = load_json(manifest_path) if manifest_path.is_file() else {}
         if manifest.get("schema") == "npc-riscv-open/d8-pnr-input-v1":
-            for role in ("routed_def", "gds"):
-                if not record.get(role, {}).get("pnr_output_sha256"):
-                    errors.append(f"{same_path}: missing {role}.pnr_output_sha256")
+            contract_path = same_path.parent / "openroad_contract.txt"
+            try:
+                contract = pnr_contract_values(contract_path)
+            except (OSError, ValueError) as error:
+                errors.append(f"{same_path}: invalid OpenROAD contract: {error}")
+                continue
+            top = contract.get("top")
+            if not top:
+                errors.append(f"{same_path}: OpenROAD contract lacks top")
+                continue
+            handoff = same_path.parent / "handoff"
+            output_roles = (
+                ("routed_netlist", "pnr_output_sha256", handoff / f"{top}_postroute.v"),
+                ("routed_sdc", "pnr_output_sha256", handoff / f"{top}_postroute.sdc"),
+                ("routed_database", "pnr_output_sha256", handoff / f"{top}_postroute.odb"),
+                ("routed_def", "pnr_output_sha256", handoff / f"{top}_postroute.def"),
+                ("spef", "openrcx_output_sha256", handoff / f"{top}_postroute.spef"),
+                ("gds", "pnr_output_sha256", handoff / f"{top}.gds"),
+            )
+            for role, key, artifact in output_roles:
+                expected = record.get(role, {}).get(key)
+                if not expected:
+                    errors.append(f"{same_path}: missing {role}.{key}")
+                elif not artifact.is_file():
+                    errors.append(f"{same_path}: missing handoff artifact {role}")
+                elif sha256_file(artifact) != expected:
+                    errors.append(f"{same_path}: hash drift for {role}")
     for manifest_path in root.rglob("input_manifest.json"):
         record = load_json(manifest_path)
         if record.get("schema") not in (

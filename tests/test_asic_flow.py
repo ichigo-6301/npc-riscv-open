@@ -536,6 +536,24 @@ class AsicFlowTests(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def test_pnr_rejects_d7_dc_manifest_without_complete_identity(self):
+        temporary, root, config = self.fixture()
+        try:
+            dc_run = root / "build/dc/matrix/dc_700mhz"
+            dc_run.mkdir(parents=True)
+            (dc_run.parent / "input_manifest.json").write_text(json.dumps({
+                "schema": "npc-riscv-open/d7-dc-input-v1",
+            }))
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                dc_run=str(dc_run), frequency_mhz=None,
+                build_root="", run_id="",
+            )
+            with self.assertRaisesRegex(asicctl.AsicError, "requires a D8"):
+                asicctl.pnr(root, config, args)
+        finally:
+            temporary.cleanup()
+
     def test_linux_dc_dry_run_states_final_timer_contract(self):
         contract = {
             "profile": "rv32ima_sv32_linux",
@@ -1282,6 +1300,9 @@ class AsicFlowTests(unittest.TestCase):
             (source / "input").mkdir()
             mapped = source / "input/cpu_top_mapped.v"
             mapped.write_text("module cpu_top; endmodule\n")
+            external_dc_manifest = root / "dc_run/input_manifest.json"
+            external_dc_manifest.parent.mkdir()
+            external_dc_manifest.write_text('{"schema":"fixture-dc-input"}\n')
             (source / "input_manifest.json").write_text(json.dumps({
                 "schema": "npc-riscv-open/d8-pnr-input-v1",
                 "profile": "rv32im_single_perf",
@@ -1290,6 +1311,10 @@ class AsicFlowTests(unittest.TestCase):
                 "expected_macro_count": 0,
                 "pnr_frequency_mhz": 425,
                 "files": {
+                    "dc_input_manifest": {
+                        "path": str(external_dc_manifest),
+                        "sha256": asicctl.sha256_file(external_dc_manifest),
+                    },
                     "dc_mapped_netlist": {
                         "path": str(mapped), "sha256": asicctl.sha256_file(mapped),
                     },
@@ -1411,10 +1436,21 @@ class AsicFlowTests(unittest.TestCase):
             self.assertEqual(
                 recovery["tracked_orfs_identity"]["runtime_identity_policy"],
                 asicctl.ORFS_RUNTIME_IDENTITY_POLICY)
+            self.assertEqual(
+                recovery["recovered_external_input_roles"], ["dc_input_manifest"])
+            recovered_manifest = json.loads((output / "input_manifest.json").read_text())
+            recovered_external = Path(
+                recovered_manifest["files"]["dc_input_manifest"]["path"])
+            self.assertTrue(recovered_external.is_file())
+            self.assertEqual(
+                recovered_external.resolve().relative_to(output / "input").parts[0],
+                "external_roles")
+            external_dc_manifest.rename(root / "dc_run/input_manifest.moved")
             (source / "orfs").rename(source / "orfs_moved_after_recovery")
             self.assertTrue((
                 output / "orfs/results/nangate45/fixture/base/6_final.gds").is_file())
             self.assertTrue(parse_pnr_run(output)["route_complete"])
+            self.assertEqual(asicctl.evidence_check(output), 0)
 
     def test_sta_summary_requires_setup_hold_coverage_and_parasitics(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1454,7 +1490,7 @@ class AsicFlowTests(unittest.TestCase):
 
     def test_evidence_check_rejects_empty_root(self):
         with tempfile.TemporaryDirectory() as temp:
-            with self.assertRaisesRegex(asicctl.AsicError, "no D7 input manifests"):
+            with self.assertRaisesRegex(asicctl.AsicError, "no ASIC input manifests"):
                 asicctl.evidence_check(Path(temp))
 
     def test_evidence_check_rejects_input_hash_drift(self):
@@ -1490,6 +1526,42 @@ class AsicFlowTests(unittest.TestCase):
             }))
             with self.assertRaisesRegex(asicctl.AsicError, "missing same_run_artifacts"):
                 asicctl.evidence_check(root)
+
+    def test_evidence_check_rejects_routed_def_and_gds_hash_drift(self):
+        for role, filename in (("routed_def", "cpu_top_postroute.def"),
+                               ("gds", "cpu_top.gds")):
+            with self.subTest(role=role), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                handoff = root / "handoff"
+                handoff.mkdir()
+                artifacts = {
+                    "routed_netlist": ("cpu_top_postroute.v", "pnr_output_sha256"),
+                    "routed_sdc": ("cpu_top_postroute.sdc", "pnr_output_sha256"),
+                    "routed_database": ("cpu_top_postroute.odb", "pnr_output_sha256"),
+                    "routed_def": ("cpu_top_postroute.def", "pnr_output_sha256"),
+                    "spef": ("cpu_top_postroute.spef", "openrcx_output_sha256"),
+                    "gds": ("cpu_top.gds", "pnr_output_sha256"),
+                }
+                same = {"mapped_netlist": {
+                    "dc_output_sha256": "a" * 64,
+                    "pnr_input_sha256": "a" * 64,
+                    "orfs_import_sha256": "a" * 64,
+                }}
+                for artifact_role, (name, key) in artifacts.items():
+                    path = handoff / name
+                    path.write_text(f"{artifact_role}\n")
+                    same[artifact_role] = {key: asicctl.sha256_file(path)}
+                same["routed_database"]["openrcx_input_sha256"] = (
+                    same["routed_database"]["pnr_output_sha256"])
+                (root / "same_run_artifacts.json").write_text(json.dumps(same))
+                (root / "input_manifest.json").write_text(json.dumps({
+                    "schema": "npc-riscv-open/d8-pnr-input-v1",
+                    "files": {},
+                }))
+                (root / "openroad_contract.txt").write_text("top=cpu_top\n")
+                (handoff / filename).write_text("corrupted\n")
+                with self.assertRaisesRegex(asicctl.AsicError, f"hash drift for {role}"):
+                    asicctl.evidence_check(root)
 
     def test_a3_dc_evaluation_passes_all_merge_guards(self):
         result = evaluate_a3_dc(

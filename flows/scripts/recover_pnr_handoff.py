@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import re
 import shutil
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from sanitize_openroad_sdc import sanitize
 from summarize_pnr import contract_values, parse_run, sha256_file
@@ -139,7 +139,7 @@ def runtime_identity(source_run: Path, contract: dict, tracked: dict) -> dict:
     }
 
 
-def copy_input_manifest(source_run: Path, output_run: Path) -> dict:
+def copy_input_manifest(source_run: Path, output_run: Path) -> Tuple[dict, List[str]]:
     source_path = source_run / "input_manifest.json"
     require_file(source_path, "input manifest")
     manifest = json.loads(source_path.read_text(encoding="utf-8"))
@@ -159,19 +159,27 @@ def copy_input_manifest(source_run: Path, output_run: Path) -> dict:
             raise RecoveryError(f"source input manifest hash mismatch: {role}")
         source_files[role] = old_path
     shutil.copytree(source_input, output_input)
-    for role, item in files.items():
+    external_roles = []
+    for index, (role, item) in enumerate(sorted(files.items())):
         old_path = source_files[role]
         try:
             relative = old_path.relative_to(source_input)
         except ValueError:
-            continue
-        new_path = output_input / relative
+            safe_role = re.sub(r"[^A-Za-z0-9_.-]+", "_", role).strip("._") or "role"
+            suffix = "".join(old_path.suffixes)
+            new_path = (output_input / "external_roles" /
+                        f"{index:03d}_{safe_role}" / f"artifact{suffix}")
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(old_path, new_path)
+            external_roles.append(role)
+        else:
+            new_path = output_input / relative
         require_file(new_path, "recovered input")
         if sha256_file(new_path) != item["sha256"]:
             raise RecoveryError(f"recovered input hash mismatch: {role}")
         item["path"] = str(new_path)
     write_json(output_run / "input_manifest.json", manifest)
-    return manifest
+    return manifest, external_roles
 
 
 def write_checksums(handoff: Path, top: str) -> None:
@@ -260,7 +268,7 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
 
     output_run.parent.mkdir(parents=True, exist_ok=True)
     output_run.mkdir()
-    manifest = copy_input_manifest(source_run, output_run)
+    manifest, external_roles = copy_input_manifest(source_run, output_run)
     for name in ("floorplan.json", "constant_net_report.txt", "openroad_contract.txt",
                  "orfs_commit.txt", "resource_monitor.csv"):
         path = source_run / name
@@ -332,6 +340,7 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         "physical_implementation_rerun": False,
         "orfs_workspace_reused_read_only": False,
         "orfs_workspace_preservation": "self_contained_copy",
+        "recovered_external_input_roles": external_roles,
         "tracked_orfs_identity": tracked_identity,
         "source_period_ns": source_period,
         "normalized_period_ns": period_ns,
