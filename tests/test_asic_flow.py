@@ -569,6 +569,95 @@ class AsicFlowTests(unittest.TestCase):
             output.getvalue(),
         )
 
+    def test_dc_matrix_fails_when_point_budget_exhausts_without_closed_point(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            constraint = root / "flows/asic/constraints/internal_clock.sdc"
+            constraint.parent.mkdir(parents=True)
+            constraint.write_text("create_clock -period 2.0 [get_ports clk]\n")
+            setup = root / "dc_setup.tcl"
+            liberty = root / "stdcell.lib"
+            database = root / "stdcell.db"
+            for path in (setup, liberty, database):
+                path.write_text("fixture\n")
+            contract = {
+                "profile": "rv32im_single_perf",
+                "mode": "default",
+                "memory_mode": "registers",
+                "source_commit": "a" * 40,
+                "source_set_sha256": "b" * 64,
+                "source_role_sha256": "c" * 64,
+                "implementation_source_sha256": "d" * 64,
+                "source_overlay_commits": [],
+                "config_sha256": "e" * 64,
+                "frequencies_mhz": [700, 200],
+                "navigation_quantum_mhz": 25,
+                "dc_max_points": 1,
+                "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
+                "memory_data": {"extra_defines": [], "macros": {}},
+                "parameter_file": None,
+                "top": "cpu_top",
+                "clock_port": "clk",
+                "reset_port": "rst_n",
+                "filelist": root / "unused.f",
+                "matrix": {"libraries": {
+                    "liberty_sha256": asicctl.sha256_file(liberty),
+                    "db_sha256": asicctl.sha256_file(database),
+                }},
+            }
+            row = {
+                "frequency_mhz": 700,
+                "period_ns": 1000.0 / 700,
+                "completed": True,
+                "setup_closed": False,
+                "missing_gate_fields": [],
+                "timing_loop_report_valid": True,
+                "timing_loop_evidence": 0,
+                "automatic_arc_break_evidence": 0,
+                "electrical_violations": 0,
+                "check_design_errors": 0,
+                "unresolved_reference_count": 0,
+                "latch_count": 0,
+                "unclocked_sync_endpoint_count": 0,
+                "macro_count": 0,
+                "expected_macro_count": 0,
+                "blackbox_count": 0,
+                "expected_blackbox_count": 0,
+                "check_design_ok": 1,
+                "check_timing_ok": 1,
+                "wns_ns": -0.4,
+                "tns_ns": -1.0,
+                "violating_paths": 1,
+            }
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                frequencies="", timer_clock_hz=None,
+                build_root=str(root / "build"), run_id="budget_exhausted",
+            )
+
+            def fake_dc(*_args, **kwargs):
+                (Path(kwargs["cwd"]) / "cpu_top_mapped.v").write_text(
+                    "module cpu_top; endmodule\n")
+                return mock.Mock(returncode=0)
+
+            environment = {
+                "NPC_ASIC_STDCELL_LIBERTY": str(liberty),
+                "NPC_ASIC_STDCELL_DB": str(database),
+                "NPC_ASIC_DC_SETUP": str(setup),
+            }
+            with mock.patch.object(asicctl, "build_contract", return_value=contract), \
+                    mock.patch.object(asicctl, "require_tool", return_value=["dc_shell"]), \
+                    mock.patch.object(asicctl, "parse_run", return_value=row), \
+                    mock.patch.object(asicctl.subprocess, "run", side_effect=fake_dc), \
+                    mock.patch.dict(os.environ, environment, clear=False):
+                self.assertEqual(asicctl.dc_matrix(root, root / ".config", args), 2)
+            verdict = json.loads((
+                root / "build/rv32im_single_perf/default/registers/dc/"
+                "budget_exhausted/verdict.json").read_text())
+            self.assertEqual(verdict["status"], "DC_NO_CLOSED_POINT")
+            self.assertEqual(verdict["stop_action"], "stop_point_budget_exhausted")
+
     def test_register_lc_and_predecessor_free_backend_dry_runs_pass(self):
         temporary, root, config = self.fixture()
         try:
@@ -668,6 +757,9 @@ class AsicFlowTests(unittest.TestCase):
         self.assertIn("image_digest_bound_no_vcs_metadata", runner)
         self.assertIn("test -e /OpenROAD-flow-scripts/.git", runner)
         self.assertIn("VCS metadata is present but HEAD verification failed", runner)
+        self.assertIn("container_indexed_list", runner)
+        self.assertIn("macro_view_mounts+=(", runner)
+        self.assertNotIn("for path in $1", runner)
 
     def test_openroad_normalizes_only_dc_constant_nets(self):
         text = (ROOT / "flows/asic/openroad/normalize_dc_constant_nets.tcl").read_text()
@@ -802,6 +894,46 @@ class AsicFlowTests(unittest.TestCase):
             self.assertIn(
                 "NPC_ASIC_BUILD_ROOT must be below NPC_ASIC_ROOT",
                 completed.stderr)
+
+    def test_openroad_runner_preserves_macro_paths_under_root_with_whitespace(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp) / "NPC Project"
+            base.mkdir()
+            environment, _ = self._openroad_runner_fixture(base, "0" * 40)
+            root = Path(environment["NPC_ASIC_ROOT"])
+            docker_log = root / "docker-args.txt"
+            fake_docker = Path(environment["NPC_ASIC_DOCKER"])
+            fake_docker.write_text(
+                "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\" > \"$NPC_TEST_DOCKER_LOG\"\n")
+            for role, suffix in (("LEF", "lef"), ("LIB", "lib"), ("GDS", "gds")):
+                path = root / f"macro.{suffix}"
+                path.write_text("fixture\n")
+                environment[f"NPC_ASIC_MACRO_{role}_COUNT"] = "1"
+                environment[f"NPC_ASIC_MACRO_{role}_0"] = str(path)
+            placement = root / "macro_placement.tcl"
+            report = root / "macro_placement_report.txt"
+            pre_pdn = root / "pre_pdn.tcl"
+            for path in (placement, report, pre_pdn):
+                path.write_text("fixture\n")
+            environment.update({
+                "NPC_ASIC_MEMORY_MODE": "sram",
+                "NPC_ASIC_EXPECTED_MACRO_COUNT": "4",
+                "NPC_ASIC_MACRO_PLACEMENT_TCL": str(placement),
+                "NPC_ASIC_MACRO_PLACEMENT_REPORT": str(report),
+                "NPC_ASIC_PRE_PDN_TCL": str(pre_pdn),
+                "NPC_TEST_DOCKER_LOG": str(docker_log),
+            })
+            completed = subprocess.run(
+                ["bash", str(ROOT / "flows/asic/openroad/run.sh")],
+                env=environment, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("Missing ORFS runtime identity report", completed.stderr)
+            self.assertNotIn("Missing macro view", completed.stderr)
+            arguments = docker_log.read_text()
+            for role in ("LEF", "LIB", "GDS"):
+                container_path = f"/npc_macro_views/NPC_ASIC_MACRO_{role}_0"
+                self.assertIn(container_path, arguments)
+                self.assertIn("NPC Project/source/macro.", arguments)
 
     def test_pnr_sdc_retargets_exactly_one_clock(self):
         source = "create_clock [get_ports clk] -name npc_clk -period 1.250000\n"
@@ -1139,6 +1271,14 @@ class AsicFlowTests(unittest.TestCase):
             nickname = "fixture"
             top = "cpu_top"
             source.mkdir()
+            matrix_path = root / "flows/asic/profiles/register_expanded.json"
+            matrix_path.parent.mkdir(parents=True)
+            matrix_path.write_text(json.dumps({"orfs": {
+                "commit": "a" * 40,
+                "image_digest": "sha256:" + "b" * 64,
+                "platform": "nangate45",
+                "runtime_identity_policy": asicctl.ORFS_RUNTIME_IDENTITY_POLICY,
+            }}))
             (source / "input").mkdir()
             mapped = source / "input/cpu_top_mapped.v"
             mapped.write_text("module cpu_top; endmodule\n")
@@ -1207,13 +1347,13 @@ class AsicFlowTests(unittest.TestCase):
             (reports / "5_route_drc.rpt").write_text("")
 
             with self.assertRaisesRegex(RecoveryError, "runtime identity report"):
-                recover_pnr_handoff(source, output)
+                recover_pnr_handoff(source, output, root)
             (source / "orfs_commit.txt").write_text(
                 "actual_commit=wrong\n"
                 "verification=image_digest_bound_no_vcs_metadata\n")
             with self.assertRaisesRegex(
                     RecoveryError, "digest-bound runtime identity mismatch"):
-                recover_pnr_handoff(source, output)
+                recover_pnr_handoff(source, output, root)
             (source / "orfs_commit.txt").write_text(
                 "actual_commit=not_embedded\n"
                 "verification=image_digest_bound_no_vcs_metadata\n")
@@ -1222,7 +1362,7 @@ class AsicFlowTests(unittest.TestCase):
             manifest["files"]["dc_mapped_netlist"]["sha256"] = "0" * 64
             manifest_path.write_text(json.dumps(manifest))
             with self.assertRaisesRegex(RecoveryError, "input manifest hash mismatch"):
-                recover_pnr_handoff(source, root / "recovered_bad_input_hash")
+                recover_pnr_handoff(source, root / "recovered_bad_input_hash", root)
             manifest["files"]["dc_mapped_netlist"]["sha256"] = asicctl.sha256_file(mapped)
             manifest_path.write_text(json.dumps(manifest))
             contract_path = source / "openroad_contract.txt"
@@ -1232,19 +1372,28 @@ class AsicFlowTests(unittest.TestCase):
                 "mapped_netlist_sha256=" + "0" * 64))
             with self.assertRaisesRegex(
                     RecoveryError, "contract mapped netlist hash mismatch"):
-                recover_pnr_handoff(source, root / "recovered_bad_contract_mapped_hash")
+                recover_pnr_handoff(
+                    source, root / "recovered_bad_contract_mapped_hash", root)
             contract_path.write_text(contract_text.replace(
                 "orfs_import_netlist_sha256=NA",
                 "orfs_import_netlist_sha256=" + "0" * 64))
             with self.assertRaisesRegex(
                     RecoveryError, "contract ORFS import hash mismatch"):
-                recover_pnr_handoff(source, root / "recovered_bad_contract_import_hash")
+                recover_pnr_handoff(
+                    source, root / "recovered_bad_contract_import_hash", root)
             contract_path.write_text(contract_text)
-            summary = recover_pnr_handoff(source, output)
+            contract_path.write_text(contract_text.replace(
+                "orfs_commit=" + "a" * 40, "orfs_commit=" + "c" * 40))
+            with self.assertRaisesRegex(RecoveryError, "tracked ASIC matrix"):
+                recover_pnr_handoff(
+                    source, root / "recovered_stale_orfs_identity", root)
+            contract_path.write_text(contract_text)
+            summary = recover_pnr_handoff(source, output, root)
             self.assertTrue(summary["route_complete"])
             self.assertFalse((source / "run.ok").exists())
             self.assertTrue((output / "run.ok").is_file())
-            self.assertTrue((output / "orfs").is_symlink())
+            self.assertTrue((output / "orfs").is_dir())
+            self.assertFalse((output / "orfs").is_symlink())
             recovered_sdc = (output / "handoff/cpu_top_postroute.sdc").read_text()
             self.assertIn("-period 2.352941176", recovered_sdc)
             roles = json.loads((output / "same_run_artifacts.json").read_text())
@@ -1256,6 +1405,16 @@ class AsicFlowTests(unittest.TestCase):
                 "orfs_commit_verification=image_digest_bound_no_vcs_metadata",
                 recovered_contract)
             self.assertTrue((output / "orfs_commit.txt").is_file())
+            recovery = json.loads((output / "recovery_manifest.json").read_text())
+            self.assertEqual(
+                recovery["orfs_workspace_preservation"], "self_contained_copy")
+            self.assertEqual(
+                recovery["tracked_orfs_identity"]["runtime_identity_policy"],
+                asicctl.ORFS_RUNTIME_IDENTITY_POLICY)
+            (source / "orfs").rename(source / "orfs_moved_after_recovery")
+            self.assertTrue((
+                output / "orfs/results/nangate45/fixture/base/6_final.gds").is_file())
+            self.assertTrue(parse_pnr_run(output)["route_complete"])
 
     def test_sta_summary_requires_setup_hold_coverage_and_parasitics(self):
         with tempfile.TemporaryDirectory() as temp:

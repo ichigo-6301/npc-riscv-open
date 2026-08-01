@@ -30,8 +30,13 @@ case "$NPC_ASIC_MEMORY_MODE" in
     test "$NPC_ASIC_EXPECTED_MACRO_COUNT" = 4 || {
       echo "D8 SRAM mode requires four macros" >&2; exit 2;
     }
-    for name in NPC_ASIC_MACRO_LEFS NPC_ASIC_MACRO_LIBS NPC_ASIC_MACRO_GDS \
-                NPC_ASIC_MACRO_PLACEMENT_TCL NPC_ASIC_MACRO_PLACEMENT_REPORT \
+    for name in NPC_ASIC_MACRO_LEF_COUNT NPC_ASIC_MACRO_LIB_COUNT \
+                NPC_ASIC_MACRO_GDS_COUNT; do
+      [[ "${!name:-}" =~ ^[1-9][0-9]*$ ]] || {
+        echo "Missing or malformed $name for SRAM mode" >&2; exit 2;
+      }
+    done
+    for name in NPC_ASIC_MACRO_PLACEMENT_TCL NPC_ASIC_MACRO_PLACEMENT_REPORT \
                 NPC_ASIC_PRE_PDN_TCL; do
       test -n "${!name:-}" || { echo "Missing $name for SRAM mode" >&2; exit 2; }
     done
@@ -96,19 +101,41 @@ container_path() {
   esac
 }
 
-container_list() {
-  local result="" path converted
-  for path in $1; do
-    test -s "$path" || { echo "Missing macro view: $path" >&2; return 2; }
-    converted=$(container_path "$path") || return 2
-    result="${result:+$result }$converted"
+container_indexed_list() {
+  local prefix=$1 count=$2 output_variable=$3
+  local result="" path path_real container_view variable index
+  local -a paths=()
+  [[ "$count" =~ ^[0-9]+$ ]] || {
+    echo "Malformed macro-view count for $prefix: $count" >&2; return 2;
+  }
+  for ((index = 0; index < count; index++)); do
+    variable="${prefix}_${index}"
+    path=${!variable:-}
+    test -n "$path" || { echo "Missing indexed macro view: $variable" >&2; return 2; }
+    paths+=("$path")
   done
-  printf '%s' "$result"
+  for ((index = 0; index < ${#paths[@]}; index++)); do
+    path=${paths[$index]}
+    test -s "$path" || { echo "Missing macro view: $path" >&2; return 2; }
+    path_real=$(realpath "$path")
+    case "$path_real" in
+      "$root_real"/*) ;;
+      *) echo "Container input must be below NPC_ASIC_ROOT: $path_real" >&2; return 2 ;;
+    esac
+    container_view="/npc_macro_views/${prefix}_${index}"
+    macro_view_mounts+=(-v "$path_real:$container_view:ro")
+    result="${result:+$result }$container_view"
+  done
+  printf -v "$output_variable" '%s' "$result"
 }
 
-macro_lefs_container=$(container_list "${NPC_ASIC_MACRO_LEFS:-}")
-macro_libs_container=$(container_list "${NPC_ASIC_MACRO_LIBS:-}")
-macro_gds_container=$(container_list "${NPC_ASIC_MACRO_GDS:-}")
+macro_view_mounts=()
+macro_lefs_container=""
+macro_libs_container=""
+macro_gds_container=""
+container_indexed_list NPC_ASIC_MACRO_LEF "${NPC_ASIC_MACRO_LEF_COUNT:-0}" macro_lefs_container
+container_indexed_list NPC_ASIC_MACRO_LIB "${NPC_ASIC_MACRO_LIB_COUNT:-0}" macro_libs_container
+container_indexed_list NPC_ASIC_MACRO_GDS "${NPC_ASIC_MACRO_GDS_COUNT:-0}" macro_gds_container
 macro_placement_container=""
 macro_report_container=""
 pre_pdn_container=""
@@ -127,6 +154,7 @@ results_dir="$work_home/results/nangate45/$NPC_ASIC_DESIGN_NICKNAME/base"
 "$docker_tool" run --rm \
   -u "$uid:$gid" \
   -v "$root_real:/npc" \
+  "${macro_view_mounts[@]}" \
   -e NPC_ASIC_DESIGN_NICKNAME="$NPC_ASIC_DESIGN_NICKNAME" \
   -e NPC_ASIC_TOP="$NPC_ASIC_TOP" \
   -e NPC_ASIC_MAPPED_NETLIST="/npc/${netlist_real#"$root_real"/}" \

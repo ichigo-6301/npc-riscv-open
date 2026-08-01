@@ -1098,7 +1098,7 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     })
     print("ASIC_DC_MATRIX_COMPLETE root={} closed_points={} tool_failures={} executed={}".format(
         matrix_root, len(closed), failed_tools, scan["executed_frequencies_mhz"]))
-    return 0 if failed_tools == 0 else 2
+    return 0 if failed_tools == 0 and selected is not None else 2
 
 
 def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
@@ -1272,9 +1272,6 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "NPC_ASIC_ORFS_IMAGE_DIGEST": digest,
         "NPC_ASIC_MEMORY_MODE": contract["memory_mode"],
         "NPC_ASIC_EXPECTED_MACRO_COUNT": str(contract["expected_macro_count"]),
-        "NPC_ASIC_MACRO_LEFS": " ".join(str(path) for path in macro_views["lef"]),
-        "NPC_ASIC_MACRO_LIBS": " ".join(str(path) for path in macro_views["lib"]),
-        "NPC_ASIC_MACRO_GDS": " ".join(str(path) for path in macro_views["gds"]),
         "NPC_ASIC_MACRO_PLACEMENT_TCL": str(macro_placement or ""),
         "NPC_ASIC_MACRO_PLACEMENT_REPORT": (
             str(run / "macro_placement_report.txt") if handoff else ""),
@@ -1287,6 +1284,12 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
             sorted(contract["memory_data"].get("macros", {}))),
         "NPC_ASIC_HOLD_SLACK_MARGIN": "-0.05" if handoff else "0.0",
     })
+    for role, paths in (("LEF", macro_views["lef"]),
+                        ("LIB", macro_views["lib"]),
+                        ("GDS", macro_views["gds"])):
+        environment[f"NPC_ASIC_MACRO_{role}_COUNT"] = str(len(paths))
+        for index, path in enumerate(paths):
+            environment[f"NPC_ASIC_MACRO_{role}_{index}"] = str(path)
     (run / "openroad_contract.txt").write_text(
         "design_nickname={}\n"
         "top={}\n"

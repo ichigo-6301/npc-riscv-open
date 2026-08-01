@@ -3,7 +3,6 @@
 
 import argparse
 import json
-import os
 from pathlib import Path
 import re
 import shutil
@@ -19,6 +18,10 @@ class RecoveryError(RuntimeError):
 
 GIT_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 OCI_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ASIC_MATRIX_REL = Path("flows/asic/profiles/register_expanded.json")
+ORFS_RUNTIME_IDENTITY_POLICY = (
+    "exact_oci_digest_git_head_when_vcs_metadata_present_v1")
 
 
 def write_json(path: Path, value: object) -> None:
@@ -54,7 +57,33 @@ def clean_route_gate(summary: dict) -> None:
         raise RecoveryError("source run is not eligible for handoff recovery: " + ", ".join(failures))
 
 
-def runtime_identity(source_run: Path, contract: dict) -> dict:
+def tracked_orfs_identity(repo_root: Path) -> dict:
+    matrix_path = repo_root.resolve() / ASIC_MATRIX_REL
+    require_file(matrix_path, "tracked ASIC matrix")
+    try:
+        matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise RecoveryError(f"malformed tracked ASIC matrix: {error}") from error
+    identity = matrix.get("orfs")
+    required = ("commit", "image_digest", "platform", "runtime_identity_policy")
+    if not isinstance(identity, dict):
+        raise RecoveryError("tracked ASIC matrix lacks ORFS identity")
+    missing = [key for key in required if not identity.get(key)]
+    if missing:
+        raise RecoveryError(
+            "tracked ASIC matrix ORFS identity lacks: " + ",".join(missing))
+    if not GIT_COMMIT_RE.fullmatch(str(identity["commit"])):
+        raise RecoveryError("tracked ASIC matrix has malformed ORFS commit")
+    if not OCI_DIGEST_RE.fullmatch(str(identity["image_digest"])):
+        raise RecoveryError("tracked ASIC matrix has malformed ORFS image digest")
+    if identity["platform"] != "nangate45":
+        raise RecoveryError("tracked ASIC matrix has unsupported ORFS platform")
+    if identity["runtime_identity_policy"] != ORFS_RUNTIME_IDENTITY_POLICY:
+        raise RecoveryError("tracked ASIC matrix ORFS identity policy mismatch")
+    return identity
+
+
+def runtime_identity(source_run: Path, contract: dict, tracked: dict) -> dict:
     report_path = source_run / "orfs_commit.txt"
     require_file(report_path, "ORFS runtime identity report")
     values: Dict[str, str] = {}
@@ -77,6 +106,13 @@ def runtime_identity(source_run: Path, contract: dict) -> dict:
         raise RecoveryError("source OpenROAD contract has malformed orfs_image_digest")
     if image == "@" + digest or not image.endswith("@" + digest):
         raise RecoveryError("source OpenROAD image does not match its tracked digest")
+    for contract_key, tracked_key in (
+            ("orfs_commit", "commit"),
+            ("orfs_image_digest", "image_digest"),
+            ("platform", "platform")):
+        if contract[contract_key] != tracked[tracked_key]:
+            raise RecoveryError(
+                f"source OpenROAD contract {contract_key} does not match tracked ASIC matrix")
 
     actual = values["actual_commit"]
     verification = values["verification"]
@@ -186,21 +222,22 @@ def same_run_artifacts(output_run: Path, top: str, mapped: Path,
     }
 
 
-def recover(source_run: Path, output_run: Path) -> dict:
+def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> dict:
     source_run = source_run.resolve()
     output_run = output_run.resolve()
     if output_run.exists():
         raise RecoveryError(f"refusing to overwrite recovery run: {output_run}")
     if (source_run / "run.ok").exists():
         raise RecoveryError("source run is already complete; recovery is not applicable")
+    tracked_identity = tracked_orfs_identity(repo_root)
     contract = contract_values(source_run / "openroad_contract.txt")
     for key in ("design_nickname", "top", "memory_mode", "expected_macro_count",
-                "pnr_period_ns", "orfs_commit", "orfs_actual_commit",
+                "platform", "pnr_period_ns", "orfs_commit", "orfs_actual_commit",
                 "orfs_commit_verification", "orfs_image_digest", "orfs_image",
                 "mapped_netlist_sha256", "orfs_import_netlist_sha256"):
         if not contract.get(key):
             raise RecoveryError(f"source OpenROAD contract lacks {key}")
-    identity = runtime_identity(source_run, contract)
+    identity = runtime_identity(source_run, contract, tracked_identity)
     contract["orfs_actual_commit"] = identity["actual_commit"]
     contract["orfs_commit_verification"] = identity["verification"]
     source_summary = parse_run(source_run)
@@ -232,7 +269,7 @@ def recover(source_run: Path, output_run: Path) -> dict:
     macro_report = source_run / "macro_placement_report.txt"
     if macro_report.is_file():
         shutil.copy2(macro_report, output_run / macro_report.name)
-    os.symlink(source_run / "orfs", output_run / "orfs", target_is_directory=True)
+    shutil.copytree(source_run / "orfs", output_run / "orfs", copy_function=shutil.copy2)
 
     mapped = Path(manifest["files"]["dc_mapped_netlist"]["path"])
     require_file(mapped, "DC mapped netlist")
@@ -287,13 +324,15 @@ def recover(source_run: Path, output_run: Path) -> dict:
             Path(parse_run.__code__.co_filename).resolve()),
     }
     write_json(output_run / "recovery_manifest.json", {
-        "schema": "npc-riscv-open/d8-pnr-postprocess-recovery-v1",
+        "schema": "npc-riscv-open/d8-pnr-postprocess-recovery-v2",
         "source_run": str(source_run),
         "source_wrapper_exit_status": source_exit,
         "source_status": source_summary["status"],
         "source_missing_artifacts": source_summary["missing_artifacts"],
         "physical_implementation_rerun": False,
-        "orfs_workspace_reused_read_only": True,
+        "orfs_workspace_reused_read_only": False,
+        "orfs_workspace_preservation": "self_contained_copy",
+        "tracked_orfs_identity": tracked_identity,
         "source_period_ns": source_period,
         "normalized_period_ns": period_ns,
         "orfs_runtime_identity": identity,
@@ -318,9 +357,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-run", required=True, type=Path)
     parser.add_argument("--output-run", required=True, type=Path)
+    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     args = parser.parse_args()
     try:
-        summary = recover(args.source_run, args.output_run)
+        summary = recover(args.source_run, args.output_run, args.repo_root)
     except (OSError, ValueError, KeyError, json.JSONDecodeError, RecoveryError) as error:
         raise SystemExit(f"PNR_HANDOFF_RECOVERY_FAILED: {error}") from error
     print(
