@@ -117,12 +117,14 @@ def parse_run(run: Path) -> dict:
         parsed["macro_count"] == parsed["expected_macro_count"] and
         unannotated == 0 and coverage_clean
     )
-    closed = bool(complete and setup_closed and hold_closed and electrical_clean)
+    timing_closed = bool(complete and setup_closed and hold_closed)
+    all_constraints_clean = bool(timing_closed and electrical_clean)
     memory_mode = record.get("memory_mode", "registers")
-    if closed:
+    if all_constraints_clean:
         status = "STA_CLOSED"
-    elif (memory_mode == "sram" and complete and setup_closed and
-          electrical_clean and not hold_closed):
+    elif timing_closed:
+        status = "STA_TIMING_CLOSED_ELECTRICAL_PARTIAL"
+    elif memory_mode == "sram" and complete and setup_closed and not hold_closed:
         status = "SRAM_IMPLEMENTATION_COMPLETE_TIMING_PARTIAL"
     else:
         status = "STA_PARTIAL"
@@ -158,7 +160,9 @@ def parse_run(run: Path) -> dict:
         "hold_closed": hold_closed,
         "electrical_clean": electrical_clean,
         "sta_complete": complete,
-        "sta_closed": closed,
+        "timing_closed": timing_closed,
+        "sta_closed": timing_closed,
+        "all_constraints_clean": all_constraints_clean,
         "missing_fields": missing_fields,
         "missing_reports": missing_reports,
         "native_errors": native_errors,

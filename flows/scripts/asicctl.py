@@ -44,6 +44,9 @@ HANDOFF_IDENTITY_FIELDS = (
     "implementation_source_sha256",
     "config_sha256",
 )
+DC_INPUT_SCHEMA = "npc-riscv-open/d8-dc-input-v1"
+DC_OUTPUT_SCHEMA = "npc-riscv-open/d8-dc-output-v1"
+PNR_INPUT_SCHEMA = "npc-riscv-open/d8-pnr-input-v1"
 ORFS_RUNTIME_IDENTITY_POLICY = (
     "exact_oci_digest_git_head_when_vcs_metadata_present_v1")
 
@@ -92,6 +95,108 @@ def require_handoff_identity(record: dict, expected: dict, label: str) -> None:
                     label, key, record[key], expected[key]
                 )
             )
+
+
+def dc_output_manifest_record(contract: dict, dc_input_path: Path, dc_run: Path,
+                              row: dict) -> dict:
+    """Freeze DC handoff artifacts before the completion marker is written."""
+    mapped = dc_run / f"{contract['top']}_mapped.v"
+    mapped_sdc = dc_run / f"{contract['top']}_mapped.sdc"
+    dc_input = load_json(dc_input_path)
+    return {
+        "schema": DC_OUTPUT_SCHEMA,
+        **{key: contract[key] for key in HANDOFF_IDENTITY_FIELDS},
+        "dc_input_schema": dc_input.get("schema"),
+        "dc_input_manifest_sha256": sha256_file(dc_input_path),
+        "top": contract["top"],
+        "frequency_mhz": row.get("frequency_mhz"),
+        "clock_period_ns": row.get("period_ns"),
+        "compile_recipe": row.get("compile_recipe"),
+        "expected_macro_count": contract["expected_macro_count"],
+        "actual_macro_count": row.get("macro_count"),
+        "expected_blackbox_count": contract["expected_blackbox_count"],
+        "actual_blackbox_count": row.get("blackbox_count"),
+        "liberty_sha256": dc_input.get("liberty_sha256"),
+        "db_sha256": dc_input.get("db_sha256"),
+        "files": {
+            "dc_input_manifest": {
+                "path": str(dc_input_path),
+                "sha256": sha256_file(dc_input_path),
+            },
+            "mapped_netlist": {
+                "path": str(mapped),
+                "sha256": sha256_file(mapped),
+            },
+            "mapped_sdc": {
+                "path": str(mapped_sdc),
+                "sha256": sha256_file(mapped_sdc),
+            },
+        },
+    }
+
+
+def validate_dc_output_record(record: dict, *, expected_identity: dict,
+                              dc_input_path: Path, dc_input: dict,
+                              mapped: Path, mapped_sdc: Path, top: str,
+                              frequency_mhz: float, clock_period_ns: float,
+                              compile_recipe: str, expected_macro_count: int,
+                              expected_blackbox_count: int,
+                              liberty_sha256: str, db_sha256: str,
+                              require_record_paths: bool, label: str) -> dict:
+    """Validate the immutable DC-output-to-P&R handoff contract."""
+    if record.get("schema") != DC_OUTPUT_SCHEMA:
+        raise AsicError(f"{label} must use schema {DC_OUTPUT_SCHEMA}")
+    require_handoff_identity(record, expected_identity, label)
+    scalar_fields = {
+        "dc_input_schema": DC_INPUT_SCHEMA,
+        "top": top,
+        "compile_recipe": compile_recipe,
+        "expected_macro_count": expected_macro_count,
+        "actual_macro_count": expected_macro_count,
+        "expected_blackbox_count": expected_blackbox_count,
+        "actual_blackbox_count": expected_blackbox_count,
+        "liberty_sha256": liberty_sha256,
+        "db_sha256": db_sha256,
+    }
+    for key, expected in scalar_fields.items():
+        if record.get(key) != expected:
+            raise AsicError(f"{label} contract mismatch for {key}")
+    for key, expected in (("frequency_mhz", frequency_mhz),
+                          ("clock_period_ns", clock_period_ns)):
+        value = record.get(key)
+        if (isinstance(value, bool) or not isinstance(value, (int, float)) or
+                not math.isclose(float(value), float(expected),
+                                 rel_tol=0.0, abs_tol=5e-9)):
+            raise AsicError(f"{label} contract mismatch for {key}")
+
+    dc_input_hash = sha256_file(dc_input_path)
+    if (dc_input.get("schema") != DC_INPUT_SCHEMA or
+            record.get("dc_input_manifest_sha256") != dc_input_hash):
+        raise AsicError(f"{label} DC input manifest identity mismatch")
+    files = record.get("files")
+    if not isinstance(files, dict):
+        raise AsicError(f"{label} lacks files")
+    expected_files = {
+        "dc_input_manifest": (dc_input_path.resolve(), dc_input_hash),
+        "mapped_netlist": (mapped.resolve(), sha256_file(mapped)),
+        "mapped_sdc": (mapped_sdc.resolve(), sha256_file(mapped_sdc)),
+    }
+    digests = {}
+    for role, (expected_path, expected_hash) in expected_files.items():
+        item = files.get(role)
+        if not isinstance(item, dict):
+            raise AsicError(f"{label} lacks file role {role}")
+        digest = item.get("sha256")
+        if (not isinstance(digest, str) or
+                re.fullmatch(r"[0-9a-f]{64}", digest) is None or
+                digest != expected_hash):
+            raise AsicError(f"{label} hash drift for {role}")
+        if require_record_paths:
+            recorded_path = Path(str(item.get("path", ""))).resolve()
+            if recorded_path != expected_path:
+                raise AsicError(f"{label} path mismatch for {role}")
+        digests[role] = digest
+    return digests
 
 
 def require_orfs_runtime_identity(matrix: dict) -> dict:
@@ -989,7 +1094,7 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         else "compile_ultra_then_incremental_mapping_v1"
     )
     input_manifest = {
-        "schema": "npc-riscv-open/d8-dc-input-v1",
+        "schema": DC_INPUT_SCHEMA,
         "profile": contract["profile"], "mode": contract["mode"],
         "source_commit": contract["source_commit"],
         "source_set_sha256": contract["source_set_sha256"],
@@ -1091,8 +1196,39 @@ def dc_matrix(root: Path, config_path: Path, args: argparse.Namespace) -> int:
             )
         (run / "exit_status.txt").write_text(str(completed.returncode) + "\n")
         mapped = run / f"{contract['top']}_mapped.v"
-        if completed.returncode == 0 and mapped.is_file():
-            (run / "run.ok").write_text("DC_RUN_COMPLETED\n")
+        mapped_sdc = run / f"{contract['top']}_mapped.sdc"
+        if completed.returncode == 0 and mapped.is_file() and mapped_sdc.is_file():
+            pre_marker_row = parse_run(run)
+            try:
+                output_manifest = dc_output_manifest_record(
+                    contract, matrix_root / "input_manifest.json", run, pre_marker_row)
+                validate_dc_output_record(
+                    output_manifest,
+                    expected_identity={
+                        key: contract[key] for key in HANDOFF_IDENTITY_FIELDS
+                    },
+                    dc_input_path=matrix_root / "input_manifest.json",
+                    dc_input=input_manifest,
+                    mapped=mapped,
+                    mapped_sdc=mapped_sdc,
+                    top=contract["top"],
+                    frequency_mhz=frequency,
+                    clock_period_ns=period,
+                    compile_recipe=compile_recipe,
+                    expected_macro_count=contract["expected_macro_count"],
+                    expected_blackbox_count=contract["expected_blackbox_count"],
+                    liberty_sha256=input_manifest["liberty_sha256"],
+                    db_sha256=input_manifest["db_sha256"],
+                    require_record_paths=True,
+                    label="DC output",
+                )
+            except AsicError as error:
+                (run / "handoff_identity_error.txt").write_text(
+                    str(error) + "\n", encoding="utf-8")
+                failed_tools += 1
+            else:
+                write_json(run / "output_manifest.json", output_manifest)
+                (run / "run.ok").write_text("DC_RUN_COMPLETED\n")
         else:
             failed_tools += 1
         row = parse_run(run)
@@ -1155,7 +1291,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
             f"orfs_identity_policy={orfs_identity['runtime_identity_policy']}"
         )
         print(
-            "required_roles=dc_input_manifest,dc_mapped_netlist,dc_mapped_sdc,"
+            "required_roles=dc_input_manifest,dc_output_manifest,dc_mapped_netlist,dc_mapped_sdc,"
             "setup_closed_summary,standard_cell_library_identity"
         )
         print("required_identity=" + ",".join(HANDOFF_IDENTITY_FIELDS))
@@ -1170,7 +1306,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     dc_run = Path(args.dc_run).resolve()
     dc_input_path = dc_run.parent / "input_manifest.json"
     dc_input = load_json(dc_input_path)
-    if dc_input.get("schema") != "npc-riscv-open/d8-dc-input-v1":
+    if dc_input.get("schema") != DC_INPUT_SCHEMA:
         raise AsicError("P&R requires a D8 DC input manifest with complete identity")
     dc_identity = {
         "profile": contract["profile"],
@@ -1216,6 +1352,26 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     for path in (mapped, mapped_sdc):
         if not path.is_file():
             raise AsicError(f"missing DC handoff: {path}")
+    dc_output_path = dc_run / "output_manifest.json"
+    dc_output = load_json(dc_output_path)
+    dc_output_digests = validate_dc_output_record(
+        dc_output,
+        expected_identity=dc_identity,
+        dc_input_path=dc_input_path,
+        dc_input=dc_input,
+        mapped=mapped,
+        mapped_sdc=mapped_sdc,
+        top=contract["top"],
+        frequency_mhz=dc_frequency,
+        clock_period_ns=float(row["period_ns"]),
+        compile_recipe=str(row["compile_recipe"]),
+        expected_macro_count=contract["expected_macro_count"],
+        expected_blackbox_count=contract["expected_blackbox_count"],
+        liberty_sha256=str(libraries["liberty_sha256"]),
+        db_sha256=str(libraries["db_sha256"]),
+        require_record_paths=True,
+        label="DC output ledger",
+    )
     if contract["memory_mode"] == "sram":
         floorplan = calculate_with_macros(
             float(row["standard_cell_area"]), contract["memory_data"]["macros"])
@@ -1240,6 +1396,9 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     sdc_copy = input_dir / mapped_sdc.name
     shutil.copy2(mapped, mapped_copy)
     shutil.copy2(mapped_sdc, sdc_copy)
+    if (sha256_file(mapped_copy) != dc_output_digests["mapped_netlist"] or
+            sha256_file(sdc_copy) != dc_output_digests["mapped_sdc"]):
+        raise AsicError("FAIL_HANDOFF_IDENTITY: DC output changed while staging P&R input")
     pnr_sdc = input_dir / f"{contract['top']}_pnr_{frequency}mhz.sdc"
     pnr_sdc.write_text(retarget(
         sdc_copy.read_text(encoding="ascii"), 1000.0 / frequency), encoding="ascii")
@@ -1252,7 +1411,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         write_macro_placement(macro_placement, floorplan)
     write_json(run / "floorplan.json", floorplan)
     write_json(run / "input_manifest.json", {
-        "schema": "npc-riscv-open/d8-pnr-input-v1",
+        "schema": PNR_INPUT_SCHEMA,
         "profile": contract["profile"], "mode": contract["mode"],
         "source_commit": contract["source_commit"],
         "source_set_sha256": contract["source_set_sha256"],
@@ -1265,8 +1424,13 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         "expected_blackbox_count": contract["expected_blackbox_count"],
         "dc_input_schema": dc_input["schema"],
         "dc_input_manifest_sha256": sha256_file(dc_input_path),
+        "dc_output_schema": dc_output["schema"],
+        "dc_output_manifest_sha256": sha256_file(dc_output_path),
         "files": {
             "dc_input_manifest": {"path": str(dc_input_path), "sha256": sha256_file(dc_input_path)},
+            "dc_output_manifest": {
+                "path": str(dc_output_path), "sha256": sha256_file(dc_output_path),
+            },
             "dc_mapped_netlist": {"path": str(mapped_copy), "sha256": sha256_file(mapped_copy)},
             "dc_mapped_sdc": {"path": str(sdc_copy), "sha256": sha256_file(sdc_copy)},
             "pnr_sdc": {"path": str(pnr_sdc), "sha256": sha256_file(pnr_sdc)},
@@ -1355,7 +1519,7 @@ def pnr(root: Path, config_path: Path, args: argparse.Namespace) -> int:
         return 2
     handoff = run / "handoff"
     mapped_hashes = {
-        "dc_output_sha256": sha256_file(mapped_copy),
+        "dc_output_sha256": dc_output_digests["mapped_netlist"],
         "pnr_input_sha256": sha256_file(mapped_copy),
         "orfs_import_sha256": sha256_file(
             run / "orfs/results/nangate45" / nickname / "base/1_2_yosys.v"),
@@ -1553,11 +1717,18 @@ def sta(root: Path, config_path: Path, args: argparse.Namespace) -> int:
     summary = parse_sta_run(run)
     summary["same_run_artifacts"] = load_json(run / "input_manifest.json")["same_run_artifacts"]
     write_json(run / "summary.json", summary)
-    if not summary["sta_closed"]:
+    if not summary["timing_closed"]:
         print(f"ASIC_STA_PARTIAL run={run}")
         return 2
-    (run / "run.ok").write_text("PRIMETIME_COMPLETED\n")
-    print(f"ASIC_STA_COMPLETE run={run}")
+    marker = (
+        "PRIMETIME_COMPLETED\n" if summary["electrical_clean"]
+        else "PRIMETIME_TIMING_CLOSED_ELECTRICAL_PARTIAL\n"
+    )
+    (run / "run.ok").write_text(marker)
+    if summary["electrical_clean"]:
+        print(f"ASIC_STA_COMPLETE run={run}")
+    else:
+        print(f"ASIC_STA_TIMING_CLOSED_ELECTRICAL_PARTIAL run={run}")
     return 0
 
 
@@ -1582,6 +1753,17 @@ def evidence_check(path: Path) -> int:
                     errors.append(f"{manifest_path}: missing role {role}"); continue
                 if sha256_file(candidate) != item.get("sha256"):
                     errors.append(f"{manifest_path}: hash drift for {role}")
+        if record.get("schema") == PNR_INPUT_SCHEMA:
+            ledger_path = manifest_path.parent / "same_run_artifacts.json"
+            ledger_candidates = sorted(
+                path for path in manifest_path.parent.glob("same_run_artifacts*.json")
+                if path.is_file()
+            )
+            if ledger_candidates != [ledger_path]:
+                errors.append(
+                    f"{manifest_path}: D8 P&R requires exactly one fixed-name "
+                    "same_run_artifacts.json ledger"
+                )
         if (record.get("schema") in (
                 "npc-riscv-open/d7-sta-input-v1", "npc-riscv-open/d8-sta-input-v1") and
                 not isinstance(record.get("same_run_artifacts"), dict)):
@@ -1605,7 +1787,7 @@ def evidence_check(path: Path) -> int:
                 errors.append(f"{same_path}: missing {role}.{key}")
         manifest_path = same_path.parent / "input_manifest.json"
         manifest = load_json(manifest_path) if manifest_path.is_file() else {}
-        if manifest.get("schema") == "npc-riscv-open/d8-pnr-input-v1":
+        if manifest.get("schema") == PNR_INPUT_SCHEMA:
             contract_path = same_path.parent / "openroad_contract.txt"
             try:
                 contract = pnr_contract_values(contract_path)

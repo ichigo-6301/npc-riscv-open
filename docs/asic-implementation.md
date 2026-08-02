@@ -142,10 +142,15 @@ OpenROAD 必须通过 `SYNTH_NETLIST_FILES` 读取 DC mapped netlist，`VERILOG_
 PrimeTime必须读取同一次 run 的 routed netlist、sanitized routed SDC和SPEF，并断言
 实际 clock period等于 `F_pnr`。DC→ORFS、route→RCX、route/RCX→PrimeTime均使用
 逐角色 SHA256；任何缺失或不一致都以 `FAIL_HANDOFF_IDENTITY` 停止。
+DC在写入 `run.ok` 前先生成独立 output manifest，冻结 mapped netlist/SDC、完整
+source/config identity、compile recipe、macro/blackbox数量和标准单元库 identity；
+P&R与postprocess recovery均在创建新输出前验证该记录。
 
 `PNR_RCX_COMPLETED` 只表示 placement/CTS/route、route完整性门禁和 OpenRCX handoff
 已经完成。它不表示 setup/hold 闭合；只有独立 PrimeTime summary 的 `sta_closed=true`
-才构成该频点的 post-route timing closure。
+才构成该频点的 post-route timing closure。`timing_closed`/`sta_closed`与
+`electrical_clean`分别记录：max-capacitance、max-fanout等例外保持可见，但不被
+错误解释为 setup/hold 频率失败。
 
 OpenROAD 非零退出也会保留 `summary.json`，但状态只能是 `PNR_RCX_PARTIAL`；该
 summary用于区分可降频重跑的 setup/timing失败与不可伪装为频率问题的 DRC、antenna、

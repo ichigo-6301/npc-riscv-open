@@ -424,6 +424,7 @@ class AsicFlowTests(unittest.TestCase):
                 "orfs_identity_policy=" + asicctl.ORFS_RUNTIME_IDENTITY_POLICY,
                 text)
             self.assertIn("dc_mapped_netlist", text)
+            self.assertIn("dc_output_manifest", text)
             self.assertIn("routed_netlist,routed_sdc,openrcx_spef", text)
             self.assertEqual(text.count("required_identity="), 2)
             for key in (
@@ -551,6 +552,65 @@ class AsicFlowTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(asicctl.AsicError, "requires a D8"):
                 asicctl.pnr(root, config, args)
+        finally:
+            temporary.cleanup()
+
+    def test_pnr_rejects_dc_outputs_modified_after_completion(self):
+        temporary, root, config = self.fixture()
+        try:
+            contract = asicctl.build_contract(root, config, "auto")
+            contract["matrix"]["libraries"] = {
+                "liberty_sha256": "3" * 64,
+                "db_sha256": "4" * 64,
+            }
+            dc_run = root / "build/dc/matrix/dc_540mhz"
+            dc_run.mkdir(parents=True)
+            mapped = dc_run / "cpu_top_mapped.v"
+            mapped_sdc = dc_run / "cpu_top_mapped.sdc"
+            mapped.write_text("module cpu_top; endmodule\n")
+            mapped_sdc.write_text(
+                "create_clock -name npc_clk -period 1.851851852 [get_ports clk]\n")
+            identity = {key: contract[key] for key in asicctl.HANDOFF_IDENTITY_FIELDS}
+            dc_input_path = dc_run.parent / "input_manifest.json"
+            dc_input = {
+                "schema": asicctl.DC_INPUT_SCHEMA,
+                **identity,
+                "compile_recipe": "compile_ultra_then_incremental_mapping_v1",
+                "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
+                **contract["matrix"]["libraries"],
+            }
+            dc_input_path.write_text(json.dumps(dc_input))
+            row = {
+                "setup_closed": True,
+                "frequency_mhz": 540.0,
+                "period_ns": 1000.0 / 540.0,
+                "compile_recipe": "compile_ultra_then_incremental_mapping_v1",
+                "memory_mode": "registers",
+                "macro_count": 0,
+                "blackbox_count": 0,
+            }
+            output_manifest = asicctl.dc_output_manifest_record(
+                contract, dc_input_path, dc_run, row)
+            (dc_run / "output_manifest.json").write_text(json.dumps(output_manifest))
+            (dc_run / "run.ok").write_text("DC_RUN_COMPLETED\n")
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                dc_run=str(dc_run), frequency_mhz=425,
+                build_root=str(root / "build/asic"), run_id="must_not_exist",
+            )
+            for role, path in (("mapped_netlist", mapped), ("mapped_sdc", mapped_sdc)):
+                with self.subTest(role=role):
+                    original = path.read_text()
+                    path.write_text(original + "// modified after DC completion\n")
+                    with mock.patch.object(
+                            asicctl, "build_contract", return_value=contract), \
+                            mock.patch.object(asicctl, "parse_run", return_value=row):
+                        with self.assertRaisesRegex(
+                                asicctl.AsicError, f"hash drift for {role}"):
+                            asicctl.pnr(root, config, args)
+                    path.write_text(original)
+            self.assertFalse((root / "build/asic").exists())
         finally:
             temporary.cleanup()
 
@@ -1328,6 +1388,9 @@ class AsicFlowTests(unittest.TestCase):
             (source / "input").mkdir()
             mapped = source / "input/cpu_top_mapped.v"
             mapped.write_text("module cpu_top; endmodule\n")
+            mapped_sdc = source / "input/cpu_top_mapped.sdc"
+            mapped_sdc.write_text(
+                "create_clock -name npc_clk -period 1.851851852 [get_ports clk]\n")
             external_dc_manifest = root / "dc_run/input_manifest.json"
             external_dc_manifest.parent.mkdir()
             external_dc_manifest.write_text(json.dumps({
@@ -1335,24 +1398,66 @@ class AsicFlowTests(unittest.TestCase):
                 **identity,
                 "expected_macro_count": 0,
                 "expected_blackbox_count": 0,
+                "compile_recipe": "compile_ultra_then_incremental_mapping_v1",
                 **libraries,
             }))
             dc_manifest_hash = asicctl.sha256_file(external_dc_manifest)
-            (source / "input_manifest.json").write_text(json.dumps({
-                "schema": "npc-riscv-open/d8-pnr-input-v1",
+            external_dc_output = root / "dc_run/output_manifest.json"
+            external_dc_output.write_text(json.dumps({
+                "schema": "npc-riscv-open/d8-dc-output-v1",
                 **identity,
-                "expected_macro_count": 0,
-                "expected_blackbox_count": 0,
-                "pnr_frequency_mhz": 425,
                 "dc_input_schema": "npc-riscv-open/d8-dc-input-v1",
                 "dc_input_manifest_sha256": dc_manifest_hash,
+                "top": top,
+                "frequency_mhz": 540,
+                "clock_period_ns": 1000.0 / 540,
+                "compile_recipe": "compile_ultra_then_incremental_mapping_v1",
+                "expected_macro_count": 0,
+                "actual_macro_count": 0,
+                "expected_blackbox_count": 0,
+                "actual_blackbox_count": 0,
+                **libraries,
                 "files": {
                     "dc_input_manifest": {
                         "path": str(external_dc_manifest),
                         "sha256": dc_manifest_hash,
                     },
+                    "mapped_netlist": {
+                        "path": str(mapped), "sha256": asicctl.sha256_file(mapped),
+                    },
+                    "mapped_sdc": {
+                        "path": str(mapped_sdc),
+                        "sha256": asicctl.sha256_file(mapped_sdc),
+                    },
+                },
+            }))
+            dc_output_hash = asicctl.sha256_file(external_dc_output)
+            (source / "input_manifest.json").write_text(json.dumps({
+                "schema": "npc-riscv-open/d8-pnr-input-v1",
+                **identity,
+                "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
+                "dc_frequency_mhz": 540,
+                "pnr_frequency_mhz": 425,
+                "dc_input_schema": "npc-riscv-open/d8-dc-input-v1",
+                "dc_input_manifest_sha256": dc_manifest_hash,
+                "dc_output_schema": "npc-riscv-open/d8-dc-output-v1",
+                "dc_output_manifest_sha256": dc_output_hash,
+                "files": {
+                    "dc_input_manifest": {
+                        "path": str(external_dc_manifest),
+                        "sha256": dc_manifest_hash,
+                    },
+                    "dc_output_manifest": {
+                        "path": str(external_dc_output),
+                        "sha256": dc_output_hash,
+                    },
                     "dc_mapped_netlist": {
                         "path": str(mapped), "sha256": asicctl.sha256_file(mapped),
+                    },
+                    "dc_mapped_sdc": {
+                        "path": str(mapped_sdc),
+                        "sha256": asicctl.sha256_file(mapped_sdc),
                     },
                 },
             }))
@@ -1463,6 +1568,39 @@ class AsicFlowTests(unittest.TestCase):
             external_dc_manifest.write_text(json.dumps(dc_baseline))
             manifest_path.write_text(json.dumps(baseline_manifest))
 
+            dc_output_baseline = json.loads(external_dc_output.read_text())
+            dc_output_mutated = copy.deepcopy(dc_output_baseline)
+            dc_output_mutated["source_role_sha256"] = "0" * 64
+            external_dc_output.write_text(json.dumps(dc_output_mutated))
+            nested_output_mutation = copy.deepcopy(baseline_manifest)
+            nested_output_hash = asicctl.sha256_file(external_dc_output)
+            nested_output_mutation["dc_output_manifest_sha256"] = nested_output_hash
+            nested_output_mutation["files"]["dc_output_manifest"]["sha256"] = (
+                nested_output_hash)
+            manifest_path.write_text(json.dumps(nested_output_mutation))
+            bad_nested_output = root / "recovered_bad_nested_output_identity"
+            with self.assertRaisesRegex(RecoveryError, "nested DC output validation"):
+                recover_pnr_handoff(source, bad_nested_output, root)
+            self.assertFalse(bad_nested_output.exists())
+            external_dc_output.write_text(json.dumps(dc_output_baseline))
+            manifest_path.write_text(json.dumps(baseline_manifest))
+
+            dc_output_mutated = copy.deepcopy(dc_output_baseline)
+            dc_output_mutated["files"]["mapped_netlist"]["sha256"] = "0" * 64
+            external_dc_output.write_text(json.dumps(dc_output_mutated))
+            nested_output_hash = asicctl.sha256_file(external_dc_output)
+            nested_output_mutation = copy.deepcopy(baseline_manifest)
+            nested_output_mutation["dc_output_manifest_sha256"] = nested_output_hash
+            nested_output_mutation["files"]["dc_output_manifest"]["sha256"] = (
+                nested_output_hash)
+            manifest_path.write_text(json.dumps(nested_output_mutation))
+            bad_nested_output_hash = root / "recovered_bad_nested_output_hash"
+            with self.assertRaisesRegex(RecoveryError, "hash drift for mapped_netlist"):
+                recover_pnr_handoff(source, bad_nested_output_hash, root)
+            self.assertFalse(bad_nested_output_hash.exists())
+            external_dc_output.write_text(json.dumps(dc_output_baseline))
+            manifest_path.write_text(json.dumps(baseline_manifest))
+
             contract_path = source / "openroad_contract.txt"
             contract_text = contract_path.read_text()
             contract_path.write_text(contract_text.replace(
@@ -1531,11 +1669,17 @@ class AsicFlowTests(unittest.TestCase):
                 recovery["tracked_orfs_identity"]["runtime_identity_policy"],
                 asicctl.ORFS_RUNTIME_IDENTITY_POLICY)
             self.assertEqual(
-                recovery["recovered_external_input_roles"], ["dc_input_manifest"])
+                recovery["recovered_external_input_roles"],
+                ["dc_input_manifest", "dc_output_manifest"],
+            )
             self.assertEqual(recovery["validated_handoff_identity"], identity)
             self.assertEqual(
                 recovery["validated_dc_input_schema"],
                 "npc-riscv-open/d8-dc-input-v1",
+            )
+            self.assertEqual(
+                recovery["validated_dc_output_schema"],
+                "npc-riscv-open/d8-dc-output-v1",
             )
             recovered_manifest = json.loads((output / "input_manifest.json").read_text())
             recovered_external = Path(
@@ -1545,6 +1689,7 @@ class AsicFlowTests(unittest.TestCase):
                 recovered_external.resolve().relative_to(output / "input").parts[0],
                 "external_roles")
             external_dc_manifest.rename(root / "dc_run/input_manifest.moved")
+            external_dc_output.rename(root / "dc_run/output_manifest.moved")
             (source / "orfs").rename(source / "orfs_moved_after_recovery")
             self.assertTrue((
                 output / f"orfs/results/nangate45/{nickname}/base/6_final.gds").is_file())
@@ -1574,9 +1719,22 @@ class AsicFlowTests(unittest.TestCase):
                 (run / name).write_text("clean\n")
             (run / "parasitic_annotation.rpt").write_text("All parasitics are annotated\n")
             (run / "primetime.log").write_text("PrimeTime complete\n")
-            self.assertTrue(parse_sta_run(run)["sta_closed"])
+            clean_contract = (run / "run_contract.txt").read_text()
+            self.assertTrue(parse_sta_run(run)["timing_closed"])
+            (run / "run_contract.txt").write_text(clean_contract.replace(
+                "max_capacitance_violation_count=0",
+                "max_capacitance_violation_count=14"))
+            electrical_partial = parse_sta_run(run)
+            self.assertTrue(electrical_partial["timing_closed"])
+            self.assertTrue(electrical_partial["sta_closed"])
+            self.assertFalse(electrical_partial["electrical_clean"])
+            self.assertFalse(electrical_partial["all_constraints_clean"])
+            self.assertEqual(
+                electrical_partial["status"],
+                "STA_TIMING_CLOSED_ELECTRICAL_PARTIAL",
+            )
             (run / "run_contract.txt").write_text(
-                (run / "run_contract.txt").read_text().replace("hold_wns_ns=0.02", "hold_wns_ns=-0.01"))
+                clean_contract.replace("hold_wns_ns=0.02", "hold_wns_ns=-0.01"))
             self.assertFalse(parse_sta_run(run)["sta_closed"])
             sram_contract = (run / "run_contract.txt").read_text()
             sram_contract = sram_contract.replace(
@@ -1587,10 +1745,109 @@ class AsicFlowTests(unittest.TestCase):
                 parse_sta_run(run)["status"],
                 "SRAM_IMPLEMENTATION_COMPLETE_TIMING_PARTIAL")
 
+    def test_sta_writes_completion_marker_for_timing_closed_electrical_partial(self):
+        temporary, root, config = self.fixture()
+        try:
+            contract = asicctl.build_contract(root, config, "auto")
+            database = root / "stdcell.db"
+            database.write_text("fixture DB\n")
+            contract["matrix"]["libraries"] = {
+                "db_sha256": asicctl.sha256_file(database),
+            }
+            setup = root / "primetime_setup.tcl"
+            setup.write_text("# fixture setup\n")
+            pnr_run = root / "build/pnr/pnr_425mhz"
+            handoff = pnr_run / "handoff"
+            handoff.mkdir(parents=True)
+            identity = {key: contract[key] for key in asicctl.HANDOFF_IDENTITY_FIELDS}
+            (pnr_run / "input_manifest.json").write_text(json.dumps({
+                "schema": asicctl.PNR_INPUT_SCHEMA,
+                **identity,
+                "expected_macro_count": 0,
+                "pnr_frequency_mhz": 425,
+                "files": {},
+            }))
+            (pnr_run / "summary.json").write_text(json.dumps({"route_complete": True}))
+            (pnr_run / "run.ok").write_text("PNR_RCX_COMPLETED\n")
+            artifacts = {
+                "routed_netlist": handoff / "cpu_top_postroute.v",
+                "routed_sdc": handoff / "cpu_top_postroute.sdc",
+                "spef": handoff / "cpu_top_postroute.spef",
+            }
+            for role, path in artifacts.items():
+                path.write_text(role + "\n")
+            same_run = {
+                "routed_netlist": {
+                    "pnr_output_sha256": asicctl.sha256_file(
+                        artifacts["routed_netlist"]),
+                },
+                "routed_sdc": {
+                    "pnr_output_sha256": asicctl.sha256_file(
+                        artifacts["routed_sdc"]),
+                },
+                "spef": {
+                    "openrcx_output_sha256": asicctl.sha256_file(artifacts["spef"]),
+                },
+            }
+            (pnr_run / "same_run_artifacts.json").write_text(json.dumps(same_run))
+            args = mock.Mock(
+                ooo_mode="auto", memory_mode="auto", dry_run=False,
+                pnr_run=str(pnr_run), build_root=str(root / "build/sta"),
+                run_id="electrical_partial",
+            )
+            summary = {
+                "status": "STA_TIMING_CLOSED_ELECTRICAL_PARTIAL",
+                "timing_closed": True,
+                "sta_closed": True,
+                "electrical_clean": False,
+                "all_constraints_clean": False,
+            }
+
+            def fake_pt(*_args, **kwargs):
+                (Path(kwargs["cwd"]) / "run_contract.txt").write_text("fixture\n")
+                return mock.Mock(returncode=0)
+
+            environment = {
+                "NPC_ASIC_STDCELL_DB": str(database),
+                "NPC_ASIC_PRIMETIME_SETUP": str(setup),
+            }
+            with mock.patch.object(asicctl, "build_contract", return_value=contract), \
+                    mock.patch.object(asicctl, "require_tool", return_value=["pt_shell"]), \
+                    mock.patch.object(asicctl, "parse_sta_run", return_value=summary), \
+                    mock.patch.object(asicctl.subprocess, "run", side_effect=fake_pt), \
+                    mock.patch.dict(os.environ, environment, clear=False):
+                self.assertEqual(asicctl.sta(root, config, args), 0)
+            run = (root / "build/sta/rv32im_single_perf/default/registers/sta/"
+                   "electrical_partial/sta_425mhz")
+            self.assertEqual(
+                (run / "run.ok").read_text(),
+                "PRIMETIME_TIMING_CLOSED_ELECTRICAL_PARTIAL\n",
+            )
+            self.assertFalse(json.loads((run / "summary.json").read_text())[
+                "electrical_clean"])
+        finally:
+            temporary.cleanup()
+
     def test_evidence_check_rejects_empty_root(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaisesRegex(asicctl.AsicError, "no ASIC input manifests"):
                 asicctl.evidence_check(Path(temp))
+
+    def test_evidence_check_requires_one_fixed_d8_pnr_same_run_ledger(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "input_manifest.json").write_text(json.dumps({
+                "schema": asicctl.PNR_INPUT_SCHEMA,
+                "files": {},
+            }))
+            with self.assertRaisesRegex(
+                    asicctl.AsicError, "requires exactly one fixed-name"):
+                asicctl.evidence_check(root)
+            (root / "same_run_artifacts.json").write_text("{}\n")
+            (root / "same_run_artifacts.backup.json").write_text("{}\n")
+            with self.assertRaisesRegex(
+                    asicctl.AsicError, "requires exactly one fixed-name"):
+                asicctl.evidence_check(root)
 
     def test_evidence_check_rejects_input_hash_drift(self):
         with tempfile.TemporaryDirectory() as temp:

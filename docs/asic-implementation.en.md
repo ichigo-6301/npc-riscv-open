@@ -168,11 +168,17 @@ PrimeTime reads the same-run routed netlist, sanitized routed SDC, and SPEF and
 asserts that the real clock period equals `F_pnr`. Role-by-role SHA256 binds the
 DC-to-ORFS, route-to-RCX, and route/RCX-to-PrimeTime handoffs. Missing or unequal
 roles fail as `FAIL_HANDOFF_IDENTITY`.
+Before writing `run.ok`, DC emits a separate output manifest that freezes the
+mapped netlist/SDC, complete source/config identity, compile recipe,
+macro/black-box counts, and standard-cell library identity. P&R and postprocess
+recovery validate this record before creating a new output.
 
 `PNR_RCX_COMPLETED` means only that placement/CTS/route, route-integrity gates,
 and the OpenRCX handoff completed. It does not establish setup or hold closure;
 only `sta_closed=true` in the independent PrimeTime summary closes post-route
-timing at that frequency.
+timing at that frequency. `timing_closed`/`sta_closed` and `electrical_clean`
+are reported independently: max-capacitance, max-fanout, and related exceptions
+remain visible without being misclassified as setup/hold frequency failures.
 
 A non-zero OpenROAD exit still leaves a `summary.json`, but its status can only
 be `PNR_RCX_PARTIAL`. That summary separates setup/timing failures eligible for

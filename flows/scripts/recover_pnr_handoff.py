@@ -9,8 +9,9 @@ import re
 import shutil
 from typing import Dict, List, Tuple
 
-from asicctl import (AsicError, HANDOFF_IDENTITY_FIELDS, build_contract,
-                     require_handoff_identity)
+from asicctl import (AsicError, DC_INPUT_SCHEMA, DC_OUTPUT_SCHEMA,
+                     HANDOFF_IDENTITY_FIELDS, PNR_INPUT_SCHEMA, build_contract,
+                     require_handoff_identity, validate_dc_output_record)
 from sanitize_openroad_sdc import sanitize
 from summarize_pnr import contract_values, parse_run, sha256_file
 
@@ -178,8 +179,8 @@ def load_input_manifest(source_run: Path) -> Tuple[dict, Dict[str, Path]]:
 
 def expected_handoff_contract(repo_root: Path, manifest: dict,
                               source_files: Dict[str, Path],
-                              openroad: dict) -> Tuple[dict, dict]:
-    if manifest.get("schema") != "npc-riscv-open/d8-pnr-input-v1":
+                              openroad: dict) -> Tuple[dict, dict, dict]:
+    if manifest.get("schema") != PNR_INPUT_SCHEMA:
         raise RecoveryError("recovery requires a D8 P&R input manifest")
     profile = manifest.get("profile")
     memory_mode = manifest.get("memory_mode")
@@ -218,8 +219,7 @@ def expected_handoff_contract(repo_root: Path, manifest: dict,
         dc_manifest = json.loads(dc_manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise RecoveryError(f"invalid nested DC input manifest: {error}") from error
-    if not isinstance(dc_manifest, dict) or dc_manifest.get("schema") != (
-            "npc-riscv-open/d8-dc-input-v1"):
+    if not isinstance(dc_manifest, dict) or dc_manifest.get("schema") != DC_INPUT_SCHEMA:
         raise RecoveryError("recovery requires a nested D8 DC input manifest")
     dc_hash = sha256_file(dc_manifest_path)
     dc_role = manifest["files"]["dc_input_manifest"]
@@ -239,6 +239,49 @@ def expected_handoff_contract(repo_root: Path, manifest: dict,
     if (dc_manifest.get("liberty_sha256") != libraries["liberty_sha256"] or
             dc_manifest.get("db_sha256") != libraries["db_sha256"]):
         raise RecoveryError("nested DC input standard-cell library identity mismatch")
+
+    dc_frequency = manifest.get("dc_frequency_mhz")
+    if (isinstance(dc_frequency, bool) or
+            not isinstance(dc_frequency, (int, float)) or dc_frequency <= 0):
+        raise RecoveryError("P&R input has invalid dc_frequency_mhz")
+    dc_output_path = source_files.get("dc_output_manifest")
+    mapped = source_files.get("dc_mapped_netlist")
+    mapped_sdc = source_files.get("dc_mapped_sdc")
+    if dc_output_path is None or mapped is None or mapped_sdc is None:
+        raise RecoveryError(
+            "P&R input lacks dc_output_manifest, dc_mapped_netlist, or dc_mapped_sdc role")
+    try:
+        dc_output = json.loads(dc_output_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RecoveryError(f"invalid nested DC output manifest: {error}") from error
+    output_hash = sha256_file(dc_output_path)
+    output_role = manifest["files"]["dc_output_manifest"]
+    if (not isinstance(dc_output, dict) or
+            manifest.get("dc_output_schema") != DC_OUTPUT_SCHEMA or
+            manifest.get("dc_output_manifest_sha256") != output_hash or
+            output_role.get("sha256") != output_hash):
+        raise RecoveryError("P&R/DC output manifest identity transfer mismatch")
+    try:
+        validate_dc_output_record(
+            dc_output,
+            expected_identity=identity,
+            dc_input_path=dc_manifest_path,
+            dc_input=dc_manifest,
+            mapped=mapped,
+            mapped_sdc=mapped_sdc,
+            top=expected["top"],
+            frequency_mhz=float(dc_frequency),
+            clock_period_ns=1000.0 / float(dc_frequency),
+            compile_recipe=str(dc_manifest.get("compile_recipe", "")),
+            expected_macro_count=expected["expected_macro_count"],
+            expected_blackbox_count=expected["expected_blackbox_count"],
+            liberty_sha256=str(libraries["liberty_sha256"]),
+            db_sha256=str(libraries["db_sha256"]),
+            require_record_paths=False,
+            label="nested DC output",
+        )
+    except AsicError as error:
+        raise RecoveryError(f"nested DC output validation failed: {error}") from error
 
     expected_nickname = re.sub(
         r"[^A-Za-z0-9_]", "_",
@@ -260,7 +303,7 @@ def expected_handoff_contract(repo_root: Path, manifest: dict,
     expected_period = 1000.0 / float(pnr_frequency)
     if not math.isclose(period_ns, expected_period, rel_tol=0.0, abs_tol=5e-9):
         raise RecoveryError("OpenROAD period differs from P&R input frequency")
-    return expected, dc_manifest
+    return expected, dc_manifest, dc_output
 
 
 def copy_input_manifest(source_run: Path, output_run: Path, manifest: dict,
@@ -306,15 +349,17 @@ def write_checksums(handoff: Path, top: str) -> None:
 
 
 def same_run_artifacts(output_run: Path, top: str, mapped: Path,
-                       imported: Path) -> dict:
+                       imported: Path, dc_output_hash: str) -> dict:
     handoff = output_run / "handoff"
     mapped_hash = sha256_file(mapped)
     imported_hash = sha256_file(imported)
     if mapped_hash != imported_hash:
         raise RecoveryError("FAIL_HANDOFF_IDENTITY: DC/ORFS mapped netlist hashes differ")
+    if mapped_hash != dc_output_hash:
+        raise RecoveryError("FAIL_HANDOFF_IDENTITY: DC output/P&R mapped netlist hashes differ")
     return {
         "mapped_netlist": {
-            "dc_output_sha256": mapped_hash,
+            "dc_output_sha256": dc_output_hash,
             "pnr_input_sha256": mapped_hash,
             "orfs_import_sha256": imported_hash,
         },
@@ -356,7 +401,7 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         if not contract.get(key):
             raise RecoveryError(f"source OpenROAD contract lacks {key}")
     manifest, source_files = load_input_manifest(source_run)
-    expected_contract, dc_manifest = expected_handoff_contract(
+    expected_contract, dc_manifest, dc_output = expected_handoff_contract(
         repo_root, manifest, source_files, contract)
     identity = runtime_identity(source_run, contract, tracked_identity)
     contract["orfs_actual_commit"] = identity["actual_commit"]
@@ -426,7 +471,8 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         results / "6_final.sdc", handoff / f"{top}_postroute.sdc", period_ns)
     write_checksums(handoff, top)
 
-    roles = same_run_artifacts(output_run, top, mapped, imported)
+    dc_output_hash = dc_output["files"]["mapped_netlist"]["sha256"]
+    roles = same_run_artifacts(output_run, top, mapped, imported, dc_output_hash)
     write_json(output_run / "same_run_artifacts.json", roles)
     contract["mapped_netlist_sha256"] = mapped_hash
     contract["orfs_import_netlist_sha256"] = imported_hash
@@ -469,6 +515,9 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         "validated_dc_input_manifest_sha256": sha256_file(
             source_files["dc_input_manifest"]),
         "validated_dc_input_schema": dc_manifest["schema"],
+        "validated_dc_output_manifest_sha256": sha256_file(
+            source_files["dc_output_manifest"]),
+        "validated_dc_output_schema": dc_output["schema"],
         "source_period_ns": source_period,
         "normalized_period_ns": period_ns,
         "orfs_runtime_identity": identity,
