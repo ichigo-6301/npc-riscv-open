@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed OpenROAD/OpenRCX summary for one D7 physical run."""
+"""Fail-closed OpenROAD/OpenRCX summary for one D8 physical run."""
 
 import json
 from pathlib import Path
@@ -46,6 +46,23 @@ def metric(metrics: Dict[str, float], name: str) -> Optional[float]:
     return float(value) if isinstance(value, (int, float)) else None
 
 
+def macro_placements(path: Path) -> list:
+    records = []
+    if not path.is_file():
+        return records
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.startswith("instance="):
+            continue
+        values = {}
+        for item in line.split():
+            if "=" in item:
+                key, value = item.split("=", 1)
+                values[key] = value
+        if all(key in values for key in ("instance", "ref", "bbox_um", "orientation")):
+            records.append(values)
+    return records
+
+
 def parse_run(run: Path) -> dict:
     contract = contract_values(run / "openroad_contract.txt")
     nickname = contract.get("design_nickname", "")
@@ -55,12 +72,20 @@ def parse_run(run: Path) -> dict:
     logs = base / "logs/nangate45" / nickname / "base"
     reports = base / "reports/nangate45" / nickname / "base"
     handoff = run / "handoff"
+    memory_mode = contract.get("memory_mode", "registers")
+    try:
+        expected_macro_count = int(contract.get("expected_macro_count", "0"))
+    except ValueError:
+        expected_macro_count = -1
+    placement_path = run / "macro_placement_report.txt"
+    placements = macro_placements(placement_path)
     route_metrics_path = logs / "5_2_route.json"
     final_metrics_path = logs / "6_report.json"
     route = read_metrics(route_metrics_path)
     final = read_metrics(final_metrics_path)
     expected = {
         "orfs_import_netlist": results / "1_2_yosys.v",
+        "constant_net_report": run / "constant_net_report.txt",
         "routed_database": handoff / (top + "_postroute.odb"),
         "routed_def": handoff / (top + "_postroute.def"),
         "routed_netlist": handoff / (top + "_postroute.v"),
@@ -71,8 +96,13 @@ def parse_run(run: Path) -> dict:
         "route_metrics": route_metrics_path,
         "final_metrics": final_metrics_path,
     }
-    missing_artifacts = [role for role, path in expected.items()
-                         if not path.is_file() or path.stat().st_size == 0]
+    if expected_macro_count > 0:
+        expected["macro_placement_report"] = placement_path
+    empty_allowed = {"route_drc_report"}
+    missing_artifacts = [
+        role for role, path in expected.items()
+        if not path.is_file() or (path.stat().st_size == 0 and role not in empty_allowed)
+    ]
     drc = metric(route, "detailedroute__route__drc_errors")
     antenna_nets = metric(route, "detailedroute__antenna__violating__nets")
     antenna_pins = metric(route, "detailedroute__antenna__violating__pins")
@@ -106,6 +136,19 @@ def parse_run(run: Path) -> dict:
         "hold_violating_paths": hold_violations,
     }
     missing_metrics = [key for key, value in required_metrics.items() if value is None]
+    constant_nets = contract_values(run / "constant_net_report.txt")
+    try:
+        constant_nets_found = int(constant_nets["found"])
+        constant_nets_normalized = int(constant_nets["normalized"])
+        constant_nets_already_signal = int(constant_nets["already_signal"])
+    except (KeyError, ValueError):
+        constant_nets_found = None
+        constant_nets_normalized = None
+        constant_nets_already_signal = None
+    if any(value is None for value in (
+            constant_nets_found, constant_nets_normalized,
+            constant_nets_already_signal)):
+        missing_metrics.append("dc_constant_net_normalization")
     exit_status = None
     try:
         exit_status = int((run / "exit_status.txt").read_text().strip())
@@ -114,7 +157,10 @@ def parse_run(run: Path) -> dict:
     route_clean = bool(
         exit_status == 0 and not missing_artifacts and not missing_metrics and
         drc == 0 and antenna_nets == 0 and antenna_pins == 0 and
-        route_errors == 0 and finish_errors == 0 and macro_count == 0
+        route_errors == 0 and finish_errors == 0 and
+        macro_count == expected_macro_count and
+        constant_nets_found == constant_nets_normalized + constant_nets_already_signal and
+        (expected_macro_count == 0 or len(placements) == expected_macro_count)
     )
     electrical_clean = bool(
         max_slew == 0 and max_cap == 0 and max_fanout == 0
@@ -135,8 +181,13 @@ def parse_run(run: Path) -> dict:
         "top": top,
         "design_nickname": nickname,
         "period_ns": float(contract["pnr_period_ns"]) if contract.get("pnr_period_ns") else None,
-        "memory_mode": contract.get("memory_mode"),
+        "memory_mode": memory_mode,
+        "expected_macro_count": expected_macro_count,
         "macro_count": int(macro_count) if macro_count is not None else None,
+        "macro_placements": placements,
+        "dc_constant_nets_found": constant_nets_found,
+        "dc_constant_nets_normalized": constant_nets_normalized,
+        "dc_constant_nets_already_signal": constant_nets_already_signal,
         "detail_route_drc_count": int(drc) if drc is not None else None,
         "antenna_net_count": int(antenna_nets) if antenna_nets is not None else None,
         "antenna_pin_count": int(antenna_pins) if antenna_pins is not None else None,

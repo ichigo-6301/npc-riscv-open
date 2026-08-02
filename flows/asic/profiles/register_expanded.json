@@ -1,8 +1,65 @@
 {
-  "schema": "npc-riscv-open/asic-register-expanded-v1",
+  "schema": "npc-riscv-open/asic-dual-memory-v1",
   "technology": "Nangate45",
-  "memory_mode": "registers",
-  "macro_count": 0,
+  "memory_modes": {
+    "registers": {
+      "allowed_profiles": ["rv32im_single_perf", "rv32ima_sv32_linux", "rv32im_ooo_4k"],
+      "expected_macro_count": 0,
+      "expected_blackbox_count": 0,
+      "extra_defines": []
+    },
+    "sram": {
+      "allowed_profiles": ["rv32im_single_perf", "rv32ima_sv32_linux"],
+      "characterization": "OpenRAM analytical",
+      "expected_macro_count": 4,
+      "expected_blackbox_count": 0,
+      "extra_defines": ["NPC_ASIC_SRAM"],
+      "generated_pvt": "FreePDK45 TT 1.0 V 25 C",
+      "standard_cell_pvt": "Nangate45 typical 1.1 V 25 C",
+      "liberty_override": {
+        "revision": "openram-analytical-expanded-grid-v1",
+        "analytical_delay": true,
+        "load_scales": [0.25, 1, 8, 32],
+        "slew_scales": [0.25, 1, 8, 64],
+        "time_unit": "1ns",
+        "voltage_v": 1.0,
+        "temperature_c": 25,
+        "max_capacitance_f": 0.0066912,
+        "max_transition_ns": 0.32
+      },
+      "dc_navigation_quantum_mhz": 25,
+      "dc_max_points": 2,
+      "openram_commit": "e16d9eb0b4495e8beee441ced3fcad68391155e6",
+      "macros": {
+        "npc_icache_data_1r1w_512x32": {
+          "expected_instances": 2,
+          "width_um": 158.695,
+          "height_um": 427.77,
+          "minimum_period_ns": 1.106,
+          "timing_view_sha256": "b5a45317cf94eee457aa24e811998849f00c2fb7b208966552a7795ea0df1970",
+          "original_view_sha256": {
+            "gds": "1f124ab2cb7e431886e7ce079e4fda6935525dcde641d0b0ed68872918ab3379",
+            "lef": "2b0ee0b59fb8ed1261a8662980ea1009bbdda72569718761a50e33a1b89a82eb",
+            "lib": "a0ad2c84db1ef2c3a3b8b7054d2786a77366ac5efd2bb29e8eadc77d3fc982c5",
+            "v": "84886703cd04cfc63cbf4e1d113391b0e4f88a3e7ad9af3ba0f19d5401d74ba2"
+          }
+        },
+        "npc_dcache_data_1r1w_512x32_b8": {
+          "expected_instances": 2,
+          "width_um": 158.695,
+          "height_um": 427.77,
+          "minimum_period_ns": 1.106,
+          "timing_view_sha256": "fcf7decbd3ce17d90a786179f477ee2221d22487be2eb07f4fdb76467d16a9e9",
+          "original_view_sha256": {
+            "gds": "084b344ca99b09daa49e0eb4933cf76d89410fffe2f5577b6639da668acce55c",
+            "lef": "a3fa225bf68336e0bff022ceb2f8601962075b11e5ea072e788697fee94bd356",
+            "lib": "e967df5f643f06bbd929aa0e92c66085ce4c96f80852786911e69b5d241b0b4c",
+            "v": "8ec3f8073f9d45374aa6e65377a7a5fab771a031d4a89abc9bd3a9cf35418093"
+          }
+        }
+      }
+    }
+  },
   "libraries": {
     "liberty_sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
     "db_sha256": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5",
@@ -11,7 +68,8 @@
   "orfs": {
     "commit": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
     "image_digest": "sha256:5fb6465e18c42bfaa19f0ba40190f1c75cb6118feffd236b13ed8081ff3f573f",
-    "platform": "nangate45"
+    "platform": "nangate45",
+    "runtime_identity_policy": "exact_oci_digest_git_head_when_vcs_metadata_present_v1"
   },
   "clock_uncertainty_setup_ns": 0.1,
   "clock_uncertainty_hold_ns": 0.0,
@@ -25,16 +83,40 @@
       "clock_port": "clk",
       "reset_port": "rst_n",
       "filelist": "filelists/asic/rv32im_single_perf.f",
+      "filelists_by_memory_mode": {
+        "registers": "filelists/asic/rv32im_single_perf_registers.f",
+        "sram": "filelists/asic/rv32im_single_perf_sram.f"
+      },
       "dc_frequencies_mhz": [800, 700, 600, 500],
+      "sram_dc_frequencies_mhz": [700, 200],
+      "pnr_frequencies_mhz": {
+        "registers": 425,
+        "sram": 475
+      },
       "elaboration_parameters": []
     },
     "rv32ima_sv32_linux": {
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
       "top": "cpu_top",
       "clock_port": "clk",
       "reset_port": "rst_n",
       "filelist": "filelists/asic/rv32ima_sv32_linux.f",
+      "filelists_by_memory_mode": {
+        "registers": "filelists/asic/rv32ima_sv32_linux_registers.f",
+        "sram": "filelists/asic/rv32ima_sv32_linux_sram.f"
+      },
+      "support_sources": {
+        "rtl/asic/xpm_register_models.sv": {
+          "sha256": "119724aac486e3d0d32255deb99efe41e8eaf49728f15aa14c6383199ad8ef4d",
+          "identity": "tracked_public_xpm_asic_memory_binding"
+        }
+      },
       "dc_frequencies_mhz": [500, 400, 350, 300, 250],
+      "sram_dc_frequencies_mhz": [400, 200],
+      "pnr_frequencies_mhz": {
+        "registers": 200,
+        "sram": 200
+      },
       "timer_timebase_hz": 1000000,
       "elaboration_parameters": []
     },
@@ -43,6 +125,9 @@
       "clock_port": "clk",
       "reset_port": "reset",
       "filelist": "filelists/asic/rv32im_ooo_4k.f",
+      "filelists_by_memory_mode": {
+        "registers": "filelists/asic/rv32im_ooo_4k_registers.f"
+      },
       "dc_frequencies_mhz": [600, 500, 400, 300, 200],
       "source_variants": {
         "99fcc2be539eabb078c0d73b26a7ef2c00071391": {

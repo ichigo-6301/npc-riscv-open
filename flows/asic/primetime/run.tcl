@@ -44,6 +44,16 @@ set netlist [file normalize [require_env NPC_ASIC_POSTROUTE_NETLIST]]
 set sdc [file normalize [require_env NPC_ASIC_POSTROUTE_SDC]]
 set spef [file normalize [require_env NPC_ASIC_POSTROUTE_SPEF]]
 set expected_period [require_env NPC_ASIC_CLOCK_PERIOD_NS]
+set memory_mode [require_env NPC_ASIC_MEMORY_MODE]
+set expected_macro_count [require_env NPC_ASIC_EXPECTED_MACRO_COUNT]
+set expected_macro_spec ""
+if {[info exists ::env(NPC_ASIC_EXPECTED_MACROS)]} {
+  set expected_macro_spec $::env(NPC_ASIC_EXPECTED_MACROS)
+}
+set macro_minimum_period_spec ""
+if {[info exists ::env(NPC_ASIC_MACRO_MIN_PERIODS)]} {
+  set macro_minimum_period_spec $::env(NPC_ASIC_MACRO_MIN_PERIODS)
+}
 file mkdir $output_dir
 source [file normalize [require_env NPC_ASIC_PRIMETIME_SETUP]]
 
@@ -55,13 +65,58 @@ foreach {path label} [list \
   require_file $path $label
 }
 
-set_app_var search_path [concat [list [file dirname $npc_asic_stdcell_db]] [get_app_var search_path]]
+set timing_libraries [list $npc_asic_stdcell_db]
+if {[info exists ::env(NPC_ASIC_MACRO_DBS)] && $::env(NPC_ASIC_MACRO_DBS) ne ""} {
+  foreach macro_db [split $::env(NPC_ASIC_MACRO_DBS) ":"] {
+    set macro_db [file normalize $macro_db]
+    require_file $macro_db "macro DB"
+    lappend timing_libraries $macro_db
+  }
+}
+set library_directories [list]
+foreach library $timing_libraries {
+  lappend library_directories [file dirname $library]
+}
+set_app_var search_path [concat $library_directories [get_app_var search_path]]
 set_app_var target_library [list $npc_asic_stdcell_db]
-set_app_var link_path [concat "*" [list $npc_asic_stdcell_db]]
+set_app_var link_path [concat "*" $timing_libraries]
 read_verilog $netlist
 current_design $top
 set link_ok [link_design $top]
 if {!$link_ok} {error "PrimeTime link_design failed"}
+
+set expected_macro_refs [list]
+array set expected_macro_ref_count {}
+foreach item [split $expected_macro_spec ","] {
+  if {$item eq ""} {continue}
+  set fields [split $item "="]
+  if {[llength $fields] != 2} {error "Malformed expected macro contract: $item"}
+  set ref [lindex $fields 0]
+  set count [lindex $fields 1]
+  lappend expected_macro_refs $ref
+  set expected_macro_ref_count($ref) $count
+  if {[sizeof_collection [get_lib_cells -quiet */$ref]] == 0} {
+    error "PrimeTime link libraries do not contain expected macro $ref"
+  }
+}
+set macro_count 0
+array set linked_macro_ref_count {}
+foreach ref $expected_macro_refs {set linked_macro_ref_count($ref) 0}
+foreach_in_collection cell [get_cells -hierarchical -quiet *] {
+  set ref [get_attribute $cell ref_name]
+  if {[lsearch -exact $expected_macro_refs $ref] >= 0} {
+    incr macro_count
+    incr linked_macro_ref_count($ref)
+  }
+}
+foreach ref $expected_macro_refs {
+  if {$linked_macro_ref_count($ref) != $expected_macro_ref_count($ref)} {
+    error "PrimeTime macro count mismatch for $ref: expected $expected_macro_ref_count($ref), got $linked_macro_ref_count($ref)"
+  }
+}
+if {$macro_count != $expected_macro_count} {
+  error "PrimeTime total macro count mismatch: expected $expected_macro_count, got $macro_count"
+}
 set read_sdc_ok 1
 if {[catch {read_sdc $sdc} message]} {
   set read_sdc_ok 0
@@ -112,6 +167,21 @@ redirect -file "$output_dir/constraints_max_fanout.rpt" {
 redirect -file "$output_dir/constraints_min_period.rpt" {
   report_constraint -min_period -all_violators
 }
+redirect -file "$output_dir/macro_instances.rpt" {
+  echo "memory_mode=$memory_mode"
+  echo "expected_total=$expected_macro_count"
+  echo "linked_total=$macro_count"
+  echo "minimum_period_contract=$macro_minimum_period_spec"
+  foreach ref $expected_macro_refs {
+    echo "ref=$ref expected=$expected_macro_ref_count($ref) linked=$linked_macro_ref_count($ref)"
+  }
+  foreach_in_collection cell [get_cells -hierarchical -quiet *] {
+    set ref [get_attribute $cell ref_name]
+    if {[lsearch -exact $expected_macro_refs $ref] >= 0} {
+      echo "instance=[get_object_name $cell] ref=$ref"
+    }
+  }
+}
 redirect -file "$output_dir/constraints_min_pulse_width.rpt" {
   report_constraint -min_pulse_width -all_violators
 }
@@ -146,8 +216,10 @@ set min_pulse_width_count [violation_count "$output_dir/constraints_min_pulse_wi
 redirect -file "$output_dir/run_contract.txt" {
   echo "top=$top"
   echo "analysis=postroute_extracted_internal_timing"
-  echo "memory_mode=registers"
-  echo "macro_count=0"
+  echo "memory_mode=$memory_mode"
+  echo "expected_macro_count=$expected_macro_count"
+  echo "macro_count=$macro_count"
+  echo "macro_minimum_period_contract=$macro_minimum_period_spec"
   echo "clock_period_ns=$actual_period"
   echo "clock_frequency_mhz=[expr {1000.0 / $actual_period}]"
   echo "link_ok=$link_ok"

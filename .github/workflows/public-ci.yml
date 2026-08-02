@@ -39,7 +39,7 @@ jobs:
         run: sha256sum --check SHA256SUMS
 
       - name: Validate public documentation
-        run: make docs-check
+        run: make docs-check showcase-check
 
       - name: Select profile
         run: make "${{ matrix.profile }}_defconfig"
@@ -66,4 +66,44 @@ jobs:
           # whitespace; SHA256SUMS is the integrity gate for that source set.
           # Formatting checks apply to the public control plane.
           git diff --check -- . ':(exclude)rtl/profiles/**'
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+  asic-contract:
+    name: ASIC contract / ${{ matrix.defconfig }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        defconfig:
+          - rv32im_single_perf_asic_defconfig
+          - rv32im_single_perf_sram_asic_defconfig
+          - rv32ima_sv32_linux_asic_defconfig
+          - rv32ima_sv32_linux_sram_asic_defconfig
+    steps:
+      - name: Checkout exact public commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install dependency-free control tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes make python3
+
+      - name: Select and validate ASIC contract
+        run: |
+          make "${{ matrix.defconfig }}"
+          make showconfig
+          make asic-config-check
+
+      - name: Validate LC, DC, P&R, and STA dry-run handoffs
+        run: |
+          make lc-macros-dry-run
+          make dc-matrix-dry-run
+          make pnr-dry-run
+          make sta-dry-run
+
+      - name: Require a clean clone after dry-run validation
+        run: |
+          git diff --check
           test -z "$(git status --porcelain --untracked-files=all)"

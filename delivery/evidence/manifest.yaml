@@ -1,48 +1,7 @@
 {
   "evidence": [
     {
-      "claims": [],
-      "id": "public_source_allowlist",
-      "path": "../provenance/source_allowlist.json",
-      "profile": "all",
-      "project_id": "npc-riscv-open",
-      "public": true,
-      "sha256": "eca37e40f69e84d68547aa617b0fe3df66b9efa00263644a4e28c90d4990aa56",
-      "snapshot_id": "v0.1.0",
-      "source_ref": "325de343baf98dc22f1a35e2b4f3f8bae268812d",
-      "status": "verified",
-      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
-      "type": "public_generated_record"
-    },
-    {
-      "claims": [],
-      "id": "public_source_closure",
-      "path": "../provenance/profile_inventory.json",
-      "profile": "all",
-      "project_id": "npc-riscv-open",
-      "public": true,
-      "sha256": "1b1f5656c8cacef305a73c7b81f7ba520000b53da2a5bef703a9326834b97e8e",
-      "snapshot_id": "v0.1.0",
-      "source_ref": "325de343baf98dc22f1a35e2b4f3f8bae268812d",
-      "status": "verified",
-      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
-      "type": "public_generated_record"
-    },
-    {
-      "claims": [],
-      "id": "public_bounded_validation",
-      "path": "../docs/verification.md",
-      "profile": "all",
-      "project_id": "npc-riscv-open",
-      "public": true,
-      "sha256": "0bfa84fd7a91f9dad763876ce24775943bfa5f091679b0fa8e5ab0c17037701b",
-      "snapshot_id": "v0.1.0",
-      "source_ref": "325de343baf98dc22f1a35e2b4f3f8bae268812d",
-      "status": "verified",
-      "tool": "deterministic public exporter and native-Linux fresh-clone checks",
-      "type": "public_generated_record"
-    },
-    {
+      "caveat": "Single and Linux records are verified; the OoO record is provisional because dual-retire MMIO difftest remains ambiguous",
       "claims": [
         "single_public_coremark_timed_cpi",
         "single_public_coremark_per_mhz",
@@ -50,29 +9,377 @@
       ],
       "id": "coremark_public_current",
       "path": "../evidence/performance/coremark.json",
-      "profile": "all",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "2b5d373029cb6828f2a1a2df27d4d83d4e37311e74cb93b06491e524d5d0f735",
+      "sha256": "21504ff1cc601d4752b5c54ff2e7270764a3cd23227f7499c1523968d8bbc99c",
+      "size_bytes": 7116,
       "snapshot_id": "v0.1.0",
       "source_ref": "7d30cf086c857fae6cbace0dd52b4bd3dd6319cb",
       "status": "partial",
-      "tool": "hash-locked CoreMark marker accounting with headless Verilator and profile-matched NEMU where unambiguous",
-      "type": "public_performance_summary"
+      "tool": "Verilator 5.008 headless runtime with hash-locked canonical CoreMark and profile-matched NEMU difftest",
+      "type": "public_bounded_performance_summary"
     },
     {
-      "claims": [],
-      "id": "coremark_reproduction_guide",
-      "path": "../docs/evidence/coremark_reproduction.md",
-      "profile": "all",
+      "caveat": "Fixed-frequency Nangate45 academic closure points only, not Fmax or foundry signoff; SRAM uses analytical FreePDK45 TT 1.0 V 25 C OpenRAM views with Nangate45 typical 1.1 V 25 C cells, and macro DRC/LVS/PEX, OCV/MMMC, DFT, LEC, power/PI, complete electrical/IO closure, and silicon remain unclaimed",
+      "claims": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area"
+      ],
+      "configuration": "Four source-matched Nangate45 academic fixed-frequency points covering register-expanded and four-macro SRAM bindings",
+      "electrical_and_external_io_status": "partial",
+      "foundry_signoff_status": "not_claimed",
+      "generated_time": "2026-07-29",
+      "id": "single_linux_nangate45_backend_public",
+      "implementation_chain_status": "verified",
+      "macro_model_status": "partial_analytical_characterization_for_sram",
+      "macro_physical_signoff_status": "not_closed_for_sram",
+      "maturity": "partial",
+      "path": "../evidence/implementation/nangate45_fixed_points.json",
+      "postroute_timing_status": "verified",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "b3e592c1a34b84e0a8a0a1d62704c8bbe5b903abdf98a6f38e949a0ef39781aa",
+      "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03",
+      "size_bytes": 35004,
       "snapshot_id": "v0.1.0",
-      "source_ref": "325de343baf98dc22f1a35e2b4f3f8bae268812d",
+      "source_ref": "multiple_source_locked_commits",
+      "source_refs": {
+        "rv32im_single_perf": "f76de57479b798aca7468f999c386bb4cb5fce02",
+        "rv32ima_sv32_linux": "0fc3de40c4e0b231c65945c9dc1711f084688c04"
+      },
       "status": "verified",
-      "tool": "public CoreMark reproduction procedure",
-      "type": "public_performance_summary"
+      "tool": "Synopsys Design Compiler O-2018.06-SP1, OpenROAD 26Q3-463-gbde79242a0, OpenRCX, and PrimeTime O-2018.06-SP1",
+      "type": "bounded_multi_profile_pnr_rcx_pt_summary"
+    },
+    {
+      "caveat": "Derived presentation data preserves the fixed-frequency academic and mixed-model SRAM boundaries of the source evidence",
+      "claims": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
+      ],
+      "configuration": "Three Profile by two memory-mode maturity matrix and four audited backend points",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "npc_showcase_data_public",
+      "path": "../evidence/data/showcase.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "11dff889b69cd35f9cd75f4b81c6f251b214511cc01d25d3ec8e65c8641bbed6",
+      "size_bytes": 6747,
+      "snapshot_id": "resume-2026-08",
+      "source_evidence": [
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
+      ],
+      "source_files": [
+        {
+          "path": "../evidence/implementation/nangate45_fixed_points.json",
+          "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+        },
+        {
+          "path": "../evidence/performance/linux_coremark_ab.json",
+          "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+        },
+        {
+          "path": "../evidence/system/linux_boot.json",
+          "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+        },
+        {
+          "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+          "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+        },
+        {
+          "path": "../evidence/fpga/single_xc7z100_history.json",
+          "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
+        }
+      ],
+      "source_ref": "multiple_source_locked_commits",
+      "status": "verified",
+      "tool": "deterministic JSON curation validated by generate_showcase_assets.py",
+      "type": "derived_showcase_dataset"
+    },
+    {
+      "caveat": "Provenance only; maturity and numeric meaning remain governed by the implementation evidence",
+      "claims": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
+      ],
+      "configuration": "Deterministic profile portfolio and fixed-point PPA SVG generation",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "generator": {
+        "command": "python3 flows/scripts/generate_showcase_assets.py --write",
+        "parameters": {
+          "asset_count": 2,
+          "mode": "write"
+        },
+        "path": "../flows/scripts/generate_showcase_assets.py",
+        "sha256": "d8268c804cc112a9e279ac5b4f5ac1da20ca6b2631ce4d6e17ea24ad7be4c01e",
+        "tool_versions": {
+          "python": "CPython 3.10.12"
+        }
+      },
+      "id": "npc_showcase_asset_provenance_public",
+      "path": "../evidence/data/showcase_assets.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "5c635adfefcab6a8b0a12914a3021612e18eb6c2f80709f950a3773c028442ba",
+      "size_bytes": 4223,
+      "snapshot_id": "resume-2026-08",
+      "source_evidence": [
+        "npc_showcase_data_public",
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
+      ],
+      "source_files": [
+        {
+          "path": "../evidence/data/showcase.json",
+          "sha256": "11dff889b69cd35f9cd75f4b81c6f251b214511cc01d25d3ec8e65c8641bbed6"
+        },
+        {
+          "path": "../evidence/implementation/nangate45_fixed_points.json",
+          "sha256": "9786c2b8bacf3b88e377cb7c968a3aa0ac761169897c1908d122c3787b3e7e03"
+        },
+        {
+          "path": "../evidence/performance/linux_coremark_ab.json",
+          "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443"
+        },
+        {
+          "path": "../evidence/system/linux_boot.json",
+          "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325"
+        },
+        {
+          "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+          "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089"
+        },
+        {
+          "path": "../evidence/fpga/single_xc7z100_history.json",
+          "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de"
+        }
+      ],
+      "source_ref": "multiple_source_locked_commits",
+      "status": "verified",
+      "type": "generated_asset_provenance"
+    },
+    {
+      "caveat": "Single and Linux indicate fixed academic points; OoO register and SRAM backends remain planned, and no Fmax or signoff maturity is implied",
+      "claims": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "single_fpga_original_routed_frequency",
+        "single_fpga_historical_board_observation",
+        "linux_historical_boot_to_initramfs_shell"
+      ],
+      "configuration": "Three source-locked Profiles by register-expanded and SRAM-macro backend status",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "npc_profile_portfolio_asset",
+      "path": "../docs/assets/profile_portfolio.svg",
+      "project_id": "npc-riscv-open",
+      "provenance_id": "npc_showcase_asset_provenance_public",
+      "public": true,
+      "sha256": "49889d789e8558d408e73b641e8aca3adf20c45d9cd986042b5cc9db4a2b5fc5",
+      "size_bytes": 5356,
+      "snapshot_id": "resume-2026-08",
+      "source_evidence_ids": [
+        "npc_showcase_data_public",
+        "single_linux_nangate45_backend_public",
+        "linux_coremark_history_public",
+        "linux_boot_history_public",
+        "ooo_historical_optimization_public",
+        "single_xc7z100_history_public"
+      ],
+      "source_ref": "multiple_source_locked_commits",
+      "status": "verified",
+      "tool": "flows/scripts/generate_showcase_assets.py",
+      "type": "generated_showcase_svg"
+    },
+    {
+      "caveat": "Fixed-frequency academic comparison only; SRAM standard-cell area excludes macro interiors and the mixed timing-model and macro-signoff limits remain visible",
+      "claims": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area",
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area",
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area",
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area"
+      ],
+      "configuration": "Four Nangate45 academic fixed points with DC and post-route frequency plus standard-cell and core area",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "npc_nangate45_closure_asset",
+      "path": "../docs/assets/nangate45_closure_points.svg",
+      "project_id": "npc-riscv-open",
+      "provenance_id": "npc_showcase_asset_provenance_public",
+      "public": true,
+      "sha256": "2593ab5e5de50d13c82ada76fb46426633ef28844a1cc61e9fa3e9b801cf0b06",
+      "size_bytes": 6768,
+      "snapshot_id": "resume-2026-08",
+      "source_evidence_ids": [
+        "npc_showcase_data_public",
+        "single_linux_nangate45_backend_public"
+      ],
+      "source_ref": "multiple_source_locked_commits",
+      "status": "verified",
+      "tool": "flows/scripts/generate_showcase_assets.py",
+      "type": "generated_showcase_svg"
+    },
+    {
+      "caveat": "Historical same-benchmark-family comparison; baseline binary hash is unavailable, retired counts differ by four, and current 0fc3de40 has not been rerun",
+      "claims": [
+        "linux_historical_no_tlb_whole_cpi",
+        "linux_historical_optimized_whole_cpi",
+        "linux_historical_approx_speedup"
+      ],
+      "configuration": "Sv32 whole-program reset-to-ebreak CoreMark comparison",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "linux_coremark_history_public",
+      "path": "../evidence/performance/linux_coremark_ab.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "c370757e0e30a3e60260dc0f58015552e2b7fae68479a658377601c2d707d443",
+      "size_bytes": 3066,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "multiple_historical_refs",
+      "status": "partial",
+      "tool": "Historical RTL simulation counters and bounded public CoreMark summary",
+      "type": "bounded_historical_performance_summary"
+    },
+    {
+      "caveat": "Verified for e3a1cc91 only; current 0fc3de40 has not repeated the deep boot",
+      "claims": [
+        "linux_historical_boot_to_initramfs_shell"
+      ],
+      "configuration": "DTB load, OpenSBI M-mode, S-mode handoff, Linux 6.6.141 /init and initramfs shell",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "linux_boot_history_public",
+      "path": "../evidence/system/linux_boot.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "d821ef7e89d3d757aed199d9cd96e01391818b6e9e3d1827aa5f12f7960dd325",
+      "size_bytes": 1590,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+      "status": "verified",
+      "tool": "Headless RTL simulation with profile-matched NEMU difftest",
+      "type": "bounded_historical_system_boot_summary"
+    },
+    {
+      "caveat": "Historical seven-workload simulation before combinational-loop remediation; not current no-loop RTL, FPGA, ASIC or silicon evidence",
+      "claims": [
+        "ooo_historical_frontend_empty_baseline_percent",
+        "ooo_historical_frontend_empty_s9b_percent",
+        "ooo_historical_redirect_direct_jal_percent",
+        "ooo_historical_redirect_btfnt_percent",
+        "ooo_historical_redirect_btb_bht_percent",
+        "ooo_historical_redirect_jalr_ras_percent"
+      ],
+      "configuration": "Frozen seven-workload historical frontend and branch-prediction stages",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "ooo_historical_optimization_public",
+      "path": "../evidence/performance/ooo_frontend_branch_ab.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "3e98aa14580e682802f67083a0adc4aa24f7b6fe44cd79723fdedf8de7a07089",
+      "size_bytes": 2872,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "multiple_historical_refs",
+      "status": "verified",
+      "tool": "Historical RTL simulation, difftest suite and performance counters",
+      "type": "bounded_historical_microarchitecture_summary"
+    },
+    {
+      "caveat": "Three historical uncommitted source snapshots are separate; board/workload observation is partial and later forwarding/predictor snapshots have implementation/timing only",
+      "claims": [
+        "single_fpga_original_routed_frequency",
+        "single_fpga_original_setup_wns",
+        "single_fpga_original_hold_whs",
+        "single_fpga_historical_board_observation",
+        "single_fpga_forward_routed_frequency",
+        "single_fpga_forward_setup_wns",
+        "single_fpga_forward_hold_whs",
+        "single_fpga_predict_routed_frequency",
+        "single_fpga_predict_setup_wns",
+        "single_fpga_predict_hold_whs"
+      ],
+      "configuration": "Vivado 2022.2 XC7Z100 historical board, forwarding and 128-entry BTB/PHT snapshots",
+      "generated_time": "2026-08-01T12:00:00Z",
+      "id": "single_xc7z100_history_public",
+      "path": "../evidence/fpga/single_xc7z100_history.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "f60a2422150ef04769a4835792e6cc03df26413ca4fed73f4ad5d258054e06de",
+      "size_bytes": 7368,
+      "snapshot_id": "resume-2026-08",
+      "source_ref": "historical_source_manifests",
+      "status": "partial",
+      "tool": "Vivado 2022.2 routed reports, bitstream identity, UART and ILA captures",
+      "type": "bounded_layered_fpga_history_summary"
     }
   ],
   "kind": "evidence_manifest",

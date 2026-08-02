@@ -1,0 +1,40 @@
+{
+  "schema": "npc-riscv-open/linux-boot-history-v1",
+  "generated_at": "2026-08-01T12:00:00Z",
+  "profile": "rv32ima_sv32_linux",
+  "run_id": "linux-opensbi-initramfs-20260527",
+  "source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+  "status": "historical_verified",
+  "runtime": "headless RTL simulation with profile-matched NEMU difftest",
+  "command": "make run-opensbi-linux with branch prediction, 16-entry ITLB/DTLB, two-entry store buffer, fast MUL and load-hit optimizations enabled",
+  "software_identity": {
+    "opensbi": "v1.8.1-85-gf36acaeb",
+    "linux": "6.6.141",
+    "dtb_size_bytes": 1587,
+    "machine_model": "YSYX RV32 SoC",
+    "boot_hart_isa": "rv32ima"
+  },
+  "observed_markers": [
+    "DTB loaded",
+    "Domain0 Next Mode: S-mode",
+    "Domain0 Next Address: 0x80400000",
+    "Linux version 6.6.141",
+    "Run /init as init process",
+    "=== initramfs entered ===",
+    "=== shell ready ==="
+  ],
+  "raw_log": {
+    "published": false,
+    "sha256": "70f3d55326039c47e6ccb0213db225f5fd04e61fd36e54b2322fdae99f75dd42",
+    "sanitization": "Only bounded markers, configuration identity and this digest are public"
+  },
+  "lineage": {
+    "optimized_performance_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+    "current_source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+    "current_source_deep_boot_status": "not_reverified"
+  },
+  "claim_ids": [
+    "linux_historical_boot_to_initramfs_shell"
+  ],
+  "caveat": "The complete boot is verified for the historical source snapshot only; it has not been repeated on the current 0fc3de40 source lock"
+}

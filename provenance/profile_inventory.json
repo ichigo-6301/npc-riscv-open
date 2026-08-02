@@ -58,6 +58,7 @@
         "BBUS_REG_ADDR_W",
         "BBUS_XLEN",
         "NPC_ASIC",
+        "NPC_ASIC_SRAM",
         "NPC_BRANCH_STAT",
         "NPC_BRANCH_STAT_VERBOSE",
         "NPC_CACHE_DATA_ARRAY_BLACKBOX",
@@ -134,6 +135,10 @@
         "ysyx_25050145_immS",
         "ysyx_25050145_immU"
       ],
+      "entry_overlay_commits": [
+        "176d4fd74da61ec681816630854501b233213982"
+      ],
+      "entry_overlay_count": 3,
       "isa": "rv32im",
       "issue_width": 1,
       "memory_binding": "behavioral_dpi",
@@ -279,6 +284,8 @@
         "ysyx_25050145_immS",
         "ysyx_25050145_immU"
       ],
+      "entry_overlay_commits": [],
+      "entry_overlay_count": 0,
       "isa": "rv32ima_zicsr_sv32",
       "issue_width": 1,
       "memory_binding": "behavioral_dpi",
@@ -341,7 +348,7 @@
       "profile_id": "rv32ima_sv32_linux",
       "public_top": "npc_public_sim_top",
       "rtl_file_count": 51,
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8"
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04"
     },
     {
       "abi": "ilp32",
@@ -378,6 +385,8 @@
         "NPC_SV32",
         "NPC_S_EXTENSION"
       ],
+      "entry_overlay_commits": [],
+      "entry_overlay_count": 0,
       "isa": "rv32im",
       "issue_width": 2,
       "memory_binding": "behavioral_dpi",

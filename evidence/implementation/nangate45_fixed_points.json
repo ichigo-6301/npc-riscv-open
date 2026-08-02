@@ -1,0 +1,753 @@
+{
+  "schema": "npc-riscv-open/nangate45-backend-evidence-v1",
+  "evidence_id": "single_linux_nangate45_backend_public",
+  "evidence_date": "2026-07-29",
+  "kind": "bounded_public_backend_evidence",
+  "audit_verdict": "AUDIT_CONFIRMED_EXISTING_BACKEND_RESULTS",
+  "audit_source": {
+    "schema": "npc-d11-single-linux-backend-audit-v1",
+    "sha256": "6d766fb2a6c7ddb1fa40e4a6f2849aac4b8e45d47f3f9c636ee1dcf42ba2e5ed",
+    "d8_single_result_sha256": "81ff217d6176fb0b07baa450403705965babb04805dba7479cb92181fd6e9797",
+    "d8_linux_result_sha256": "0d8e4b96d424c838bc0b4e254bfc321b4e5c2de5fc1ceb782a567175352b488f",
+    "rerun_performed": false,
+    "heavy_stage_rerun_count": 0
+  },
+  "claim_boundary": {
+    "classification": "fixed-frequency Nangate45 academic closure points",
+    "physical_implementation_status": "verified",
+    "internal_extracted_setup_hold_status": "verified",
+    "electrical_and_external_io_status": "partial",
+    "foundry_signoff_status": "not_claimed",
+    "not_fmax": true,
+    "not_silicon": true
+  },
+  "platform_identity": {
+    "top_module": "cpu_top",
+    "pdk": "Nangate45 ORFS academic platform",
+    "standard_cell_model": "NangateOpenCellLibrary typical, 1.1 V, 25 C, 1 ns time unit",
+    "standard_cell_liberty_sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+    "standard_cell_db_sha256": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5",
+    "technology_lef_sha256": "834a79295054cd4209178d1bade67c353863c47bb4b3c22ee38b862b7cec37f2",
+    "standard_cell_macro_lef_sha256": "a43aea339f12a57a63497783e508ba16f3da2dc056d3247dec7d99707c2dedef",
+    "standard_cell_gds_sha256": "7fdbd7f4e46283fdd9b9a369e1cae1a7f6f742c8e75cfe943c17f451626fe8e8",
+    "source_sdc_sha256": "66d4d4242384d8dc5f0f031e7540eae35855f0acf6c099eea97f3230ec431078",
+    "rc_source": "PDK_PROVIDED_ACADEMIC_RC",
+    "rc_model_boundary": "Pinned ORFS Nangate45 academic OpenRCX rules; not foundry-calibrated RC.",
+    "openrcx_rules_sha256": "2f65fafbe2c704b378563c53a680b93cef080c2799997019d43df7d1e5a563e9",
+    "tools": {
+      "design_compiler": {
+        "version": "O-2018.06-SP1",
+        "setup_sha256": "cbc613f1267e8d6c923ff62c052bbc1d20be5c5d7d4de222d085497a15c79066"
+      },
+      "openroad": {
+        "version": "26Q3-463-gbde79242a0",
+        "orfs_commit": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+        "container_digest": "sha256:5fb6465e18c42bfaa19f0ba40190f1c75cb6118feffd236b13ed8081ff3f573f"
+      },
+      "openrcx": {
+        "version": "26Q3-463-gbde79242a0",
+        "rules_sha256": "2f65fafbe2c704b378563c53a680b93cef080c2799997019d43df7d1e5a563e9"
+      },
+      "primetime": {
+        "version": "O-2018.06-SP1",
+        "setup_sha256": "036875dbd47201184bf54583585eea11fd562135d050065e48168ab4fec4b446"
+      },
+      "library_compiler": {
+        "version": "O-2018.06-SP1"
+      },
+      "klayout": {
+        "version": "0.30.7"
+      }
+    }
+  },
+  "sram_identity": {
+    "openram_commit": "e16d9eb0b4495e8beee441ced3fcad68391155e6",
+    "macro_count_per_design": 4,
+    "macro_model": "OpenRAM analytical FreePDK45 TT, 1.0 V, 25 C",
+    "standard_cell_model": "Nangate45 typical, 1.1 V, 25 C",
+    "mixed_pvt": true,
+    "handoff_manifest_sha256": "dba6afa6cb98e3429b93aed30534eb1c5e35b3e415fa40b950e3d5efb756f33d",
+    "library_compiler_manifest_sha256": "b8768160bb4159ccd0cde8528e9813c6f167370be33fe54db586163fab6d0892",
+    "macro_view_hashes": {
+      "dcache_liberty_sha256": "fcf7decbd3ce17d90a786179f477ee2221d22487be2eb07f4fdb76467d16a9e9",
+      "dcache_db_sha256": "7af02d9f5427b66a4e12d9ff6ae40e78e0d18e17be3a2b23eaee2b6efcab89a4",
+      "icache_liberty_sha256": "b5a45317cf94eee457aa24e811998849f00c2fb7b208966552a7795ea0df1970",
+      "icache_db_sha256": "79ce8ca64fc00859ce6193ed107a3f1793bda70330c255b70d160276a6e9b9cf"
+    },
+    "macro_model_status": "partial_analytical_characterization",
+    "macro_drc_lvs_pex_status": "not_closed",
+    "rc004_retained": true
+  },
+  "closure_points": {
+    "rv32im_single_perf.registers": {
+      "claim_ids": [
+        "single_registers_nangate45_dc_frequency",
+        "single_registers_nangate45_postroute_frequency",
+        "single_registers_nangate45_standard_cell_area",
+        "single_registers_nangate45_core_area"
+      ],
+      "identity": {
+        "profile": "rv32im_single_perf",
+        "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+        "execution_head": "e0fa7a99138dde1e88251858f9ea156a8c3e1a15",
+        "source_set_sha256": "8124c7d9d41959d0827af3c4f54c4154b90a4a116e46074e197afe207c751f12",
+        "config_sha256": "08fae36ec1354f38b91b7e95f9c0263a5438b8eb2c6e125ea458479c91db0db8",
+        "top_module": "cpu_top",
+        "memory_mode": "register_expanded",
+        "macro_count": 0,
+        "blackbox_count": 0
+      },
+      "run_identity": {
+        "dc_run_id": "single_540_wns/dc_540mhz",
+        "route_run_id": "20260727T233625Z_register_425d/pnr_425mhz",
+        "primetime_run_id": "register_sta/7b278621_20260728T044400Z",
+        "routed_netlist_run_id": "20260727T233625Z_register_425d/pnr_425mhz",
+        "routed_sdc_run_id": "20260727T233625Z_register_425d/pnr_425mhz",
+        "spef_run_id": "20260727T233625Z_register_425d/pnr_425mhz"
+      },
+      "frequency": {
+        "dc_mhz": 540,
+        "dc_period_ns": 1.851852,
+        "postroute_mhz": 425,
+        "pnr_period_ns": 2.352941176,
+        "primetime_period_ns": 2.352941
+      },
+      "area": {
+        "standard_cell_area_um2": 679497.0,
+        "standard_cell_area_mm2": 0.679497,
+        "core_area_um2": 2614530.0,
+        "core_area_mm2": 2.61453,
+        "die_area_um2": 2753900.0,
+        "utilization": 0.259893
+      },
+      "constraint_hashes": {
+        "source_sdc_sha256": "66d4d4242384d8dc5f0f031e7540eae35855f0acf6c099eea97f3230ec431078",
+        "dc_mapped_sdc_sha256": "a461906af48ac83562b1b1d9e29016d5beb7bd1911fabb80a07fe467d1e48ede",
+        "pnr_input_sdc_sha256": "fcedb96f9ab1e498c3d1b225ba165a8084bd5085f75284c61756e36a0bf5a862",
+        "routed_sdc_pre_sanitize_sha256": "e2ef98ad0fab75bb61b4e17000401f7f8149812eec8eb3018994dd4ce2a9d47c",
+        "routed_sdc_sha256": "db199ca4f8a2fb3df7708e121ecad6913d33139bc4c82ebfd13cf5b782885834"
+      },
+      "role_hashes": {
+        "dc_mapped_netlist": "c3b0665ae59f9bf456080dd924c8cfe4fc6c92495221d712eb912a994c2a20ed",
+        "pnr_input_netlist": "c3b0665ae59f9bf456080dd924c8cfe4fc6c92495221d712eb912a994c2a20ed",
+        "pnr_imported_netlist": "c3b0665ae59f9bf456080dd924c8cfe4fc6c92495221d712eb912a994c2a20ed",
+        "pnr_routed_netlist": "b0b8334af5bb4c27cdced94a8a5daba376ede1d2ff5b088d4fa4719788fcdc1f",
+        "primetime_routed_netlist": "b0b8334af5bb4c27cdced94a8a5daba376ede1d2ff5b088d4fa4719788fcdc1f",
+        "pnr_routed_sdc": "db199ca4f8a2fb3df7708e121ecad6913d33139bc4c82ebfd13cf5b782885834",
+        "primetime_routed_sdc": "db199ca4f8a2fb3df7708e121ecad6913d33139bc4c82ebfd13cf5b782885834",
+        "pnr_routed_database": "d9d2bd8f45db0c9bb44e65e51959ee765c7a6b19887ad29823611baf1bb68166",
+        "openrcx_input_database": "d9d2bd8f45db0c9bb44e65e51959ee765c7a6b19887ad29823611baf1bb68166",
+        "openrcx_spef": "b007619fbe5d38dc424fe177382e874ecedd11b11ffe6cb136137148b67cad4c",
+        "primetime_spef": "b007619fbe5d38dc424fe177382e874ecedd11b11ffe6cb136137148b67cad4c",
+        "routed_def": "7be82d7dbc4d8273996b91163e46ec8e0ae8c44b804f8f196843703f605a9185",
+        "gds": "51b6c6f5e5a16ef2dca69d3f594f1c1c5a965a0a8fb1d27d64f65e3ef007fdc4",
+        "standard_cell_liberty": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+        "standard_cell_db": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5"
+      },
+      "dc_integrity": {
+        "link_ok": true,
+        "check_design_ok": true,
+        "check_timing_ok": true,
+        "timing_loop_count": 0,
+        "automatic_arc_break_count": 0,
+        "latch_count": 0,
+        "unclocked_synchronous_endpoint_count": 0,
+        "unresolved_reference_count": 0,
+        "macro_count": 0,
+        "blackbox_count": 0,
+        "register_count": 82687,
+        "clocked_register_count": 82687,
+        "electrical_violation_count": 0,
+        "setup_wns_ns": 0.000346899,
+        "setup_tns_ns": 0.0
+      },
+      "stage_completeness": {
+        "placement": true,
+        "cts": true,
+        "detailed_route": true,
+        "gds": true,
+        "openrcx": true,
+        "primetime_reports": true
+      },
+      "report_hashes": {
+        "dc_input_manifest": "e443800748c2e2061a20e0da1248650b1763714a3363e8253866f46cd3685692",
+        "dc_log": "ccb6ca74a39852e457b821612fa09d56654049b82ec6f368eec908ed32734058",
+        "dc_timing_loops": "e31ee603d997cea26f5d8c1d742707546c0aac46493213aebfd376bfa877e44a",
+        "pnr_input_manifest": "1ef7b611792927357a5112e61b20c1e9d8acd4e44356c844a175cb1261a8ec8d",
+        "pnr_log": "2ee6893e6cd5ce6a820425b40329d3725f4add64859cb84649ddaadaaaea991c",
+        "pnr_recovery_manifest": "b31aa12351269cd4a0f236722f89ff8555ba401a212c4f36248b704c41ca3c0f",
+        "primetime_input_manifest": "3772681302e4eeb3283108ca823a3c78d9d6871a26e6ef8d6f709e6a70957381",
+        "primetime_log": "672d0bf9ac7c0a9d31c4bc8cce8a690fabdc9cf654e92712f9a978c0a58889a9",
+        "primetime_analysis_coverage": "ee76c317d098a0d84c6a80a65cdfbbae9a8678db5bb4788010f461186daefa94"
+      },
+      "route_result": {
+        "route_drc_kind": "OpenROAD detailed-route",
+        "route_drc_count": 0,
+        "antenna_net_count": 0,
+        "antenna_pin_count": 0,
+        "unrouted_net_count": 0,
+        "gds_generated": true
+      },
+      "primetime_result": {
+        "scope": "post-route extracted internal timing",
+        "setup_wns_ns": 0.025646,
+        "setup_tns_ns": 0.0,
+        "setup_violating_paths": 0,
+        "hold_wns_ns": 0.063219,
+        "hold_tns_ns": 0.0,
+        "hold_violating_paths": 0,
+        "constrained_path_coverage_percent": 100.0,
+        "analysis_coverage_untested": {
+          "total": 19,
+          "setup": 2,
+          "hold": 2,
+          "recovery": 5,
+          "removal": 5,
+          "min_pulse_width": 5
+        },
+        "unclocked_synchronous_endpoint_count": 0,
+        "max_transition_violations": 0,
+        "max_capacitance_violations": 329,
+        "max_fanout_violations": 0,
+        "external_io_model_status": "not_closed",
+        "electrical_clean": false
+      },
+      "result_maturity": {
+        "implementation_chain_status": "verified",
+        "postroute_timing_status": "verified",
+        "electrical_exceptions_status": "partial",
+        "macro_model_status": "not_applicable",
+        "macro_physical_signoff_status": "not_applicable",
+        "full_io_timing_status": "not_claimed",
+        "ocv_mmmc_status": "not_claimed",
+        "dft_status": "not_claimed",
+        "foundry_signoff_status": "not_claimed",
+        "overall_profile_maturity": "partial"
+      },
+      "caveats": [
+        "Max-capacitance violations are not setup-frequency violations.",
+        "External IO drive and delay models are absent.",
+        "Asynchronous recovery/removal checks remain untested."
+      ],
+      "nonclaims": [
+        "maximum frequency",
+        "complete electrical closure",
+        "external IO timing closure",
+        "OCV/MMMC",
+        "DFT",
+        "power integrity",
+        "formal LEC",
+        "foundry signoff",
+        "silicon result"
+      ]
+    },
+    "rv32im_single_perf.sram": {
+      "claim_ids": [
+        "single_sram_nangate45_dc_frequency",
+        "single_sram_nangate45_postroute_frequency",
+        "single_sram_nangate45_standard_cell_area",
+        "single_sram_nangate45_core_area"
+      ],
+      "identity": {
+        "profile": "rv32im_single_perf",
+        "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
+        "execution_head": "e0fa7a99138dde1e88251858f9ea156a8c3e1a15",
+        "source_set_sha256": "d5296a9dbba4a47ef061b286d6fac90a49770b7a2d46f72f05a12dfbfc2bfccb",
+        "config_sha256": "cab68f8c556b4b9afb3edbb9e265699033316b1010191b98fcb2ddfa4930647e",
+        "top_module": "cpu_top",
+        "memory_mode": "sram_macro",
+        "macro_count": 4,
+        "blackbox_count": 0
+      },
+      "run_identity": {
+        "dc_run_id": "2d702c44_20260728T055500Z/dc_600mhz",
+        "route_run_id": "sram475_e0fa7a99_20260728T064804Z/pnr_475mhz",
+        "primetime_run_id": "sram_pt475/e0fa7a99_20260728T0702Z",
+        "routed_netlist_run_id": "sram475_e0fa7a99_20260728T064804Z/pnr_475mhz",
+        "routed_sdc_run_id": "sram475_e0fa7a99_20260728T064804Z/pnr_475mhz",
+        "spef_run_id": "sram475_e0fa7a99_20260728T064804Z/pnr_475mhz"
+      },
+      "frequency": {
+        "dc_mhz": 600,
+        "dc_period_ns": 1.666667,
+        "postroute_mhz": 475,
+        "pnr_period_ns": 2.105263158,
+        "primetime_period_ns": 2.105263
+      },
+      "area": {
+        "standard_cell_area_um2": 149292.0,
+        "standard_cell_area_mm2": 0.149292,
+        "core_area_um2": 858801.0,
+        "core_area_mm2": 0.858801,
+        "die_area_um2": 939450.0,
+        "utilization": 0.490023
+      },
+      "constraint_hashes": {
+        "source_sdc_sha256": "66d4d4242384d8dc5f0f031e7540eae35855f0acf6c099eea97f3230ec431078",
+        "dc_mapped_sdc_sha256": "0edf409f22a67dd6e93b14e3592241e7f55b27dcf9d24c20ae9eaf106c800de5",
+        "pnr_input_sdc_sha256": "02b396a583942b3abda95edfabf85b16475fd4f636024ac8ea9fbb8ab1f13cf9",
+        "routed_sdc_sha256": "e8a140d44dc8d5e8d6944bc3258e55a9d05d2d5dd394abef08e82ae36d90c0b2"
+      },
+      "role_hashes": {
+        "dc_mapped_netlist": "4106e9dc1afb76883f069212c85538ab8ff64f104d936fab9ab724202cd87aaa",
+        "pnr_input_netlist": "4106e9dc1afb76883f069212c85538ab8ff64f104d936fab9ab724202cd87aaa",
+        "pnr_imported_netlist": "4106e9dc1afb76883f069212c85538ab8ff64f104d936fab9ab724202cd87aaa",
+        "pnr_routed_netlist": "492c240524b7e750662ec735c3daa0cf6c586de82e34590a6d54567187966bae",
+        "primetime_routed_netlist": "492c240524b7e750662ec735c3daa0cf6c586de82e34590a6d54567187966bae",
+        "pnr_routed_sdc": "e8a140d44dc8d5e8d6944bc3258e55a9d05d2d5dd394abef08e82ae36d90c0b2",
+        "primetime_routed_sdc": "e8a140d44dc8d5e8d6944bc3258e55a9d05d2d5dd394abef08e82ae36d90c0b2",
+        "pnr_routed_database": "fc88dc488b39bb1306f4eb8602d75e4feaf21d0f19fbbbe9727373d54d75447e",
+        "openrcx_input_database": "fc88dc488b39bb1306f4eb8602d75e4feaf21d0f19fbbbe9727373d54d75447e",
+        "openrcx_spef": "ab50db17aef211b982f81daead4bf29c1eb4a92f3c73e7ef1f39f587cd5c6c76",
+        "primetime_spef": "ab50db17aef211b982f81daead4bf29c1eb4a92f3c73e7ef1f39f587cd5c6c76",
+        "routed_def": "b884940e4352d18bac07f8a30a8cc65baf4b63fb86aa95a517aa41a4fb48e8c1",
+        "gds": "8e6405179bed4773f73f65a77306ee5fb6765435bd59c57887baac8b93e0a457",
+        "standard_cell_liberty": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+        "standard_cell_db": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5",
+        "dcache_liberty": "fcf7decbd3ce17d90a786179f477ee2221d22487be2eb07f4fdb76467d16a9e9",
+        "dcache_db": "7af02d9f5427b66a4e12d9ff6ae40e78e0d18e17be3a2b23eaee2b6efcab89a4",
+        "icache_liberty": "b5a45317cf94eee457aa24e811998849f00c2fb7b208966552a7795ea0df1970",
+        "icache_db": "79ce8ca64fc00859ce6193ed107a3f1793bda70330c255b70d160276a6e9b9cf"
+      },
+      "dc_integrity": {
+        "link_ok": true,
+        "check_design_ok": true,
+        "check_timing_ok": true,
+        "timing_loop_count": 0,
+        "automatic_arc_break_count": 0,
+        "latch_count": 0,
+        "unclocked_synchronous_endpoint_count": 0,
+        "unresolved_reference_count": 0,
+        "macro_count": 4,
+        "blackbox_count": 0,
+        "register_count": 17027,
+        "clocked_register_count": 17027,
+        "electrical_violation_count": 0,
+        "setup_wns_ns": 0.0000109673,
+        "setup_tns_ns": 0.0
+      },
+      "stage_completeness": {
+        "placement": true,
+        "cts": true,
+        "detailed_route": true,
+        "gds": true,
+        "openrcx": true,
+        "primetime_reports": true
+      },
+      "report_hashes": {
+        "dc_input_manifest": "e32364c87d81bbfd4facf804a4f8ebfbab536fd62668bb4f544383d5c6a9aa7e",
+        "dc_run_contract": "16367b34a55a8c9c49d1bc85f076014d5881f578352b0241231286c40f17e074",
+        "pnr_input_manifest": "09bc5763a708284253342676803e3997a98a77fda57f18fa0698a8f6d16906f2",
+        "pnr_log": "750d71da42fe9a068658738b2c4828fa0c5334e8a2ff2f22d3683d9dbe7c1fb6",
+        "pnr_same_run_manifest": "2e1c81bf08270f3f2ba2e249158a17f5d8d03fe27cc6c60984229cdd55321e9f",
+        "primetime_input_manifest": "43c337b5717cf32828f33d013999651391c7d0d81632c3b7325c2bb15f9f2c5a",
+        "primetime_log": "1b69263dd44b12290b28adcfcc7a20277bab914523166fd164c9760ec8d497cc",
+        "primetime_analysis_coverage": "07e698fddf81942e4f29b4e9ca544583eae9e16f572138302017541f8a9b06f6"
+      },
+      "route_result": {
+        "route_drc_kind": "OpenROAD detailed-route",
+        "route_drc_count": 0,
+        "antenna_net_count": 0,
+        "antenna_pin_count": 0,
+        "unrouted_net_count": 0,
+        "gds_generated": true
+      },
+      "primetime_result": {
+        "scope": "post-route extracted internal timing",
+        "setup_wns_ns": 0.013556,
+        "setup_tns_ns": 0.0,
+        "setup_violating_paths": 0,
+        "hold_wns_ns": 0.047904,
+        "hold_tns_ns": 0.0,
+        "hold_violating_paths": 0,
+        "constrained_path_coverage_percent": 100.0,
+        "analysis_coverage_untested": {
+          "total": 0,
+          "setup": 0,
+          "hold": 0,
+          "recovery": 0,
+          "removal": 0,
+          "min_pulse_width": 0
+        },
+        "unclocked_synchronous_endpoint_count": 0,
+        "min_period_violations": 0,
+        "min_pulse_width_violations": 0,
+        "max_transition_violations": 0,
+        "max_capacitance_violations": 19,
+        "max_fanout_violations": 0,
+        "rc004_visible_count": 102,
+        "rc004_total_count": 312,
+        "external_io_model_status": "not_closed",
+        "electrical_clean": false
+      },
+      "result_maturity": {
+        "implementation_chain_status": "verified",
+        "postroute_timing_status": "verified",
+        "electrical_exceptions_status": "partial",
+        "macro_model_status": "partial_analytical_characterization",
+        "macro_physical_signoff_status": "not_closed",
+        "full_io_timing_status": "not_claimed",
+        "ocv_mmmc_status": "not_claimed",
+        "dft_status": "not_claimed",
+        "foundry_signoff_status": "not_claimed",
+        "overall_profile_maturity": "partial"
+      },
+      "caveats": [
+        "OpenRAM analytical FreePDK45 TT, 1.0 V, 25 C macro timing is mixed with Nangate45 typical, 1.1 V, 25 C standard-cell timing.",
+        "RC-004 C-effective warnings are retained.",
+        "Macro DRC/LVS/PEX is not closed.",
+        "OCV/MMMC, DFT, formal LEC, power and power integrity are not closed.",
+        "Max-capacitance violations and absent external IO models are not setup-frequency failures."
+      ],
+      "nonclaims": [
+        "maximum frequency",
+        "complete electrical closure",
+        "macro DRC/LVS/PEX",
+        "OCV/MMMC",
+        "external IO timing closure",
+        "DFT",
+        "power integrity",
+        "formal LEC",
+        "foundry signoff",
+        "silicon result"
+      ]
+    },
+    "rv32ima_sv32_linux.registers": {
+      "claim_ids": [
+        "linux_registers_nangate45_dc_frequency",
+        "linux_registers_nangate45_postroute_frequency",
+        "linux_registers_nangate45_standard_cell_area",
+        "linux_registers_nangate45_core_area"
+      ],
+      "identity": {
+        "profile": "rv32ima_sv32_linux",
+        "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+        "execution_head": "fd044b844fe48a90b347bf68f51085795e8df0a8",
+        "source_set_sha256": "19a6008ae668be7da3b62fa512ac8a6a003db03985611a2f06b07999676c2e0c",
+        "config_sha256": "b8ae398850e0dc072cb57cafe3036d8b1ddc697efca74db563ba892c1a689fb9",
+        "top_module": "cpu_top",
+        "memory_mode": "register_expanded",
+        "macro_count": 0,
+        "blackbox_count": 0
+      },
+      "run_identity": {
+        "dc_run_id": "linux_register_timer200_52f4abba_20260728T071557Z/dc_280mhz",
+        "route_run_id": "linux_register_pnr200_52f4abba_20260728T0747Z/pnr_200mhz",
+        "primetime_run_id": "linux_register_pt200_52f4abba_20260728T085237Z",
+        "routed_netlist_run_id": "linux_register_pnr200_52f4abba_20260728T0747Z/pnr_200mhz",
+        "routed_sdc_run_id": "linux_register_pnr200_52f4abba_20260728T0747Z/pnr_200mhz",
+        "spef_run_id": "linux_register_pnr200_52f4abba_20260728T0747Z/pnr_200mhz"
+      },
+      "frequency": {
+        "dc_mhz": 280,
+        "dc_period_ns": 3.571429,
+        "postroute_mhz": 200,
+        "pnr_period_ns": 5.0,
+        "primetime_period_ns": 5.0
+      },
+      "area": {
+        "standard_cell_area_um2": 717964.0,
+        "standard_cell_area_mm2": 0.717964,
+        "core_area_um2": 2825040.0,
+        "core_area_mm2": 2.82504,
+        "die_area_um2": 2969840.0,
+        "utilization": 0.254143
+      },
+      "constraint_hashes": {
+        "source_sdc_sha256": "66d4d4242384d8dc5f0f031e7540eae35855f0acf6c099eea97f3230ec431078",
+        "dc_mapped_sdc_sha256": "5695c6ca6411b66c628d68269a471ea478b6a309b1be18e30e759b7163875d0e",
+        "pnr_input_sdc_sha256": "3622e2403484bdceacbdd1ede3a9c47f05d7915cc282da67f4d72d41ca692eef",
+        "routed_sdc_sha256": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463"
+      },
+      "role_hashes": {
+        "dc_mapped_netlist": "2f803a73345a9c275558fa0a6131a81f40736a5dff5183eecbae6598f908e2fb",
+        "pnr_input_netlist": "2f803a73345a9c275558fa0a6131a81f40736a5dff5183eecbae6598f908e2fb",
+        "pnr_imported_netlist": "2f803a73345a9c275558fa0a6131a81f40736a5dff5183eecbae6598f908e2fb",
+        "pnr_routed_netlist": "580928611a6e960b7461d70f9a3b070afeeaef5d46fec4e4f0ebd34085bd3257",
+        "primetime_routed_netlist": "580928611a6e960b7461d70f9a3b070afeeaef5d46fec4e4f0ebd34085bd3257",
+        "pnr_routed_sdc": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463",
+        "primetime_routed_sdc": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463",
+        "pnr_routed_database": "9f6d3a2f76e7e7c6014c95b031a609b97fbacc089ede7d8985d2a17b311906cd",
+        "openrcx_input_database": "9f6d3a2f76e7e7c6014c95b031a609b97fbacc089ede7d8985d2a17b311906cd",
+        "openrcx_spef": "9e5a90ef80821ab32e044b03b63279cd413671bcbd8593c9e6d1a43033b8290d",
+        "primetime_spef": "9e5a90ef80821ab32e044b03b63279cd413671bcbd8593c9e6d1a43033b8290d",
+        "routed_def": "ae6a00b3747882912ab781edea42afcd2d4b1a2baecb6090c20b4a16bd505b86",
+        "gds": "0626db60f44333514c63e49f24dbf3880abec4deb9489460e1ea9e4265ae54f9",
+        "standard_cell_liberty": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+        "standard_cell_db": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5"
+      },
+      "dc_integrity": {
+        "link_ok": true,
+        "check_design_ok": true,
+        "check_timing_ok": true,
+        "timing_loop_count": 0,
+        "automatic_arc_break_count": 0,
+        "latch_count": 0,
+        "unclocked_synchronous_endpoint_count": 0,
+        "unresolved_reference_count": 0,
+        "macro_count": 0,
+        "blackbox_count": 0,
+        "register_count": 87677,
+        "clocked_register_count": 87677,
+        "electrical_violation_count": 0,
+        "setup_wns_ns": 0.000019789,
+        "setup_tns_ns": 0.0
+      },
+      "stage_completeness": {
+        "placement": true,
+        "cts": true,
+        "detailed_route": true,
+        "gds": true,
+        "openrcx": true,
+        "primetime_reports": true
+      },
+      "report_hashes": {
+        "dc_input_manifest": "e7350db01f7a82dcc8c378d31db22ac990d6c772587a0f923dbc46a5709d012f",
+        "dc_run_contract": "f8af3c066a2bfbd75785d968da4cbba7ee55c2425b645ab864a855d799e5a7ff",
+        "pnr_input_manifest": "db136cb5ac07b5b30a63e0e2e48bbccf4ce0d878fe48fc2f1e7f8929a4ff1340",
+        "pnr_log": "7e1aee965082c5ba75eda5de784347dbc44c6600d47c33f37e96e8ffe152fb92",
+        "pnr_same_run_manifest": "14fd157ac38576f341e7c8bcaefefaa5f050538b80f139bade2c6e769a9342bc",
+        "primetime_input_manifest": "eb62fffddb96245ce515a833d7a37085434df85f0180d8079ab9da83d688aa10",
+        "primetime_log": "dea705e89995e5a18ac2da7eadf7c6d68726885696af978a783fcf8a09d3c260",
+        "primetime_analysis_coverage": "63bbaa8914c552e400cc5559898d00a9a0b4fe6a9a89a2ce5a0f31f9c613fd33"
+      },
+      "route_result": {
+        "route_drc_kind": "OpenROAD detailed-route",
+        "route_drc_count": 0,
+        "antenna_net_count": 0,
+        "antenna_pin_count": 0,
+        "unrouted_net_count": 0,
+        "gds_generated": true
+      },
+      "primetime_result": {
+        "scope": "post-route extracted internal timing",
+        "setup_wns_ns": 0.387809,
+        "setup_tns_ns": 0.0,
+        "setup_violating_paths": 0,
+        "hold_wns_ns": 0.032648,
+        "hold_tns_ns": 0.0,
+        "hold_violating_paths": 0,
+        "constrained_path_coverage_percent": 100.0,
+        "analysis_coverage_untested": {
+          "total": 90,
+          "setup": 6,
+          "hold": 6,
+          "recovery": 26,
+          "removal": 26,
+          "min_pulse_width": 26
+        },
+        "unclocked_synchronous_endpoint_count": 0,
+        "max_transition_violations": 0,
+        "max_capacitance_violations": 105,
+        "max_fanout_violations": 3,
+        "external_io_model_status": "not_closed",
+        "electrical_clean": false
+      },
+      "result_maturity": {
+        "implementation_chain_status": "verified",
+        "postroute_timing_status": "verified",
+        "electrical_exceptions_status": "partial",
+        "macro_model_status": "not_applicable",
+        "macro_physical_signoff_status": "not_applicable",
+        "full_io_timing_status": "not_claimed",
+        "ocv_mmmc_status": "not_claimed",
+        "dft_status": "not_claimed",
+        "foundry_signoff_status": "not_claimed",
+        "overall_profile_maturity": "partial"
+      },
+      "caveats": [
+        "Max-capacitance and fanout violations are not setup-frequency violations.",
+        "External IO drive and delay models are absent.",
+        "Asynchronous recovery/removal checks remain untested."
+      ],
+      "nonclaims": [
+        "maximum frequency",
+        "complete electrical closure",
+        "external IO timing closure",
+        "asynchronous recovery/removal closure",
+        "OCV/MMMC",
+        "DFT",
+        "power integrity",
+        "formal LEC",
+        "foundry signoff",
+        "silicon result"
+      ]
+    },
+    "rv32ima_sv32_linux.sram": {
+      "claim_ids": [
+        "linux_sram_nangate45_dc_frequency",
+        "linux_sram_nangate45_postroute_frequency",
+        "linux_sram_nangate45_standard_cell_area",
+        "linux_sram_nangate45_core_area"
+      ],
+      "identity": {
+        "profile": "rv32ima_sv32_linux",
+        "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+        "execution_head": "fd044b844fe48a90b347bf68f51085795e8df0a8",
+        "source_set_sha256": "19a6008ae668be7da3b62fa512ac8a6a003db03985611a2f06b07999676c2e0c",
+        "config_sha256": "5c6a149509d82a0015b84a5ba02cf4285edc37a3509bb165078022107574ae79",
+        "top_module": "cpu_top",
+        "memory_mode": "sram_macro",
+        "macro_count": 4,
+        "blackbox_count": 0
+      },
+      "run_identity": {
+        "dc_run_id": "linux_sram_fd044b84_20260728T091128Z/dc_300mhz",
+        "route_run_id": "linux_sram_pnr200_fd044b84_20260728T1015Z/pnr_200mhz",
+        "primetime_run_id": "linux_sram_fd044b84_20260728T091128Z/pt_200mhz",
+        "routed_netlist_run_id": "linux_sram_pnr200_fd044b84_20260728T1015Z/pnr_200mhz",
+        "routed_sdc_run_id": "linux_sram_pnr200_fd044b84_20260728T1015Z/pnr_200mhz",
+        "spef_run_id": "linux_sram_pnr200_fd044b84_20260728T1015Z/pnr_200mhz"
+      },
+      "frequency": {
+        "dc_mhz": 300,
+        "dc_period_ns": 3.333333,
+        "postroute_mhz": 200,
+        "pnr_period_ns": 5.0,
+        "primetime_period_ns": 5.0
+      },
+      "area": {
+        "standard_cell_area_um2": 198085.0,
+        "standard_cell_area_mm2": 0.198085,
+        "core_area_um2": 1049500.0,
+        "core_area_mm2": 1.0495,
+        "die_area_um2": 1138460.0,
+        "utilization": 0.447476
+      },
+      "constraint_hashes": {
+        "source_sdc_sha256": "66d4d4242384d8dc5f0f031e7540eae35855f0acf6c099eea97f3230ec431078",
+        "dc_mapped_sdc_sha256": "9ed1518086d2df5a02ec4230a2fb13b49dcc2269379ff4a9aa93f2e3bccddd38",
+        "pnr_input_sdc_sha256": "f760c672479abc3359e941e6aac4e346015d756f0c8e6202046dc5387eef585f",
+        "routed_sdc_sha256": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463"
+      },
+      "role_hashes": {
+        "dc_mapped_netlist": "1b5b9bc25f0deed385accefbb7cf700305f55656597b96f37981c59c2d62d1a1",
+        "pnr_input_netlist": "1b5b9bc25f0deed385accefbb7cf700305f55656597b96f37981c59c2d62d1a1",
+        "pnr_imported_netlist": "1b5b9bc25f0deed385accefbb7cf700305f55656597b96f37981c59c2d62d1a1",
+        "pnr_routed_netlist": "8f4773e844331e0dd266fc2a4d193ab1c795e7e9297bbe3a790dec835f6ec2a5",
+        "primetime_routed_netlist": "8f4773e844331e0dd266fc2a4d193ab1c795e7e9297bbe3a790dec835f6ec2a5",
+        "pnr_routed_sdc": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463",
+        "primetime_routed_sdc": "d1f0677e04720688cd5a71c9b479ec96fc4fd31ef916161abe59fa1afbc21463",
+        "pnr_routed_database": "f26fc7168ed17974ca03aa456dbb1fd2750491af46570466561a7326613bd81f",
+        "openrcx_input_database": "f26fc7168ed17974ca03aa456dbb1fd2750491af46570466561a7326613bd81f",
+        "openrcx_spef": "58bbc8695911df8d137899637fdbd2490e0bc0c236e72080915f441d5d0035e4",
+        "primetime_spef": "58bbc8695911df8d137899637fdbd2490e0bc0c236e72080915f441d5d0035e4",
+        "routed_def": "250292d725c33dae015985d8ad42358def95e35e07fdb6e5cdf59dedd37cf009",
+        "gds": "ef3ef372ee32fbe0301d38895cff229484a2aefae58a5a92843c75e5b673d20d",
+        "standard_cell_liberty": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1",
+        "standard_cell_db": "c6da1f0e7a7f445c0476d1e6bf6860c9815fe4f50c9ce138264a581af59e4cb5",
+        "dcache_liberty": "fcf7decbd3ce17d90a786179f477ee2221d22487be2eb07f4fdb76467d16a9e9",
+        "dcache_db": "7af02d9f5427b66a4e12d9ff6ae40e78e0d18e17be3a2b23eaee2b6efcab89a4",
+        "icache_liberty": "b5a45317cf94eee457aa24e811998849f00c2fb7b208966552a7795ea0df1970",
+        "icache_db": "79ce8ca64fc00859ce6193ed107a3f1793bda70330c255b70d160276a6e9b9cf"
+      },
+      "dc_integrity": {
+        "link_ok": true,
+        "check_design_ok": true,
+        "check_timing_ok": true,
+        "timing_loop_count": 0,
+        "automatic_arc_break_count": 0,
+        "latch_count": 0,
+        "unclocked_synchronous_endpoint_count": 0,
+        "unresolved_reference_count": 0,
+        "macro_count": 4,
+        "blackbox_count": 0,
+        "register_count": 22017,
+        "clocked_register_count": 22017,
+        "electrical_violation_count": 0,
+        "setup_wns_ns": 0.0000827312,
+        "setup_tns_ns": 0.0
+      },
+      "stage_completeness": {
+        "placement": true,
+        "cts": true,
+        "detailed_route": true,
+        "gds": true,
+        "openrcx": true,
+        "primetime_reports": true
+      },
+      "report_hashes": {
+        "dc_input_manifest": "dd2b83e792d32b86ef266ef4273277dd99d40a15af064f7c65df09addc184b5f",
+        "dc_run_contract": "2c53b5213531a078da11a2cfbe8e1a38c1efe4701cc7a87a6309a25c79ed03ec",
+        "pnr_input_manifest": "867c60f9eb7c48b15e0bb9bbeca06afa12f372798d79bf0fc1031b6ce2e4deba",
+        "pnr_log": "c9cd5a17251e1bc19cf6cfd7d8ec256fab529aa48758f46a257b2130e040cb5f",
+        "pnr_same_run_manifest": "609b72f7dd126f8ddad5636e7a46808ae7f0503d921a23355269968dac1b26ed",
+        "primetime_input_manifest": "f242142b7c95428d5db45e3241245045093737e93e8e8ab23c2e767d826f894c",
+        "primetime_log": "fb91caf2b6444f892f1b098d45bd6bef94ed19b0042f970cb49e96c76413773b",
+        "primetime_analysis_coverage": "4e797c43315a33a562583b0aeb1a75f40b910269d5eb8795257d1994a9d9f3d3"
+      },
+      "route_result": {
+        "route_drc_kind": "OpenROAD detailed-route",
+        "route_drc_count": 0,
+        "antenna_net_count": 0,
+        "antenna_pin_count": 0,
+        "unrouted_net_count": 0,
+        "gds_generated": true,
+        "openrcx_extracted_net_count": 104987,
+        "power_grid_connected": true,
+        "gds_cell_match_complete": true,
+        "gds_orphan_cell_count": 0
+      },
+      "primetime_result": {
+        "scope": "post-route extracted internal timing",
+        "setup_wns_ns": 0.720415,
+        "setup_tns_ns": 0.0,
+        "setup_violating_paths": 0,
+        "hold_wns_ns": 0.03909,
+        "hold_tns_ns": 0.0,
+        "hold_violating_paths": 0,
+        "constrained_path_coverage_percent": 100.0,
+        "analysis_coverage_untested": {
+          "total": 2,
+          "setup": 1,
+          "hold": 1,
+          "recovery": 0,
+          "removal": 0,
+          "min_pulse_width": 0
+        },
+        "unclocked_synchronous_endpoint_count": 0,
+        "min_period_violations": 0,
+        "min_pulse_width_violations": 0,
+        "max_transition_violations": 0,
+        "max_capacitance_violations": 14,
+        "max_fanout_violations": 0,
+        "rc004_visible_count": 102,
+        "rc004_suppression_total_count": 246,
+        "rc004_suppressed_count": 146,
+        "external_io_model_status": "not_closed",
+        "electrical_clean": false
+      },
+      "result_maturity": {
+        "implementation_chain_status": "verified",
+        "postroute_timing_status": "verified",
+        "electrical_exceptions_status": "partial",
+        "macro_model_status": "partial_analytical_characterization",
+        "macro_physical_signoff_status": "not_closed",
+        "full_io_timing_status": "not_claimed",
+        "ocv_mmmc_status": "not_claimed",
+        "dft_status": "not_claimed",
+        "foundry_signoff_status": "not_claimed",
+        "overall_profile_maturity": "partial"
+      },
+      "caveats": [
+        "OpenRAM analytical FreePDK45 TT, 1.0 V, 25 C macro timing is mixed with Nangate45 typical, 1.1 V, 25 C standard-cell timing.",
+        "RC-004 C-effective warnings are retained.",
+        "Macro DRC/LVS/PEX is not closed.",
+        "OCV/MMMC, DFT, formal LEC, power and power integrity are not closed.",
+        "Max-capacitance violations and absent external IO models are not setup-frequency failures."
+      ],
+      "nonclaims": [
+        "maximum frequency",
+        "complete electrical closure",
+        "macro DRC/LVS/PEX",
+        "OCV/MMMC",
+        "external IO timing closure",
+        "DFT",
+        "power integrity",
+        "formal LEC",
+        "foundry signoff",
+        "silicon result"
+      ]
+    }
+  }
+}

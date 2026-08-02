@@ -1,0 +1,65 @@
+{
+  "schema": "npc-riscv-open/linux-coremark-history-v1",
+  "generated_at": "2026-08-01T12:00:00Z",
+  "profile": "rv32ima_sv32_linux",
+  "benchmark": "AM CoreMark, 10 iterations, one context, Sv32 whole-program reset-to-ebreak window",
+  "comparison_status": "partial",
+  "baseline": {
+    "id": "sv32_no_tlb",
+    "source_ref": "4a4cbf5da1a2ba835460faa4602c9596ad382556",
+    "cycles": 27929341,
+    "retired_instructions": 3252477,
+    "whole_program_cpi": 8.587098694,
+    "configuration": "RV32IMA S-mode, Sv32 enabled, ITLB=0, DTLB=0, IF/LSU PTW active, zero-latency DPI memory",
+    "binary_sha256": null,
+    "status": "partial",
+    "status_reason": "The fixed historical handoff records source, configuration, counters and PASS, but not the baseline binary hash"
+  },
+  "optimized": {
+    "id": "sv32_tlb_store_fastmul_loadhit",
+    "source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+    "cycles": 5613603,
+    "retired_instructions": 3252481,
+    "whole_program_cpi": 1.725944902,
+    "timed_cpi": 1.725375105,
+    "binary_sha256": "50840465ecda9da48a69a4361b1a479c42428b5331b114dc694658c6928be6c5",
+    "config_sha256": "82a3448b6c29355e3249a1123f9f15f51b60b02a327a8f2950f000093eb169ea",
+    "raw_summary_sha256": "843648c6d29c0015a963478b6adc8ae5d614f98cfb1a1e360048cb664c42c945",
+    "configuration": "16-entry ITLB/DTLB, two-entry store buffer, fast MUL latency 2, forwarding and load-hit path, zero-latency DPI memory",
+    "status": "historical_verified"
+  },
+  "derived": {
+    "metric": "same_benchmark_family_speedup",
+    "formula": "baseline.whole_program_cpi / optimized.whole_program_cpi",
+    "value": 4.97530291,
+    "display_value": "approximately 4.98x",
+    "status": "partial",
+    "status_reason": "The baseline binary hash is unavailable and the two runs differ by four retired instructions"
+  },
+  "lineage": {
+    "historical_boot_source_ref": "e3a1cc91c4c00040f7180eec5e385326d9964893",
+    "optimized_source_ref": "abf66cad0f9ad02efc8beb641d4005adeaeeae0b",
+    "current_source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+    "relationship": "historical_boot_source_ref is an ancestor of optimized_source_ref, which is an ancestor of current_source_ref",
+    "current_source_exact_rerun": "not_reverified"
+  },
+  "evidence_sources": [
+    {
+      "role": "baseline_historical_handoff",
+      "git_ref": "b28e4103d1be3e46c989af2139d9d2111c19f983",
+      "logical_path": "npc/docs/linux/am-sv32-benchmark-handoff-20260611.md",
+      "sha256": "465ce940df8c7042c1190a93d8b45ee9e41acc2e64f3f09646f1827dabcff24c"
+    },
+    {
+      "role": "optimized_public_bounded_summary",
+      "logical_path": "evidence/performance/coremark.json",
+      "sha256": "21504ff1cc601d4752b5c54ff2e7270764a3cd23227f7499c1523968d8bbc99c"
+    }
+  ],
+  "claim_ids": [
+    "linux_historical_no_tlb_whole_cpi",
+    "linux_historical_optimized_whole_cpi",
+    "linux_historical_approx_speedup"
+  ],
+  "caveat": "This is a historical same-benchmark-family comparison, not a strict hash-identical A/B and not a current 0fc3de40 performance claim"
+}

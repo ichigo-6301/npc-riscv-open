@@ -1,0 +1,64 @@
+{
+  "schema": "npc-riscv-open/ooo-historical-optimization-v1",
+  "generated_at": "2026-08-01T12:00:00Z",
+  "profile": "rv32im_ooo_4k",
+  "suite": "frozen seven-workload default-profile simulation suite",
+  "epoch": "pre_combinational_loop_remediation",
+  "status": "historical_verified",
+  "frontend_supply": {
+    "source_ref": "8a6aaa3f366baac67fb9420bb6dc7819b15a4f28",
+    "baseline_cycles": 68362971,
+    "optimized_cycles": 58630924,
+    "baseline_cpi": 6.204327,
+    "optimized_cpi": 5.320735,
+    "frontend_empty_lost_slot_denominator": "total_dispatch_slots",
+    "baseline_frontend_empty_percent": 53.76,
+    "optimized_frontend_empty_percent": 23.29,
+    "mechanism": "four-entry raw FIFO, epoch-tagged ordered requests, metadata FIFO and pipelined pair-fetch service"
+  },
+  "branch_prediction": {
+    "redirect_denominator": "control_completions",
+    "stages": [
+      {
+        "id": "direct_jal",
+        "source_ref": "62d4085047a31add16f74e5ee1d81725590f4434",
+        "redirect_percent": 59.38,
+        "mechanism": "direct JAL target prediction and two-wide bundle truncation"
+      },
+      {
+        "id": "btfnt",
+        "source_ref": "a247ac438579adc514caca107f12bc862b436511",
+        "redirect_percent": 24.84,
+        "mechanism": "backward-taken forward-not-taken conditional prediction"
+      },
+      {
+        "id": "tagged_btb_bht",
+        "source_ref": "712b3633f4780bcd5da7c685883df2c30ce00b18",
+        "redirect_percent": 22.66,
+        "mechanism": "64-entry tagged BTB with confidence-gated two-bit direction counters"
+      },
+      {
+        "id": "jalr_btb_ras",
+        "source_ref": "87a0bbc45ca2817c8ae9fb3eedbd6e98f7f6cd12",
+        "redirect_percent": 17.73,
+        "mechanism": "64-entry indirect BTB and eight-entry RAS"
+      }
+    ]
+  },
+  "evidence_sources": [
+    {"role": "frontend_supply_status", "sha256": "b7a756497fcd303cc3edfb96cc8cfdd1c34783d93f74b01ed30a1d5a2da497e1"},
+    {"role": "direct_jal_status", "sha256": "ba21467fa58fa856b4ca50d9ec3b3d16cdf71d546135d03667e39e7db1f4f291"},
+    {"role": "btfnt_status", "sha256": "b607333e2bf893e9e1655e7a1c1ec298bc78f5ed6facf41d472afc6696631e85"},
+    {"role": "tagged_btb_bht_status", "sha256": "e522f4c07fe3d02c6b4759e6ea002bc913848d08f45c766d0666b6752bb91a89"},
+    {"role": "jalr_btb_ras_status", "sha256": "e90e869b47809bcff2af57043900231d4b431fd91b1425b8502ca899118f79a1"}
+  ],
+  "claim_ids": [
+    "ooo_historical_frontend_empty_baseline_percent",
+    "ooo_historical_frontend_empty_s9b_percent",
+    "ooo_historical_redirect_direct_jal_percent",
+    "ooo_historical_redirect_btfnt_percent",
+    "ooo_historical_redirect_btb_bht_percent",
+    "ooo_historical_redirect_jalr_ras_percent"
+  ],
+  "caveat": "These values characterize historical simulation checkpoints before loop remediation; they are not current no-loop RTL, backend, FPGA or silicon results"
+}

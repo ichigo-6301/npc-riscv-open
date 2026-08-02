@@ -11,9 +11,9 @@ conditions.
 
 | Profile | Architecture | Current public validation state |
 | --- | --- | --- |
-| `rv32im_single_perf` | Five-stage, single-issue RV32IM | source closure, regression, and hash-locked CoreMark+difftest verified |
-| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | E1 bounded architecture checks await this sync validation; the `abf66cad` CoreMark+difftest row is historical; complete Linux not claimed |
-| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | source closure and dual-width regression verified; CoreMark provisional at the dual-retire MMIO difftest boundary |
+| `rv32im_single_perf` | Five-stage, single-issue RV32IM | current simulation/ASIC verified; historical XC7Z100 200 MHz implementation verified with `partial` UART/ILA board observation |
+| `rv32ima_sv32_linux` | Five-stage, single-issue RV32IMA M/S + Sv32 | current bounded simulation/ASIC verified; `e3a1cc91` boot to Linux shell verified, current source not deeply rerun |
+| `rv32im_ooo_4k` | Dual-issue, dual-commit RV32IM OoO | current RTL/performance provisional; historical optimization recorded separately; backend planned |
 
 The three RTL sets are not one parameterized implementation. One build compiles
 one source set, while the public wrappers normalize only commit, halt, and
@@ -30,10 +30,18 @@ debug observation.
 - [Simulation](simulation.en.md): Profile selection, images, tracing, and
   optional difftest.
 - [Verification](verification.en.md): test scope, current results, and gaps.
-- [No-SRAM ASIC implementation](asic-implementation.en.md): DC,
+- [Dual-memory ASIC implementation](asic-implementation.en.md): LC, DC,
   OpenROAD/OpenRCX, PrimeTime, and evidence gates.
+- [Backend closure evidence](evidence/backend_closure.en.md): bounded evidence
+  for the four Single/Linux fixed-frequency implementation points.
+- [Performance optimization history](evidence/performance_history.en.md):
+  approximate Linux A/B and the historical OoO optimization epoch.
+- [System and FPGA history](evidence/system_fpga_history.en.md): Linux boot
+  lineage and layered XC7Z100 snapshots.
 - [Limitations](limitations.en.md): unestablished feature, PPA, and system-level
   conclusions.
+- [Roadmap](roadmap.en.md): unfinished work and maturity promotion gates by
+  Profile.
 
 Machine-readable source locks, Profile configurations, claims, nonclaims, and
 evidence indexes live under `delivery/`, `provenance/`, and `evidence/`. Never

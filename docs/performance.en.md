@@ -4,10 +4,13 @@
 
 This page separates the timed CoreMark interval, whole-program CPI,
 CoreMark/MHz, a finite workload aggregate, and physical implementation metrics.
-All current numbers come from
-[`evidence/performance/coremark.json`](../evidence/performance/coremark.json).
-`make performance-check` validates formulas, input hashes, claims, and both
-language surfaces.
+CoreMark numbers come from
+[`evidence/performance/coremark.json`](../evidence/performance/coremark.json),
+while backend numbers come from
+[`evidence/implementation/nangate45_fixed_points.json`](../evidence/implementation/nangate45_fixed_points.json).
+`make performance-check` validates benchmark formulas and input identity;
+`make implementation-check` validates backend claims, D11 identity, role
+hashes, and both language surfaces.
 
 ## Metric definitions
 
@@ -48,10 +51,24 @@ row remains provisional.
 
 ## Linux private/public parity
 
-The public Profile and private history both lock RTL commit
-`abf66cad0f9ad02efc8beb641d4005adeaeeae0b` and
-`NPC_DCACHE_WRITE_ALLOCATE=0`. The same canonical Sv32 binary has an identical
-CoreMark marker interval in both harnesses:
+### Historical optimization A/B
+
+Whole-program counters from the same Sv32 CoreMark benchmark family record a
+no-TLB point of `27,929,341 / 3,252,477 = 8.587098694 CPI` (`evidence:linux_coremark_history_public`).
+The optimized point is `5,613,603 / 3,252,481 = 1.725944902 CPI` (`evidence:linux_coremark_history_public`). Same-clock
+execution efficiency is approximately `4.9753x` (`evidence:linux_coremark_history_public`).
+This A/B is `partial`: the baseline
+binary hash is unavailable, retired counts differ by four, and current
+`0fc3de40` has not been rerun with the same inputs. Resume wording may round it
+to "about 8.59 to 1.73, about 4.98x," but must not call it a strict same-binary
+A/B. See [Performance optimization history](evidence/performance_history.en.md).
+
+The historical CoreMark evidence in the table locks RTL commit
+`abf66cad0f9ad02efc8beb641d4005adeaeeae0b`; the current public Profile and ASIC
+source lock have moved to `0fc3de40c4e0b231c65945c9dc1711f084688c04`.
+Both source points use `NPC_DCACHE_WRITE_ALLOCATE=0`. The same canonical Sv32
+binary has an identical CoreMark marker interval in the historical private and
+public harnesses:
 
 | Harness | Pre cycles / instructions | Timed cycles / instructions | Post cycles / instructions | Whole cycles / instructions | Evidence |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -59,9 +76,9 @@ CoreMark marker interval in both harnesses:
 | Public headless runtime | 313,878 / 184,284 | 5,278,164 / 3,059,140 | 21,561 / 9,057 | 5,613,603 / 3,252,481 | `evidence:coremark_public_current` |
 
 Both timed CPI values are 1.725375105 (`evidence:coremark_public_current`). This
-evidence is locked to `abf66cad`; current source lock `d3caf5fe` contains the
-E1 I-cache exception-metadata ownership change, DCache and trigger declaration-order
-fixes, and a CSR reset expansion active only under `NPC_ASIC`. The production
+evidence is locked to `abf66cad`; current source lock `0fc3de40` contains the
+E1 I-cache exception-metadata ownership change, DCache, trigger, store-buffer
+drain-valid, DTLB translated-address, memory-response, and top-level control declaration-order fixes, a CSR reset expansion active only under `NPC_ASIC`, and explicit non-DPI statistic-net widths. The production
 simulation path is unchanged, but it still needs the same binary/config
 rerun before promotion. The
 whole-program difference is explained by the old harness reset/counter index
@@ -96,19 +113,44 @@ set has not yet been rerun through the current public entrypoint, so it remains
 `provisional` (`nonclaim:ooo_public_cpi_not_yet_claimed`).
 
 The earlier Linux checkpoint `e3a1cc91c4c00040f7180eec5e385326d9964893`
-has only an approximate historical CoreMark CPI of 1.98 (`nonclaim:linux_prior_checkpoint_cpi_not_claimed`); it is not a result of the
-current `abf66cad` Profile.
+has only an approximate historical CoreMark CPI of 1.98 (`nonclaim:linux_prior_checkpoint_cpi_not_claimed`); it is neither a result of the
+current public `0fc3de40` source lock nor the `abf66cad` CoreMark evidence point
+above.
 
-## Implementation data
+In the historical pre-loop-remediation seven-workload simulation epoch, OoO
+frontend-empty rate moved from `53.76%` to `23.29%` using total dispatch slots
+as the denominator. The branch-prediction chain moved redirects per control
+completion through `59.38%`, `24.84%`, `22.66%`, and `17.73%`. These values
+describe historical mechanism effects only; they do not transfer to current
+loop-free RTL or any backend result. See
+[Performance optimization history](evidence/performance_history.en.md)
+(`evidence:ooo_historical_optimization_public`).
 
-| Profile | Absolute CoreMark score | Closed frequency | Area | Power | State |
+## Nangate45 academic fixed-frequency points
+
+The four rows below come from the D11 source/config/tool/library identity audit.
+The DC point and OpenROAD/OpenRCX/PrimeTime point use independent clocks. The
+physical frequency is not inferred from DC WNS and is not called Fmax.
+
+| Profile / memory | DC / physical | PT setup / hold WNS | P&R std-cell / core area | Macros | Maturity |
 | --- | ---: | ---: | ---: | ---: | --- |
-| `rv32im_single_perf` | — | — | — | — | `not_claimed` |
-| `rv32ima_sv32_linux` | — | — | — | — | `not_claimed` |
-| `rv32im_ooo_4k` | — | — | — | — | `not_claimed` |
+| `rv32im_single_perf` / registers | 540 / 425 MHz | +0.025646 / +0.063219 ns | 0.679497 / 2.614530 mm² | 0 | internal fixed point `verified`; `evidence:single_linux_nangate45_backend_public` |
+| `rv32im_single_perf` / SRAM | 600 / 475 MHz | +0.013556 / +0.047904 ns | 0.149292 / 0.858801 mm² | 4 | P&R/timing `verified`, macro model `partial`; `evidence:single_linux_nangate45_backend_public` |
+| `rv32ima_sv32_linux` / registers | 280 / 200 MHz | +0.387809 / +0.032648 ns | 0.717964 / 2.825040 mm² | 0 | internal fixed point `verified`; `evidence:single_linux_nangate45_backend_public` |
+| `rv32ima_sv32_linux` / SRAM | 300 / 200 MHz | +0.720415 / +0.039090 ns | 0.198085 / 1.049500 mm² | 4 | P&R/timing `verified`, macro model `partial`; `evidence:single_linux_nangate45_backend_public` |
+| `rv32im_ooo_4k` / registers or SRAM | — | — | — | — | backend `planned`; `nonclaim:ooo_ppa_timing_not_claimed` |
 
-Simulation CPI or CoreMark/MHz cannot establish frequency, area, or power.
-Historical DC stress records remain in machine-readable nonclaims but do not
-populate the current implementation table. See the
-[CoreMark evidence](evidence/coremark_reproduction.en.md),
-[Verification](verification.en.md), and [Limitations](limitations.en.md).
+All four completed points report zero detailed-route DRC, antenna net/pin, and
+unrouted-net counts. PrimeTime setup/hold TNS and violating-path counts are
+also zero. SRAM standard-cell area excludes the four macros, so cross-memory
+comparison must use the explicitly labeled core footprint while retaining the
+macro organization. See the [backend evidence](evidence/backend_closure.en.md)
+for role hashes, run identities, coverage, and caveats.
+
+These results verify top-level physical implementation and internal extracted
+setup/hold only. Max capacitance, external IO drive/delay, the analytical
+OpenRAM model, `RC-004`, macro DRC/LVS/PEX, OCV/MMMC, DFT, formal LEC,
+power/PI, foundry signoff, and silicon correlation remain open. Power and an
+absolute CoreMark score remain `not_claimed`. See
+[Verification](verification.en.md), [Limitations](limitations.en.md), and the
+[Roadmap](roadmap.en.md).

@@ -1,0 +1,124 @@
+{
+  "schema": "npc-riscv-open/fpga-history-v1",
+  "generated_at": "2026-08-01T12:00:00Z",
+  "profile_family": "rv32im_single_perf",
+  "tool": "Vivado 2022.2",
+  "part": "xc7z100ffg900-2",
+  "clock": {"name": "clk_fpga_0", "frequency_mhz": 200, "period_ns": 5.0},
+  "source_manifest_algorithm": "SHA256 of LF-delimited, lexicographically sorted '<file_sha256>  <project_relative_path>' rows covering riscv.xpr plus project RTL, BD, XDC and COE sources",
+  "snapshots": [
+    {
+      "id": "single_board_20260507",
+      "date": "2026-05-07",
+      "architecture": "historical five-stage RV32IM predecessor before forwarding and branch prediction",
+      "source_identity": {"kind": "historical_uncommitted_vivado_snapshot", "source_manifest_sha256": "22b79e835c05ea34c7628997d2e2880c85065eea24ad125c66b9b52a6669ae48"},
+      "maturity": {
+        "fpga_source_ready": "partial",
+        "fpga_rtl_simulation": "not_claimed",
+        "fpga_synthesis": "verified",
+        "fpga_implementation": "verified",
+        "fpga_timing": "verified",
+        "fpga_bitstream": "verified",
+        "fpga_board_smoke": "partial",
+        "fpga_workload_validation": "partial"
+      },
+      "timing": {"setup_wns_ns": 0.083, "setup_tns_ns": 0.0, "hold_whs_ns": 0.044, "hold_ths_ns": 0.0, "unconstrained_internal_endpoints": 0},
+      "route": {"routing_errors": 0, "routed_drc_warnings": 4, "drc_clean": false},
+      "artifacts": {
+        "synthesis_checkpoint_sha256": "31a8eb245fae4ddd36ac64736924b4348dacfbded0328545e5d5e96d0e061a91",
+        "routed_checkpoint_sha256": "34552602573ff2f89fbdfc85de5c9ea4c8dcea3b58a3cb6db53bdfec01fd8cc6",
+        "timing_report_sha256": "09cb5a8d92a8aa2a0ccfe734e4605f19fbbcab805414e0b77232406a23b00b73",
+        "route_report_sha256": "03d32fc54a7e4fb6975336f9cded73dbbda2068a13c5b655c18176177ffd2b0d",
+        "drc_report_sha256": "a8804e4481e8a0d1ff221f93843c148a54f294779848f040d96231a0220ad7ee",
+        "implementation_bitstream_sha256": "224c4e5fd078d130d5ca45d264561316bc6b8e0c128ae9168bf9b71a4dfa7795",
+        "debug_probes_sha256": "804b7f8a37c249baeccd0ddb80ecf4cd6552569d457ea7eaa39d67698603c887",
+        "vitis_xsa_sha256": "17abc3ec67509473f9139e746d6c426f76e94f538c0afa7f328b8ee821e34cd0",
+        "vitis_bitstream_sha256": "025ed26a8653e58eb0f9db2a05e7281ff68b1c6b027183cccd60cbd69b6757a4",
+        "vitis_software_elf_sha256": "37d07f71bc2e40e003fcb719a85e302e84ce61e01432ba3a093a307c09dc2d2c",
+        "uart_log_sha256": "0de04b5b0c193b439aa857babfce2723e0c6eb958188f479d7c1ffcd48b69bd5",
+        "ila_csv_sha256": "ed8562025618ef35b18ae6d8c692a35938920e38a8b79498e3841c96735e4511"
+      },
+      "workload": {
+        "name": "CoreMark board observation",
+        "isa": "rv32em_zicsr",
+        "abi": "ilp32e",
+        "binary_sha256": "e7b44b22a5ca7f8eb62e3d083e3a89ae333a51c55add055a934b02c11e5136f2",
+        "coe_sha256": "0a80d5709131799f0376144e73af9a8e73d57c428d441e5556a60ed18f1c72cd",
+        "uart_marker": "CoreMark PASS",
+        "ila_valid_commit_samples": 49,
+        "ila_binary_instruction_matches": 49,
+        "standardized_coremark_score_claimed": false
+      },
+      "caveat": "UART and ILA observations exist, but no Hardware Manager transcript binds the exact programmed bitstream; the RV32E workload also does not validate upper GPR use"
+    },
+    {
+      "id": "single_forward_20260512",
+      "date": "2026-05-12",
+      "architecture": "five-stage RV32IM snapshot with cross-stage forwarding",
+      "source_identity": {"kind": "historical_uncommitted_vivado_snapshot", "source_manifest_sha256": "dc9ac7981ee3c6c4cade2a427409af3e8f3f5c56045a390b75efc472c73a7256"},
+      "maturity": {
+        "fpga_source_ready": "partial",
+        "fpga_rtl_simulation": "not_claimed",
+        "fpga_synthesis": "verified",
+        "fpga_implementation": "verified",
+        "fpga_timing": "verified",
+        "fpga_bitstream": "not_claimed",
+        "fpga_board_smoke": "not_claimed",
+        "fpga_workload_validation": "not_claimed"
+      },
+      "timing": {"setup_wns_ns": 0.010, "setup_tns_ns": 0.0, "hold_whs_ns": 0.040, "hold_ths_ns": 0.0, "unconstrained_internal_endpoints": 0},
+      "route": {"routing_errors": 0, "routed_drc_warnings": 6, "drc_clean": false},
+      "artifacts": {
+        "synthesis_checkpoint_sha256": "2c1736bcb499b2731723937e9742c88b14ad3de9606d24f0524bcb785dc4a293",
+        "routed_checkpoint_sha256": "facbdd113e237773d6a7194f9df7f0a390843d83d7ff506ef3bdca8908e567d7",
+        "timing_report_sha256": "bd43f1af0f37d57df2f5b6e64f390cdde2e0a929a9cae5c423966143a9ccecab",
+        "route_report_sha256": "62227cbd96a34810dd6fcfa4fff89864a9361b94f0819d004b824c782f6315f8",
+        "drc_report_sha256": "811ac13af96480f59bfe2e76eee114e7719ab83fb8c8600c5c202e43c2619270",
+        "copied_older_xsa_sha256": "17abc3ec67509473f9139e746d6c426f76e94f538c0afa7f328b8ee821e34cd0"
+      },
+      "caveat": "The copied XSA predates this routed run and cannot support bitstream or board claims"
+    },
+    {
+      "id": "single_predict_20260515",
+      "date": "2026-05-15",
+      "architecture": "five-stage RV32IM snapshot with forwarding and 128-entry BTB plus two-bit PHT",
+      "source_identity": {"kind": "historical_uncommitted_vivado_snapshot", "source_manifest_sha256": "58e3681a0455c11ba24a9d3640ea0152c4d4d8c22ff5c59733f131940af32d4d"},
+      "maturity": {
+        "fpga_source_ready": "partial",
+        "fpga_rtl_simulation": "not_claimed",
+        "fpga_synthesis": "verified",
+        "fpga_implementation": "verified",
+        "fpga_timing": "verified",
+        "fpga_bitstream": "not_claimed",
+        "fpga_board_smoke": "not_claimed",
+        "fpga_workload_validation": "not_claimed"
+      },
+      "timing": {"setup_wns_ns": 0.010, "setup_tns_ns": 0.0, "hold_whs_ns": 0.045, "hold_ths_ns": 0.0, "unconstrained_internal_endpoints": 0},
+      "route": {"routing_errors": 0, "routed_drc_warnings": 6, "drc_clean": false},
+      "artifacts": {
+        "synthesis_checkpoint_sha256": "25ca9e123e4e2a6ba65889d59b8a8faf64aad38b37d753a86b415daab2faf05c",
+        "routed_checkpoint_sha256": "19191b1f2f6f49e1ff7784dea24572af0745ee7da1191a366494ca6dc2532642",
+        "timing_report_sha256": "f91dd1d8533b6eeb026d17cf1005976622cbfa7c1a067ce6f3228f216762236a",
+        "route_report_sha256": "ad4ff27082664a3540b3a284f20b046ccd96fee9ff43636e741504fa97df92af",
+        "drc_report_sha256": "c24bec078622d586eeccd899ee453308b53e9a0fb7189e3754ddd6151fd0af9c",
+        "copied_older_xsa_sha256": "17abc3ec67509473f9139e746d6c426f76e94f538c0afa7f328b8ee821e34cd0"
+      },
+      "caveat": "The copied XSA predates this routed run and cannot support bitstream or board claims"
+    }
+  ],
+  "current_profile_source_ref": "f76de57479b798aca7468f999c386bb4cb5fce02",
+  "current_profile_board_status": "not_claimed",
+  "claim_ids": [
+    "single_fpga_original_routed_frequency",
+    "single_fpga_original_setup_wns",
+    "single_fpga_original_hold_whs",
+    "single_fpga_historical_board_observation",
+    "single_fpga_forward_routed_frequency",
+    "single_fpga_forward_setup_wns",
+    "single_fpga_forward_hold_whs",
+    "single_fpga_predict_routed_frequency",
+    "single_fpga_predict_setup_wns",
+    "single_fpga_predict_hold_whs"
+  ],
+  "caveat": "Historical source snapshots are not identified as the current f76de574 source lock, and no FPGA result is a silicon or ASIC claim"
+}

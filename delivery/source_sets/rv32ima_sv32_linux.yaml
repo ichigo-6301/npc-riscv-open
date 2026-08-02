@@ -2,13 +2,13 @@
   "allowlist_manifest": "provenance/source_allowlist.json",
   "allowlist_profile_key": "rv32ima_sv32_linux",
   "blob_hash_policy": "required_at_export",
-  "commit_sha": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+  "commit_sha": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
   "compatibility_notes": [
     "The exact per-file source, destination, Git blob, byte count, and SHA256 records live only in the canonical JSON allowlist.",
     "OpenSBI, Linux, NEMU, AM, DTB, and KVM payloads are external dependencies and are never source-exported by this set.",
     "The source snapshot includes the later structural RTL layout (CSR, frontend, LSU, MMU, pipeline, statistic, and top subdirectories); this is a source refactor, not a change to the public wrapper ABI.",
     "The native board top is excluded; the public wrapper provides only the headless CPU boundary. Bounded OpenSBI, interrupt, MMIO, and Sv32 validation remain separate validation gates.",
-    "E1 localizes I-cache exception metadata; 34f13ec4 moves DCache declarations and the trigger-enable localparam ahead of task references, and d3caf5fe expands the CSR reset only under NPC_ASIC so DC O-2018 sees one nonblocking assignment style. The production simulation path is unchanged. Performance evidence from abf66cad remains historical until rerun on this exact source lock."
+    "E1 localizes I-cache exception metadata; the DC compatibility commits order DCache, trigger-enable, store-buffer drain-valid, DTLB translated-address, memory-response, and top-level control declarations before their first use, while d3caf5fe expands the CSR reset only under NPC_ASIC so DC O-2018 sees one nonblocking assignment style and 0fc3de40 preserves explicit statistic-net widths without DPI. The production simulation path is unchanged. Performance evidence from abf66cad remains historical until rerun on this exact source lock."
   ],
   "destination_root": "rtl/profiles/rv32ima_sv32_linux",
   "groups": {
@@ -85,7 +85,7 @@
   "source_count": {
     "rtl_files": 51
   },
-  "source_ref": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
+  "source_ref": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
   "source_root": "npc",
   "source_set_id": "rv32ima_sv32_linux"
 }

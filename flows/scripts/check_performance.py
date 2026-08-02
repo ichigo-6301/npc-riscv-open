@@ -79,12 +79,23 @@ def check_claims(root: Path, runs: dict, errors: list[str]) -> None:
     if not isinstance(raw_claims, list):
         errors.append("public claims metadata has no claims list")
         return
+    claim_items = [
+        item for item in raw_claims
+        if isinstance(item, dict) and item.get("id")
+    ]
     claims = {
         str(item.get("id")): item for item in raw_claims
         if isinstance(item, dict) and item.get("id")
     }
-    if set(claims) != set(EXPECTED_CLAIMS):
-        errors.append("public verified CoreMark claim set has drifted")
+    if len(claims) != len(claim_items):
+        errors.append("public claims metadata contains duplicate ids")
+    missing_claims = set(EXPECTED_CLAIMS) - set(claims)
+    if missing_claims:
+        errors.append(
+            "public verified CoreMark claim subset has drifted: missing {}".format(
+                ",".join(sorted(missing_claims))
+            )
+        )
     for claim_id, (profile, field) in EXPECTED_CLAIMS.items():
         claim = claims.get(claim_id)
         if claim is None or profile not in runs:
@@ -137,10 +148,9 @@ def check_evidence(root: Path, manifest: dict, errors: list[str]) -> None:
         return
     if set(runs) != set(EXPECTED_STATUS):
         errors.append("CoreMark evidence must contain exactly the three public Profiles")
-    documents = [
-        root / "README.md", root / "README.en.md",
-        root / "docs/performance.md", root / "docs/performance.en.md",
-    ]
+    # README carries the compact, separately validated interview summary.
+    # Full nine-decimal values remain mandatory on the detailed performance pages.
+    documents = [root / "docs/performance.md", root / "docs/performance.en.md"]
     for profile, record in runs.items():
         if not isinstance(record, dict):
             errors.append(f"CoreMark evidence run {profile} is not an object")

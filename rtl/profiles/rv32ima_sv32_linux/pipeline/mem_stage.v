@@ -337,6 +337,9 @@ module mem_stage (
     wire mreq_is_atomic_sc = mreq_atomic_en_r && (mreq_atomic_op_r == 4'd2);
     wire mreq_is_atomic_amo = mreq_atomic_en_r &&
         (mreq_atomic_op_r >= 4'd3) && (mreq_atomic_op_r <= 4'd11);
+    wire mem_resp_fire = mresp_valid_r && dbus_resp_valid && dbus_resp_ready;
+    wire mresp_is_store = (mresp_mem_wr_r == 2'b11);
+    wire mresp_is_atomic_lr = mresp_atomic_en_r && (mresp_atomic_op_r == 4'd1);
     // LR/SC 时序要点：
     // - LR 的reservation在“收到LR读响应”这一拍才真正建立；
     // - 若下一条SC已提前进入mreq队列，且恰好在同一拍尝试判定成功与否，
@@ -395,7 +398,6 @@ module mem_stage (
     wire [31:0] mresp_split_load_data =
         mresp_split_first_data_r | (dbus_resp_data << {mresp_split_first_bytes_r[1:0], 3'b000});
 
-    wire mem_resp_fire = mresp_valid_r && dbus_resp_valid && dbus_resp_ready;
     // 为避免在请求/响应同拍交错时重复发射同一条访存，先收敛为“单未决访存”：
     // 只有当mresp槽为空时才允许发起新的mreq。
     // 这会牺牲一点吞吐，但能保证LR/SC/AMO语义和提交顺序稳定。
@@ -518,8 +520,6 @@ module mem_stage (
     wire mresp_selected = mresp_valid_r;
     wire skid_selected = !mresp_valid_r && !mreq_valid_r && skid_valid_r;
     wire mresp_is_load = (mresp_mem_wr_r == 2'b01) && !mresp_atomic_en_r;
-    wire mresp_is_store = (mresp_mem_wr_r == 2'b11);
-    wire mresp_is_atomic_lr = mresp_atomic_en_r && (mresp_atomic_op_r == 4'd1);
     wire mresp_is_atomic_sc = mresp_atomic_en_r && (mresp_atomic_op_r == 4'd2);
     wire mresp_is_atomic_amo = mresp_atomic_en_r &&
         (mresp_atomic_op_r >= 4'd3) && (mresp_atomic_op_r <= 4'd11);

@@ -2,6 +2,29 @@
   "commit_sha": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
   "default_run_config": "rv32im_ooo_4k_smoke",
   "design_config": "rv32im_ooo_4k",
+  "implementation_results": {
+    "registers": {
+      "implementation_chain_status": "planned",
+      "memory_mode": "register_expanded",
+      "postroute_internal_timing_status": "planned",
+      "synthesis_status": "planned"
+    },
+    "sram": {
+      "implementation_chain_status": "planned",
+      "memory_mode": "sram_macro",
+      "postroute_internal_timing_status": "planned",
+      "synthesis_status": "planned"
+    }
+  },
+  "historical_evidence": {
+    "optimization_epoch": {
+      "current_loop_free_rtl_inheritance": "not_claimed",
+      "evidence_id": "ooo_historical_optimization_public",
+      "epoch": "pre_combinational_loop_remediation",
+      "scope": "seven-workload historical simulation",
+      "status": "verified_historical_mechanism_metrics"
+    }
+  },
   "intent": "Dual-dispatch dual-commit RV32IM out-of-order performance profile with 4 KiB instruction and data structures",
   "kind": "profile",
   "maturity": "development",
@@ -13,6 +36,7 @@
     "headless_verilator": true,
     "native_rtl_preserved": true,
     "nvboard_excluded": true,
+    "verified_implementation_claims": false,
     "verified_performance_claims": false
   },
   "public_filelist": "filelists/rv32im_ooo_4k.f",
@@ -27,11 +51,12 @@
     "headless_verilator_migration": "verified",
     "isa_tests": "verified",
     "performance_benchmark": "provisional",
-    "physical_design": "not_claimed",
+    "physical_design": "planned",
+    "postroute_sta": "planned",
     "public_fresh_clone": "verified",
     "rtl_regression": "verified",
     "signoff_sta": "not_claimed",
-    "synthesis": "not_claimed",
+    "synthesis": "planned",
     "synthesis_lint": "verified"
   },
   "target_config": "verilator_headless",

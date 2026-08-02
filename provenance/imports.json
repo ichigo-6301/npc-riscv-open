@@ -2,18 +2,61 @@
   "profiles": [
     {
       "entry_count": 33,
+      "implementation_source_sets": {
+        "registers": {
+          "logical_entry_count": 33,
+          "overlay_destinations": [],
+          "source_set_sha256": "8124c7d9d41959d0827af3c4f54c4154b90a4a116e46074e197afe207c751f12"
+        },
+        "sram": {
+          "logical_entry_count": 33,
+          "overlay_destinations": [
+            "rtl/asic/overlays/rv32im_single_perf_sram/cache/CacheDataArray1R1W.v",
+            "rtl/asic/overlays/rv32im_single_perf_sram/cache/DCache.v",
+            "rtl/asic/overlays/rv32im_single_perf_sram/cache/ICache.v"
+          ],
+          "source_set_sha256": "d5296a9dbba4a47ef061b286d6fac90a49770b7a2d46f72f05a12dfbfc2bfccb"
+        }
+      },
+      "memory_mode_overlay_commits": [
+        "176d4fd74da61ec681816630854501b233213982"
+      ],
+      "memory_mode_overlay_count": 3,
       "profile_id": "rv32im_single_perf",
       "source_commit": "f76de57479b798aca7468f999c386bb4cb5fce02",
       "source_sha256": "0f96c5e756a6fb99483ef384c217d384a7107d4b0dfbac66cfbed2e154ddbc2b"
     },
     {
       "entry_count": 51,
+      "implementation_source_sets": {
+        "registers": {
+          "logical_entry_count": 51,
+          "overlay_destinations": [],
+          "source_set_sha256": "19a6008ae668be7da3b62fa512ac8a6a003db03985611a2f06b07999676c2e0c"
+        },
+        "sram": {
+          "logical_entry_count": 51,
+          "overlay_destinations": [],
+          "source_set_sha256": "19a6008ae668be7da3b62fa512ac8a6a003db03985611a2f06b07999676c2e0c"
+        }
+      },
+      "memory_mode_overlay_commits": [],
+      "memory_mode_overlay_count": 0,
       "profile_id": "rv32ima_sv32_linux",
-      "source_commit": "d3caf5fe7d33bb7868f9813f86ee3def68625db8",
-      "source_sha256": "f634264ce5f1909cd7beff780004ae398ac61cdd06a5b1670d195f44d53dd8b1"
+      "source_commit": "0fc3de40c4e0b231c65945c9dc1711f084688c04",
+      "source_sha256": "144483880032065c7a83d8841420b220494e47101abc7cfcaf876aa65850191c"
     },
     {
       "entry_count": 63,
+      "implementation_source_sets": {
+        "registers": {
+          "logical_entry_count": 63,
+          "overlay_destinations": [],
+          "source_set_sha256": "de58f86b026b58e38a68ac12e3f049950b5b93004d3931d63361b37e2d745a7d"
+        }
+      },
+      "memory_mode_overlay_commits": [],
+      "memory_mode_overlay_count": 0,
       "profile_id": "rv32im_ooo_4k",
       "source_commit": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
       "source_sha256": "1693a0966ccc0c7cccc55299e0bdb0394b008f295fb5b7c6345822f2aecee770"

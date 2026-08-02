@@ -1,5 +1,5 @@
-// D7 synthesis-only XPM compatibility models. They preserve the Linux cache
-// port/latency contract while expanding storage into ordinary registers.
+// ASIC-only XPM compatibility models. Register mode expands storage into
+// ordinary registers; SRAM mode binds only the exact Linux 512x32 cache leaves.
 module xpm_memory_sdpram #(
     parameter integer ADDR_WIDTH_A = 1,
     parameter integer ADDR_WIDTH_B = 1,
@@ -43,6 +43,33 @@ module xpm_memory_sdpram #(
     input  logic sleep,
     input  logic [(WRITE_DATA_WIDTH_A/BYTE_WRITE_WIDTH_A)-1:0] wea
 );
+`ifdef NPC_ASIC_SRAM
+    generate
+        if (ADDR_WIDTH_A == 9 && ADDR_WIDTH_B == 9 &&
+            BYTE_WRITE_WIDTH_A == 8 && MEMORY_SIZE == 16384 &&
+            READ_DATA_WIDTH_B == 32 && READ_LATENCY_B == 1 &&
+            WRITE_DATA_WIDTH_A == 32) begin : gen_asic_icache_macro
+            wire [31:0] macro_dout;
+            wire macro_write_enable = ena && !sleep && (|wea);
+            wire macro_read_enable = enb && regceb && !sleep && !rstb;
+
+            npc_icache_data_1r1w_512x32 u_macro (
+                .clk0(clka),
+                .csb0(!macro_write_enable),
+                .addr0(addra),
+                .din0(dina),
+                .clk1(clkb),
+                .csb1(!macro_read_enable),
+                .addr1(addrb),
+                .dout1(macro_dout)
+            );
+
+            assign doutb = rstb ? '0 : macro_dout;
+        end else begin : gen_unsupported_sram_configuration
+            npc_unsupported_sram_xpm_sdpram_configuration u_unsupported();
+        end
+    endgenerate
+`else
     localparam integer DEPTH = 1 << ADDR_WIDTH_A;
     localparam integer BYTE_LANES = WRITE_DATA_WIDTH_A / BYTE_WRITE_WIDTH_A;
     logic [WRITE_DATA_WIDTH_A-1:0] mem [0:DEPTH-1];
@@ -64,6 +91,7 @@ module xpm_memory_sdpram #(
         else if (enb && regceb && !sleep)
             doutb <= mem[addrb];
     end
+`endif
 
     assign dbiterrb = 1'b0;
     assign sbiterrb = 1'b0;
@@ -112,6 +140,36 @@ module xpm_memory_tdpram #(
     input  logic [(WRITE_DATA_WIDTH_A/BYTE_WRITE_WIDTH_A)-1:0] wea,
     input  logic [(WRITE_DATA_WIDTH_B/BYTE_WRITE_WIDTH_A)-1:0] web
 );
+`ifdef NPC_ASIC_SRAM
+    generate
+        if (ADDR_WIDTH_A == 9 && ADDR_WIDTH_B == 9 &&
+            BYTE_WRITE_WIDTH_A == 8 && MEMORY_SIZE == 16384 &&
+            READ_DATA_WIDTH_A == 32 && READ_LATENCY_A == 1 &&
+            READ_DATA_WIDTH_B == 32 && READ_LATENCY_B == 1 &&
+            WRITE_DATA_WIDTH_A == 32 && WRITE_DATA_WIDTH_B == 32) begin : gen_asic_dcache_macro
+            wire [31:0] macro_dout;
+            wire macro_write_enable = ena && (|wea);
+
+            npc_dcache_data_1r1w_512x32_b8 u_macro (
+                .clk0(clka),
+                .csb0(!macro_write_enable),
+                .wmask0(wea),
+                .addr0(addra),
+                .din0(dina),
+                .clk1(clkb),
+                .csb1(!enb),
+                .addr1(addrb),
+                .dout1(macro_dout)
+            );
+
+            assign douta = '0;
+            assign doutb = macro_dout;
+        end else begin : gen_unsupported_sram_configuration
+            npc_unsupported_sram_xpm_tdpram_configuration u_unsupported();
+        end
+    endgenerate
+    wire unused_port_b_write = &{1'b0, dinb, web};
+`else
     localparam integer DEPTH = 1 << ADDR_WIDTH_A;
     localparam integer BYTE_LANES_A = WRITE_DATA_WIDTH_A / BYTE_WRITE_WIDTH_A;
     localparam integer BYTE_LANES_B = WRITE_DATA_WIDTH_B / BYTE_WRITE_WIDTH_A;
@@ -134,4 +192,5 @@ module xpm_memory_tdpram #(
             doutb <= mem[addrb];
     end
     wire unused_port_b_write = &{1'b0, dinb, web};
+`endif
 endmodule

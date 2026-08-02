@@ -253,6 +253,7 @@ module Sv32LSUPipe (
     wire req_translate = req_translate_normal;
 `endif
     wire dtlb_enabled = (`NPC_HAS_DTLB != 0);
+    wire [31:0] dtlb_lookup_paddr;
     wire [2:0] req_bytes = access_bytes(cpu_req_len);
     wire [12:0] req_end_off = {1'b0, cpu_req_vaddr[11:0]} + {10'b0, req_bytes} - 13'd1;
     wire req_cross_page = req_translate && req_end_off[12];
@@ -262,7 +263,6 @@ module Sv32LSUPipe (
     wire dtlb_lookup_valid = cpu_req_valid && cpu_req_fast_ok && req_translate && !req_cross_page && dtlb_enabled &&
         (state_r == S_IDLE) && !cpu_resp_valid && !drop_pipe_r;
     wire dtlb_lookup_hit;
-    wire [31:0] dtlb_lookup_paddr;
     wire [31:0] dtlb_lookup_pte;
     wire dtlb_lookup_level;
     wire dtlb_perm_ok = perm_ok(cpu_req_write, req_eff_priv, mstatus_i, dtlb_lookup_pte);

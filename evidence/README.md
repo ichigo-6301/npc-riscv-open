@@ -29,3 +29,18 @@ CoreMark table and Linux parity result. Single/Linux records are verified under
 their fixed external-input contracts; the OoO record carries its own
 provisional difftest boundary. Frequency, area, power, and absolute CoreMark
 score remain empty until separate evidence satisfies this policy.
+
+Historical, snapshot-scoped evidence is intentionally separate:
+
+- `performance/linux_coremark_ab.json` records the approximate/partial Linux
+  no-TLB-to-optimized comparison and current-source rerun boundary;
+- `performance/ooo_frontend_branch_ab.json` records pre-loop-remediation OoO
+  frontend and branch-prediction experiments with explicit denominators;
+- `system/linux_boot.json` records bounded Linux 6.6.141 boot markers and
+  source lineage without publishing the raw log;
+- `fpga/single_xc7z100_history.json` records three Vivado snapshots across all
+  eight FPGA maturity dimensions and rejects old-XSA promotion.
+
+`implementation/nangate45_fixed_points.json` remains the bounded source for
+the four Single/Linux academic fixed-frequency ASIC points. `make evidence-check`
+validates all current, historical, FPGA, system, and implementation identities.
