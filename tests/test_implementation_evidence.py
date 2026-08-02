@@ -11,12 +11,18 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKER_PATH = ROOT / "flows/scripts/check_implementation.py"
+DOCS_CHECKER_PATH = ROOT / "flows/scripts/check_docs.py"
 GENERATOR_PATH = ROOT / "flows/scripts/generate_showcase_assets.py"
 
 SPEC = importlib.util.spec_from_file_location("check_implementation", CHECKER_PATH)
 CHECKER = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 SPEC.loader.exec_module(CHECKER)
+
+DOCS_SPEC = importlib.util.spec_from_file_location("check_docs", DOCS_CHECKER_PATH)
+DOCS_CHECKER = importlib.util.module_from_spec(DOCS_SPEC)
+assert DOCS_SPEC.loader is not None
+DOCS_SPEC.loader.exec_module(DOCS_CHECKER)
 
 
 class ImplementationEvidenceTests(unittest.TestCase):
@@ -260,16 +266,19 @@ class ImplementationEvidenceTests(unittest.TestCase):
             CHECKER.check_document_surfaces(root, errors)
             self.assertEqual(errors, [])
 
-            english = root / "control/README.en.md"
-            english.write_text(
-                english.read_text().replace("540 / 425 MHz", "540 / 424 MHz", 1),
+            backend_english = root / "docs/evidence/backend_closure.en.md"
+            backend_english.write_text(
+                backend_english.read_text().replace(
+                    "540 / 425 MHz", "540 / 424 MHz", 1),
                 encoding="utf-8",
             )
             errors = []
             CHECKER.check_document_surfaces(root, errors)
             self.assertTrue(any("numeric row" in error for error in errors), errors)
 
-            shutil.copy2(readme_source / "README.en.md", english)
+            shutil.copy2(
+                ROOT / "docs/evidence/backend_closure.en.md", backend_english)
+            english = root / "control/README.en.md"
             marker = (
                 "<!-- claim:single_registers_nangate45_dc_frequency "
                 "maturity:verified -->"
@@ -278,6 +287,27 @@ class ImplementationEvidenceTests(unittest.TestCase):
             errors = []
             CHECKER.check_document_surfaces(root, errors)
             self.assertTrue(any("claim marker drift" in error for error in errors), errors)
+
+    def test_readme_key_results_summary_is_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name in ("README.md", "README.en.md"):
+                shutil.copy2(ROOT / name, root / name)
+            errors = []
+            DOCS_CHECKER.check_readme_showcase(root, errors)
+            self.assertEqual(errors, [])
+
+            english = root / "README.en.md"
+            english.write_text(
+                english.read_text().replace("1.4849", "1.4848", 1),
+                encoding="utf-8",
+            )
+            errors = []
+            DOCS_CHECKER.check_readme_showcase(root, errors)
+            self.assertTrue(
+                any("key-results row" in error and "1.4849" in error for error in errors),
+                errors,
+            )
 
     def test_source_set_and_functional_overlay_alignment_fail_closed(self):
         implementation = json.loads((ROOT / CHECKER.IMPLEMENTATION_PATH).read_text())

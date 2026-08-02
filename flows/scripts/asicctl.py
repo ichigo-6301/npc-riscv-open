@@ -3,6 +3,7 @@
 
 import argparse
 import datetime as dt
+from decimal import Decimal, InvalidOperation
 import hashlib
 import json
 import math
@@ -17,6 +18,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 from calculate_floorplan import calculate, calculate_with_macros, format_box
 from compare_a3_dc import run as compare_a3_dc
+from normalize_openram_lef import assert_on_grid, normalize
 from prepare_pnr_sdc import retarget
 from summarize_dc import parse_run
 from summarize_pnr import contract_values as pnr_contract_values, parse_run as parse_pnr_run
@@ -566,6 +568,36 @@ def manifest_file(root: Path, record: dict, role: str) -> Path:
     return path
 
 
+def require_canonical_normalized_lef(name: str, canonical: Path,
+                                     normalized: Path, record: dict) -> None:
+    """Bind a derived LEF to the fixed canonical view and normalization recipe."""
+    grid = Decimal("0.005")
+    try:
+        recorded_grid = Decimal(str(record.get("grid_um", "")))
+    except InvalidOperation as error:
+        raise AsicError(f"{name}: normalized LEF grid is invalid") from error
+    if recorded_grid != grid:
+        raise AsicError(f"{name}: normalized LEF grid identity mismatch")
+    changed_lines = record.get("changed_lines")
+    if isinstance(changed_lines, bool) or not isinstance(changed_lines, int):
+        raise AsicError(f"{name}: normalized LEF changed_lines is invalid")
+    try:
+        canonical_text = canonical.read_text(encoding="ascii")
+        normalized_text = normalized.read_text(encoding="ascii")
+    except (OSError, UnicodeError) as error:
+        raise AsicError(f"{name}: normalized LEF is not canonical ASCII") from error
+    expected_text, expected_changed = normalize(canonical_text, grid)
+    try:
+        assert_on_grid(normalized_text, grid)
+    except ValueError as error:
+        raise AsicError(f"{name}: normalized LEF grid validation failed: {error}") from error
+    if normalized_text != expected_text:
+        raise AsicError(
+            f"{name}: normalized LEF differs from deterministic canonical derivation")
+    if changed_lines != expected_changed:
+        raise AsicError(f"{name}: normalized LEF changed_lines mismatch")
+
+
 def load_sram_handoff(contract: dict) -> dict:
     location = os.environ.get("NPC_ASIC_SRAM_HANDOFF", "")
     if not location:
@@ -606,6 +638,12 @@ def load_sram_handoff(contract: dict) -> dict:
             raise AsicError(f"{name}: canonical Liberty identity mismatch")
         if files["lib"].get("sha256") != expected_macro["timing_view_sha256"]:
             raise AsicError(f"{name}: timing Liberty identity mismatch")
+        require_canonical_normalized_lef(
+            name,
+            resolved[name]["lef"],
+            resolved[name]["normalized_lef"],
+            files["normalized_lef"],
+        )
     return {
         "manifest": manifest,
         "manifest_path": manifest_path,
@@ -719,7 +757,9 @@ def stage_sram_views(run: Path, contract: dict, handoff: dict) -> dict:
         for source_role, output_role in (("lib", "lib"), ("normalized_lef", "lef"),
                                          ("gds", "gds")):
             source = handoff["files"][name][source_role]
-            target = destination / source.name
+            target = destination / f"{name}.{output_role}"
+            if target.exists():
+                raise AsicError(f"macro view staging collision: {target.name}")
             shutil.copy2(source, target)
             result[output_role].append(target)
     return result

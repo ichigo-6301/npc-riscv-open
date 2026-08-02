@@ -3,11 +3,14 @@
 
 import argparse
 import json
+import math
 from pathlib import Path
 import re
 import shutil
 from typing import Dict, List, Tuple
 
+from asicctl import (AsicError, HANDOFF_IDENTITY_FIELDS, build_contract,
+                     require_handoff_identity)
 from sanitize_openroad_sdc import sanitize
 from summarize_pnr import contract_values, parse_run, sha256_file
 
@@ -22,6 +25,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ASIC_MATRIX_REL = Path("flows/asic/profiles/register_expanded.json")
 ORFS_RUNTIME_IDENTITY_POLICY = (
     "exact_oci_digest_git_head_when_vcs_metadata_present_v1")
+ASIC_DEFCONFIGS = {
+    ("rv32im_single_perf", "registers"):
+        Path("configs/rv32im_single_perf_asic_defconfig"),
+    ("rv32im_single_perf", "sram"):
+        Path("configs/rv32im_single_perf_sram_asic_defconfig"),
+    ("rv32ima_sv32_linux", "registers"):
+        Path("configs/rv32ima_sv32_linux_asic_defconfig"),
+    ("rv32ima_sv32_linux", "sram"):
+        Path("configs/rv32ima_sv32_linux_sram_asic_defconfig"),
+    ("rv32im_ooo_4k", "registers"):
+        Path("configs/rv32im_ooo_4k_asic_defconfig"),
+}
 
 
 def write_json(path: Path, value: object) -> None:
@@ -139,16 +154,16 @@ def runtime_identity(source_run: Path, contract: dict, tracked: dict) -> dict:
     }
 
 
-def copy_input_manifest(source_run: Path, output_run: Path) -> Tuple[dict, List[str]]:
+def load_input_manifest(source_run: Path) -> Tuple[dict, Dict[str, Path]]:
     source_path = source_run / "input_manifest.json"
     require_file(source_path, "input manifest")
     manifest = json.loads(source_path.read_text(encoding="utf-8"))
-    source_input = (source_run / "input").resolve()
-    output_input = output_run / "input"
+    if not isinstance(manifest, dict):
+        raise RecoveryError("source input manifest must be a JSON object")
     files = manifest.get("files")
     if not isinstance(files, dict) or not files:
         raise RecoveryError("source input manifest lacks files")
-    source_files = {}
+    source_files: Dict[str, Path] = {}
     for role, item in files.items():
         if not isinstance(item, dict) or not item.get("path") or not item.get("sha256"):
             raise RecoveryError(f"source input manifest has malformed role: {role}")
@@ -158,6 +173,101 @@ def copy_input_manifest(source_run: Path, output_run: Path) -> Tuple[dict, List[
         if not re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) or actual != item["sha256"]:
             raise RecoveryError(f"source input manifest hash mismatch: {role}")
         source_files[role] = old_path
+    return manifest, source_files
+
+
+def expected_handoff_contract(repo_root: Path, manifest: dict,
+                              source_files: Dict[str, Path],
+                              openroad: dict) -> Tuple[dict, dict]:
+    if manifest.get("schema") != "npc-riscv-open/d8-pnr-input-v1":
+        raise RecoveryError("recovery requires a D8 P&R input manifest")
+    profile = manifest.get("profile")
+    memory_mode = manifest.get("memory_mode")
+    mode = manifest.get("mode")
+    defconfig = ASIC_DEFCONFIGS.get((profile, memory_mode))
+    if defconfig is None:
+        raise RecoveryError(
+            f"unsupported recovery profile/memory identity: {profile}/{memory_mode}")
+    try:
+        expected = build_contract(
+            repo_root.resolve(), repo_root.resolve() / defconfig,
+            str(mode), str(memory_mode),
+        )
+        identity = {key: expected[key] for key in HANDOFF_IDENTITY_FIELDS}
+        require_handoff_identity(manifest, identity, "P&R input")
+    except (AsicError, KeyError) as error:
+        raise RecoveryError(f"P&R input identity validation failed: {error}") from error
+
+    for key in ("expected_macro_count", "expected_blackbox_count"):
+        value = manifest.get(key)
+        if isinstance(value, bool) or value != expected[key]:
+            raise RecoveryError(f"P&R input contract mismatch for {key}")
+    pnr_frequency = manifest.get("pnr_frequency_mhz")
+    if isinstance(pnr_frequency, bool) or not isinstance(pnr_frequency, (int, float)):
+        raise RecoveryError("P&R input has invalid pnr_frequency_mhz")
+    if pnr_frequency <= 0:
+        raise RecoveryError("P&R input pnr_frequency_mhz must be positive")
+    fixed_frequency = expected.get("pnr_frequency_mhz")
+    if fixed_frequency is not None and pnr_frequency != fixed_frequency:
+        raise RecoveryError("P&R input fixed frequency differs from tracked contract")
+
+    dc_manifest_path = source_files.get("dc_input_manifest")
+    if dc_manifest_path is None:
+        raise RecoveryError("P&R input lacks dc_input_manifest role")
+    try:
+        dc_manifest = json.loads(dc_manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RecoveryError(f"invalid nested DC input manifest: {error}") from error
+    if not isinstance(dc_manifest, dict) or dc_manifest.get("schema") != (
+            "npc-riscv-open/d8-dc-input-v1"):
+        raise RecoveryError("recovery requires a nested D8 DC input manifest")
+    dc_hash = sha256_file(dc_manifest_path)
+    dc_role = manifest["files"]["dc_input_manifest"]
+    if (manifest.get("dc_input_schema") != dc_manifest["schema"] or
+            manifest.get("dc_input_manifest_sha256") != dc_hash or
+            dc_role.get("sha256") != dc_hash):
+        raise RecoveryError("P&R/DC input manifest identity transfer mismatch")
+    try:
+        require_handoff_identity(dc_manifest, identity, "nested DC input")
+    except AsicError as error:
+        raise RecoveryError(f"nested DC input identity validation failed: {error}") from error
+    for key in ("expected_macro_count", "expected_blackbox_count"):
+        value = dc_manifest.get(key)
+        if isinstance(value, bool) or value != expected[key]:
+            raise RecoveryError(f"nested DC input contract mismatch for {key}")
+    libraries = expected["matrix"]["libraries"]
+    if (dc_manifest.get("liberty_sha256") != libraries["liberty_sha256"] or
+            dc_manifest.get("db_sha256") != libraries["db_sha256"]):
+        raise RecoveryError("nested DC input standard-cell library identity mismatch")
+
+    expected_nickname = re.sub(
+        r"[^A-Za-z0-9_]", "_",
+        f"{expected['profile']}_{expected['mode']}_{int(pnr_frequency)}m",
+    )
+    if openroad.get("design_nickname") != expected_nickname:
+        raise RecoveryError("OpenROAD design nickname differs from P&R identity")
+    if openroad.get("top") != expected["top"]:
+        raise RecoveryError("OpenROAD top differs from tracked P&R contract")
+    if openroad.get("memory_mode") != expected["memory_mode"]:
+        raise RecoveryError("OpenROAD memory mode differs from tracked P&R contract")
+    try:
+        macro_count = int(openroad.get("expected_macro_count", ""))
+        period_ns = float(openroad.get("pnr_period_ns", ""))
+    except ValueError as error:
+        raise RecoveryError("OpenROAD macro count or period is invalid") from error
+    if macro_count != expected["expected_macro_count"]:
+        raise RecoveryError("OpenROAD macro count differs from tracked P&R contract")
+    expected_period = 1000.0 / float(pnr_frequency)
+    if not math.isclose(period_ns, expected_period, rel_tol=0.0, abs_tol=5e-9):
+        raise RecoveryError("OpenROAD period differs from P&R input frequency")
+    return expected, dc_manifest
+
+
+def copy_input_manifest(source_run: Path, output_run: Path, manifest: dict,
+                        source_files: Dict[str, Path]) -> Tuple[dict, List[str]]:
+    source_input = (source_run / "input").resolve()
+    output_input = output_run / "input"
+    files = manifest["files"]
     shutil.copytree(source_input, output_input)
     external_roles = []
     for index, (role, item) in enumerate(sorted(files.items())):
@@ -245,6 +355,9 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
                 "mapped_netlist_sha256", "orfs_import_netlist_sha256"):
         if not contract.get(key):
             raise RecoveryError(f"source OpenROAD contract lacks {key}")
+    manifest, source_files = load_input_manifest(source_run)
+    expected_contract, dc_manifest = expected_handoff_contract(
+        repo_root, manifest, source_files, contract)
     identity = runtime_identity(source_run, contract, tracked_identity)
     contract["orfs_actual_commit"] = identity["actual_commit"]
     contract["orfs_commit_verification"] = identity["verification"]
@@ -266,9 +379,23 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         require_file(logs / name, name)
     require_file(reports / "5_route_drc.rpt", "route DRC report", allow_empty=True)
 
+    mapped = source_files.get("dc_mapped_netlist")
+    if mapped is None:
+        raise RecoveryError("P&R input lacks dc_mapped_netlist role")
+    imported = results / "1_2_yosys.v"
+    mapped_hash = sha256_file(mapped)
+    imported_hash = sha256_file(imported)
+    if contract["mapped_netlist_sha256"] != mapped_hash:
+        raise RecoveryError("source OpenROAD contract mapped netlist hash mismatch")
+    if contract["orfs_import_netlist_sha256"] not in ("NA", imported_hash):
+        raise RecoveryError("source OpenROAD contract ORFS import hash mismatch")
+    if mapped_hash != imported_hash:
+        raise RecoveryError("FAIL_HANDOFF_IDENTITY: mapped netlist differs from ORFS import")
+
     output_run.parent.mkdir(parents=True, exist_ok=True)
     output_run.mkdir()
-    manifest, external_roles = copy_input_manifest(source_run, output_run)
+    manifest, external_roles = copy_input_manifest(
+        source_run, output_run, manifest, source_files)
     for name in ("floorplan.json", "constant_net_report.txt", "openroad_contract.txt",
                  "orfs_commit.txt", "resource_monitor.csv"):
         path = source_run / name
@@ -284,12 +411,6 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
     imported = output_run / "orfs/results/nangate45" / nickname / "base/1_2_yosys.v"
     mapped_hash = sha256_file(mapped)
     imported_hash = sha256_file(imported)
-    if contract["mapped_netlist_sha256"] != mapped_hash:
-        raise RecoveryError("source OpenROAD contract mapped netlist hash mismatch")
-    if contract["orfs_import_netlist_sha256"] not in ("NA", imported_hash):
-        raise RecoveryError("source OpenROAD contract ORFS import hash mismatch")
-    if mapped_hash != imported_hash:
-        raise RecoveryError("FAIL_HANDOFF_IDENTITY: mapped netlist differs from ORFS import")
 
     handoff = output_run / "handoff"
     handoff.mkdir()
@@ -342,6 +463,12 @@ def recover(source_run: Path, output_run: Path, repo_root: Path = REPO_ROOT) -> 
         "orfs_workspace_preservation": "self_contained_copy",
         "recovered_external_input_roles": external_roles,
         "tracked_orfs_identity": tracked_identity,
+        "validated_handoff_identity": {
+            key: expected_contract[key] for key in HANDOFF_IDENTITY_FIELDS
+        },
+        "validated_dc_input_manifest_sha256": sha256_file(
+            source_files["dc_input_manifest"]),
+        "validated_dc_input_schema": dc_manifest["schema"],
         "source_period_ns": source_period,
         "normalized_period_ns": period_ns,
         "orfs_runtime_identity": identity,

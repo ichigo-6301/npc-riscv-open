@@ -1286,9 +1286,37 @@ class AsicFlowTests(unittest.TestCase):
             root = Path(temp)
             source = root / "source"
             output = root / "recovered"
-            nickname = "fixture"
+            nickname = "rv32im_single_perf_default_425m"
             top = "cpu_top"
             source.mkdir()
+            identity = {
+                "profile": "rv32im_single_perf",
+                "mode": "default",
+                "memory_mode": "registers",
+                "source_commit": "d" * 40,
+                "source_set_sha256": "e" * 64,
+                "source_role_sha256": "f" * 64,
+                "implementation_source_sha256": "1" * 64,
+                "config_sha256": "2" * 64,
+            }
+            libraries = {
+                "liberty_sha256": "3" * 64,
+                "db_sha256": "4" * 64,
+            }
+            expected_contract = {
+                **identity,
+                "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
+                "pnr_frequency_mhz": 425,
+                "top": top,
+                "matrix": {"libraries": libraries},
+            }
+            contract_patcher = mock.patch(
+                "recover_pnr_handoff.build_contract",
+                return_value=expected_contract,
+            )
+            contract_patcher.start()
+            self.addCleanup(contract_patcher.stop)
             matrix_path = root / "flows/asic/profiles/register_expanded.json"
             matrix_path.parent.mkdir(parents=True)
             matrix_path.write_text(json.dumps({"orfs": {
@@ -1302,18 +1330,26 @@ class AsicFlowTests(unittest.TestCase):
             mapped.write_text("module cpu_top; endmodule\n")
             external_dc_manifest = root / "dc_run/input_manifest.json"
             external_dc_manifest.parent.mkdir()
-            external_dc_manifest.write_text('{"schema":"fixture-dc-input"}\n')
+            external_dc_manifest.write_text(json.dumps({
+                "schema": "npc-riscv-open/d8-dc-input-v1",
+                **identity,
+                "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
+                **libraries,
+            }))
+            dc_manifest_hash = asicctl.sha256_file(external_dc_manifest)
             (source / "input_manifest.json").write_text(json.dumps({
                 "schema": "npc-riscv-open/d8-pnr-input-v1",
-                "profile": "rv32im_single_perf",
-                "mode": "default",
-                "memory_mode": "registers",
+                **identity,
                 "expected_macro_count": 0,
+                "expected_blackbox_count": 0,
                 "pnr_frequency_mhz": 425,
+                "dc_input_schema": "npc-riscv-open/d8-dc-input-v1",
+                "dc_input_manifest_sha256": dc_manifest_hash,
                 "files": {
                     "dc_input_manifest": {
                         "path": str(external_dc_manifest),
-                        "sha256": asicctl.sha256_file(external_dc_manifest),
+                        "sha256": dc_manifest_hash,
                     },
                     "dc_mapped_netlist": {
                         "path": str(mapped), "sha256": asicctl.sha256_file(mapped),
@@ -1321,7 +1357,7 @@ class AsicFlowTests(unittest.TestCase):
                 },
             }))
             (source / "openroad_contract.txt").write_text(
-                "design_nickname=fixture\ntop=cpu_top\nplatform=nangate45\n"
+                f"design_nickname={nickname}\ntop=cpu_top\nplatform=nangate45\n"
                 "memory_mode=registers\nexpected_macro_count=0\n"
                 "pnr_period_ns=2.352941176\norfs_commit=" + "a" * 40 + "\n"
                 "orfs_actual_commit=NA\norfs_commit_verification=pending\n"
@@ -1384,14 +1420,72 @@ class AsicFlowTests(unittest.TestCase):
                 "verification=image_digest_bound_no_vcs_metadata\n")
             manifest_path = source / "input_manifest.json"
             manifest = json.loads(manifest_path.read_text())
+            baseline_manifest = copy.deepcopy(manifest)
+            bad_schema = copy.deepcopy(baseline_manifest)
+            bad_schema["schema"] = "npc-riscv-open/d7-pnr-input-v1"
+            manifest_path.write_text(json.dumps(bad_schema))
+            bad_schema_output = root / "recovered_bad_pnr_schema"
+            with self.assertRaisesRegex(RecoveryError, "requires a D8 P&R"):
+                recover_pnr_handoff(source, bad_schema_output, root)
+            self.assertFalse(bad_schema_output.exists())
+
+            for field in asicctl.HANDOFF_IDENTITY_FIELDS:
+                with self.subTest(recovery_identity_field=field):
+                    mutated = copy.deepcopy(baseline_manifest)
+                    mutated[field] = "wrong"
+                    manifest_path.write_text(json.dumps(mutated))
+                    bad_output = root / f"recovered_bad_identity_{field}"
+                    with self.assertRaisesRegex(
+                            RecoveryError, "identity validation|unsupported recovery"):
+                        recover_pnr_handoff(source, bad_output, root)
+                    self.assertFalse(bad_output.exists())
+            missing_identity = copy.deepcopy(baseline_manifest)
+            del missing_identity["config_sha256"]
+            manifest_path.write_text(json.dumps(missing_identity))
+            missing_identity_output = root / "recovered_missing_identity"
+            with self.assertRaisesRegex(RecoveryError, "missing required identity"):
+                recover_pnr_handoff(source, missing_identity_output, root)
+            self.assertFalse(missing_identity_output.exists())
+
+            dc_baseline = json.loads(external_dc_manifest.read_text())
+            dc_mutated = copy.deepcopy(dc_baseline)
+            dc_mutated["source_role_sha256"] = "0" * 64
+            external_dc_manifest.write_text(json.dumps(dc_mutated))
+            nested_mutation = copy.deepcopy(baseline_manifest)
+            nested_hash = asicctl.sha256_file(external_dc_manifest)
+            nested_mutation["dc_input_manifest_sha256"] = nested_hash
+            nested_mutation["files"]["dc_input_manifest"]["sha256"] = nested_hash
+            manifest_path.write_text(json.dumps(nested_mutation))
+            bad_nested_output = root / "recovered_bad_nested_identity"
+            with self.assertRaisesRegex(RecoveryError, "nested DC input identity"):
+                recover_pnr_handoff(source, bad_nested_output, root)
+            self.assertFalse(bad_nested_output.exists())
+            external_dc_manifest.write_text(json.dumps(dc_baseline))
+            manifest_path.write_text(json.dumps(baseline_manifest))
+
+            contract_path = source / "openroad_contract.txt"
+            contract_text = contract_path.read_text()
+            contract_path.write_text(contract_text.replace(
+                "top=cpu_top", "top=untracked_top"))
+            bad_top_output = root / "recovered_bad_contract_top"
+            with self.assertRaisesRegex(RecoveryError, "top differs"):
+                recover_pnr_handoff(source, bad_top_output, root)
+            self.assertFalse(bad_top_output.exists())
+            contract_path.write_text(contract_text.replace(
+                "expected_macro_count=0", "expected_macro_count=1"))
+            bad_macro_output = root / "recovered_bad_contract_macro"
+            with self.assertRaisesRegex(RecoveryError, "macro count differs"):
+                recover_pnr_handoff(source, bad_macro_output, root)
+            self.assertFalse(bad_macro_output.exists())
+            contract_path.write_text(contract_text)
+
+            manifest = copy.deepcopy(baseline_manifest)
             manifest["files"]["dc_mapped_netlist"]["sha256"] = "0" * 64
             manifest_path.write_text(json.dumps(manifest))
             with self.assertRaisesRegex(RecoveryError, "input manifest hash mismatch"):
                 recover_pnr_handoff(source, root / "recovered_bad_input_hash", root)
             manifest["files"]["dc_mapped_netlist"]["sha256"] = asicctl.sha256_file(mapped)
             manifest_path.write_text(json.dumps(manifest))
-            contract_path = source / "openroad_contract.txt"
-            contract_text = contract_path.read_text()
             contract_path.write_text(contract_text.replace(
                 "mapped_netlist_sha256=" + asicctl.sha256_file(mapped),
                 "mapped_netlist_sha256=" + "0" * 64))
@@ -1438,6 +1532,11 @@ class AsicFlowTests(unittest.TestCase):
                 asicctl.ORFS_RUNTIME_IDENTITY_POLICY)
             self.assertEqual(
                 recovery["recovered_external_input_roles"], ["dc_input_manifest"])
+            self.assertEqual(recovery["validated_handoff_identity"], identity)
+            self.assertEqual(
+                recovery["validated_dc_input_schema"],
+                "npc-riscv-open/d8-dc-input-v1",
+            )
             recovered_manifest = json.loads((output / "input_manifest.json").read_text())
             recovered_external = Path(
                 recovered_manifest["files"]["dc_input_manifest"]["path"])
@@ -1448,7 +1547,7 @@ class AsicFlowTests(unittest.TestCase):
             external_dc_manifest.rename(root / "dc_run/input_manifest.moved")
             (source / "orfs").rename(source / "orfs_moved_after_recovery")
             self.assertTrue((
-                output / "orfs/results/nangate45/fixture/base/6_final.gds").is_file())
+                output / f"orfs/results/nangate45/{nickname}/base/6_final.gds").is_file())
             self.assertTrue(parse_pnr_run(output)["route_complete"])
             self.assertEqual(asicctl.evidence_check(output), 0)
 

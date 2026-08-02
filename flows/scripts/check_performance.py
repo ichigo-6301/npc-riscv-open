@@ -148,10 +148,9 @@ def check_evidence(root: Path, manifest: dict, errors: list[str]) -> None:
         return
     if set(runs) != set(EXPECTED_STATUS):
         errors.append("CoreMark evidence must contain exactly the three public Profiles")
-    documents = [
-        root / "README.md", root / "README.en.md",
-        root / "docs/performance.md", root / "docs/performance.en.md",
-    ]
+    # README carries the compact, separately validated interview summary.
+    # Full nine-decimal values remain mandatory on the detailed performance pages.
+    documents = [root / "docs/performance.md", root / "docs/performance.en.md"]
     for profile, record in runs.items():
         if not isinstance(record, dict):
             errors.append(f"CoreMark evidence run {profile} is not an object")

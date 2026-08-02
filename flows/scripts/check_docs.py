@@ -54,6 +54,97 @@ METRIC_VALUE_RE = re.compile(
 )
 METRIC_MARKER_RE = re.compile(r"\b(nonclaim|evidence):([A-Za-z0-9_.-]+)\b")
 CODE_TOKEN_RE = re.compile(r"`([A-Za-z0-9_.-]+)`")
+SHOWCASE_START = "<!-- showcase:key-results:start -->"
+SHOWCASE_END = "<!-- showcase:key-results:end -->"
+README_RESULT_ROWS = {
+    "evidence/performance/coremark.json": (
+        "1.4849", "current", "verified",
+    ),
+    "evidence/performance/linux_coremark_ab.json": (
+        "8.587→1.726", "4.98x", "historical_verified", "partial",
+        "not_reverified",
+    ),
+    "evidence/system/linux_boot.json": (
+        "6.6.141", "historical_verified", "not_reverified",
+    ),
+    "evidence/performance/ooo_frontend_branch_ab.json": (
+        "53.76%→23.29%", "59.38%→17.73%", "historical_verified",
+        "pre-loop-remediation", "provisional",
+    ),
+    "evidence/fpga/single_xc7z100_history.json": (
+        "200 MHz", "historical_verified", "partial", "not_claimed",
+    ),
+    "evidence/implementation/nangate45_fixed_points.json": (
+        "200–475 MHz", "verified", "partial",
+    ),
+}
+README_RESULT_GUIDES = {
+    "README.md": {
+        "evidence/performance/coremark.json": "docs/evidence/coremark_reproduction.md",
+        "evidence/performance/linux_coremark_ab.json": "docs/evidence/performance_history.md",
+        "evidence/system/linux_boot.json": "docs/evidence/system_fpga_history.md",
+        "evidence/performance/ooo_frontend_branch_ab.json": "docs/evidence/performance_history.md",
+        "evidence/fpga/single_xc7z100_history.json": "docs/evidence/system_fpga_history.md",
+        "evidence/implementation/nangate45_fixed_points.json": "docs/evidence/backend_closure.md",
+    },
+    "README.en.md": {
+        "evidence/performance/coremark.json": "docs/evidence/coremark_reproduction.en.md",
+        "evidence/performance/linux_coremark_ab.json": "docs/evidence/performance_history.en.md",
+        "evidence/system/linux_boot.json": "docs/evidence/system_fpga_history.en.md",
+        "evidence/performance/ooo_frontend_branch_ab.json": "docs/evidence/performance_history.en.md",
+        "evidence/fpga/single_xc7z100_history.json": "docs/evidence/system_fpga_history.en.md",
+        "evidence/implementation/nangate45_fixed_points.json": "docs/evidence/backend_closure.en.md",
+    },
+}
+README_CODE_PATHS = (
+    "rtl/profiles/rv32im_single_perf/cpu_top.v",
+    "rtl/profiles/rv32ima_sv32_linux/top/cpu_top.v",
+    "rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv",
+    "rtl/profiles/rv32im_single_perf/cpu_top/if_stage.v",
+    "rtl/profiles/rv32im_single_perf/cpu_top/id_stage.v",
+    "rtl/profiles/rv32im_single_perf/cache/ICache.v",
+    "rtl/profiles/rv32im_single_perf/cache/DCache.v",
+    "rtl/profiles/rv32ima_sv32_linux/csr/PrivCsrRegs.v",
+    "rtl/profiles/rv32ima_sv32_linux/csr/TrapCtrl.v",
+    "rtl/profiles/rv32ima_sv32_linux/frontend/Sv32FrontendPipe.v",
+    "rtl/profiles/rv32ima_sv32_linux/mmu/Sv32Tlb.v",
+    "rtl/profiles/rv32ima_sv32_linux/lsu/Sv32DCacheBridge.v",
+    "rtl/profiles/rv32ima_sv32_linux/lsu/Sv32LSUPipe.v",
+    "rtl/profiles/rv32im_ooo_4k/core/ooo_rename_dispatch_recovery_2w.sv",
+    "rtl/profiles/rv32im_ooo_4k/core/ooo_prf.sv",
+    "rtl/profiles/rv32im_ooo_4k/core/small_rob.sv",
+    "rtl/profiles/rv32im_ooo_4k/core/alu_issue_queue_1w.sv",
+    "rtl/profiles/rv32im_ooo_4k/core/ooo_branch_checkpoint_state_2w.sv",
+    "rtl/profiles/rv32im_ooo_4k/execute/ooo_lsu_atomic_mem_arbiter_2e.sv",
+    "rtl/profiles/rv32im_ooo_4k/execute/ooo_precise_store_buffer_4entry.sv",
+    "rtl/wrappers/rv32im_single_perf_sim_top.sv",
+    "rtl/wrappers/rv32ima_sv32_linux_sim_top.sv",
+    "rtl/wrappers/rv32im_ooo_4k_sim_top.sv",
+    "sim/include/profile_abi.hpp",
+    "sim/adapters/nemu_public_adapter.cpp",
+    "sim/common/verilator_runner.py",
+    "sim/common/verilator_main.cpp",
+    "tests/sources/rv32im_core_smoke.S",
+)
+README_CHECK_TOKENS = (
+    "rv32im_single_perf_defconfig",
+    "rv32ima_sv32_linux_defconfig",
+    "rv32im_ooo_4k_defconfig",
+    "verilator-lint",
+    "smoke",
+    "regression",
+    "runtime-tests",
+    "docs-check",
+    "evidence-check",
+    "showcase-check",
+    "implementation-check",
+    "verify-checksums",
+    "public-hygiene",
+    "lc-macros-dry-run",
+    "dc-matrix-dry-run",
+    "pnr-dry-run",
+    "sta-dry-run",
+)
 
 
 def load_json_yaml(path: Path) -> dict:
@@ -133,6 +224,59 @@ def check_links(root: Path, errors: list[str]) -> None:
                 errors.append(f"{path.relative_to(root)}:{line}: broken local link {target}")
 
 
+def check_readme_showcase(root: Path, errors: list[str]) -> None:
+    headings = {
+        "README.md": (
+            "## 关键结果与证据入口", "## 60 秒状态矩阵",
+            "## 10 分钟代码阅读路径", "## 快速检查（不依赖商业 EDA）",
+            "## Canonical top 与 filelist", "## 文档导航", "## 限制与 Roadmap",
+        ),
+        "README.en.md": (
+            "## Key Results And Evidence", "## 60-Second Status Matrix",
+            "## 10-Minute Code Reading Path", "## Quick Checks Without Commercial EDA",
+            "## Canonical Top And Filelist", "## Documentation",
+            "## Limitations And Roadmap",
+        ),
+    }
+    for name, expected_headings in headings.items():
+        path = root / name
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        positions = [text.find(heading) for heading in expected_headings]
+        if any(position < 0 for position in positions) or positions != sorted(positions):
+            errors.append(f"{name}: interview-entry section order drift")
+        if text.count(SHOWCASE_START) != 1 or text.count(SHOWCASE_END) != 1:
+            errors.append(f"{name}: key-results block markers must appear exactly once")
+            continue
+        block = text.split(SHOWCASE_START, 1)[1].split(SHOWCASE_END, 1)[0]
+        table_lines = [line for line in block.splitlines() if line.startswith("|")]
+        if len(table_lines) != 8:
+            errors.append(f"{name}: key-results table must contain exactly six data rows")
+        for evidence_path, tokens in README_RESULT_ROWS.items():
+            matches = [line for line in table_lines if f"]({evidence_path})" in line]
+            if len(matches) != 1:
+                errors.append(f"{name}: key-results row mismatch for {evidence_path}")
+                continue
+            row = matches[0]
+            for token in (*tokens, README_RESULT_GUIDES[name][evidence_path]):
+                if token not in row:
+                    errors.append(
+                        f"{name}: key-results row {evidence_path} lacks {token}")
+        for code_path in README_CODE_PATHS:
+            if f"]({code_path})" not in text:
+                errors.append(f"{name}: code-reading path lacks {code_path}")
+        for token in README_CHECK_TOKENS:
+            if token not in text:
+                errors.append(f"{name}: quick-check entry lacks {token}")
+        for badge in ("actions/workflows/public-ci.yml", "RTL-Verilog", "github/license"):
+            if badge not in text:
+                errors.append(f"{name}: public badge drift for {badge}")
+        for boundary in ("Fmax", "OCV/MMMC", "foundry signoff", "silicon"):
+            if boundary not in text:
+                errors.append(f"{name}: result nonclaim boundary lacks {boundary}")
+
+
 def metric_records(root: Path) -> tuple[dict[str, dict], set[str]]:
     nonclaims_data = load_json_yaml(root / "delivery/claims/nonclaims.yaml")
     evidence_data = load_json_yaml(root / "delivery/evidence/manifest.yaml")
@@ -205,6 +349,7 @@ def main() -> int:
     check_pairs(root, errors)
     check_terms(root, errors)
     check_links(root, errors)
+    check_readme_showcase(root, errors)
     check_performance_records(root, errors)
     if errors:
         raise SystemExit("DOCS_CHECK_FAILED\n  - " + "\n  - ".join(sorted(set(errors))))

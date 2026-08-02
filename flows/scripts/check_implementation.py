@@ -918,8 +918,6 @@ def check_document_surfaces(root: Path, errors: list[str]) -> None:
         errors,
     )
     for relative in (
-        Path("README.md"),
-        Path("README.en.md"),
         Path("docs/evidence/backend_closure.md"),
         Path("docs/evidence/backend_closure.en.md"),
         Path("docs/performance.md"),

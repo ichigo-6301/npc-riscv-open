@@ -71,10 +71,11 @@ library (macro_TT_1p0V_25C_lib) {
             files = {}
             for role in ("v", "lib", "canonical_lib", "lef", "gds", "normalized_lef"):
                 path = root / f"macro.{role}"
-                path.write_text(role)
+                path.write_text("lef" if role == "normalized_lef" else role)
                 files[role] = {
                     "path": path.name, "sha256": sha256(path), "bytes": path.stat().st_size,
                 }
+            files["normalized_lef"].update({"grid_um": 0.005, "changed_lines": 0})
             manifest = {
                 "schema": "npc-riscv-open/d8-sram-handoff-v2",
                 "memory_mode": "sram",
@@ -103,10 +104,65 @@ library (macro_TT_1p0V_25C_lib) {
             with mock.patch.dict(os.environ, {"NPC_ASIC_SRAM_HANDOFF": str(root)}):
                 loaded = asicctl.load_sram_handoff(contract)
             self.assertEqual(loaded["files"][name]["lib"], root / "macro.lib")
+            normalized = root / "macro.normalized_lef"
+            normalized.write_text("MACRO tampered ;\n")
+            files["normalized_lef"].update({
+                "sha256": sha256(normalized), "bytes": normalized.stat().st_size,
+            })
+            manifest_path.write_text(json.dumps(manifest))
+            with mock.patch.dict(os.environ, {"NPC_ASIC_SRAM_HANDOFF": str(root)}):
+                with self.assertRaisesRegex(
+                        asicctl.AsicError, "deterministic canonical derivation"):
+                    asicctl.load_sram_handoff(contract)
+            normalized.write_text("lef")
+            files["normalized_lef"].update({
+                "sha256": sha256(normalized), "bytes": normalized.stat().st_size,
+            })
+            manifest_path.write_text(json.dumps(manifest))
+            files["normalized_lef"]["grid_um"] = 0.010
+            manifest_path.write_text(json.dumps(manifest))
+            with mock.patch.dict(os.environ, {"NPC_ASIC_SRAM_HANDOFF": str(root)}):
+                with self.assertRaisesRegex(asicctl.AsicError, "grid identity mismatch"):
+                    asicctl.load_sram_handoff(contract)
+            files["normalized_lef"].update({"grid_um": 0.005, "changed_lines": 1})
+            manifest_path.write_text(json.dumps(manifest))
+            with mock.patch.dict(os.environ, {"NPC_ASIC_SRAM_HANDOFF": str(root)}):
+                with self.assertRaisesRegex(asicctl.AsicError, "changed_lines mismatch"):
+                    asicctl.load_sram_handoff(contract)
+            files["normalized_lef"]["changed_lines"] = 0
+            manifest_path.write_text(json.dumps(manifest))
             (root / "macro.canonical_lib").write_text("tampered")
             with mock.patch.dict(os.environ, {"NPC_ASIC_SRAM_HANDOFF": str(root)}):
                 with self.assertRaisesRegex(asicctl.AsicError, "SHA256 mismatch"):
                     asicctl.load_sram_handoff(contract)
+
+    def test_stage_sram_views_preserves_same_basename_macro_views(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            run = root / "run"
+            macros = ("macro_a", "macro_b")
+            handoff = {"files": {}}
+            for name in macros:
+                source_dir = root / name
+                source_dir.mkdir()
+                handoff["files"][name] = {}
+                for role, suffix in (("lib", "lib"), ("normalized_lef", "lef"),
+                                     ("gds", "gds")):
+                    path = source_dir / f"shared.{suffix}"
+                    path.write_text(f"{name}:{role}\n")
+                    handoff["files"][name][role] = path
+            contract = {"memory_data": {"macros": {name: {} for name in macros}}}
+
+            staged = asicctl.stage_sram_views(run, contract, handoff)
+
+            self.assertEqual(
+                [path.name for path in staged["lib"]], ["macro_a.lib", "macro_b.lib"])
+            self.assertEqual(
+                [path.read_text() for path in staged["lef"]],
+                ["macro_a:normalized_lef\n", "macro_b:normalized_lef\n"],
+            )
+            with self.assertRaisesRegex(asicctl.AsicError, "staging collision"):
+                asicctl.stage_sram_views(run, contract, handoff)
 
 
 if __name__ == "__main__":
