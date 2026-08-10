@@ -7,3 +7,4 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 *.f text eol=lf
+provenance/upstream/rv32im_ooo_4k/history/*.patch -whitespace

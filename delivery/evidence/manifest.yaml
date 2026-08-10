@@ -354,6 +354,59 @@
       "type": "bounded_historical_microarchitecture_summary"
     },
     {
+      "caveat": "Historical pre-loop-remediation CoreMark lineage only; the baseline binary and configuration hashes are unavailable and the endpoints differ by 12 retired instructions, so the approximately 5.63x equal-clock cycle comparison remains partial and is not inherited by current, loop-free, DC, FPGA or ASIC results",
+      "claims": [
+        "ooo_historical_s9a_coremark_whole_cpi",
+        "ooo_historical_p89_coremark_whole_cpi",
+        "ooo_historical_coremark_approx_speedup"
+      ],
+      "nonclaims": [
+        "ooo_historical_coremark_strict_ab_not_claimed"
+      ],
+      "configuration": "Historical S9A and P89 CoreMark whole-program endpoints; rv32e_zicsr/ilp32e benchmark family on RV32IM hardware with M extension; tracked documentation records IF/LSU/memory 2/3/2, seed 1 and difftest, while only P89 retains binary/config SHA256",
+      "generated_time": "2026-08-10T00:00:00Z",
+      "id": "ooo_coremark_history_public",
+      "path": "../evidence/performance/ooo_coremark_history.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "67282547e5aac51975d9632f73c0c019b6607901bd2620090302900532bcab25",
+      "size_bytes": 5157,
+      "snapshot_id": "main-ooo-history-v1",
+      "source_ref": "multiple_historical_refs",
+      "status": "partial",
+      "tool": "Historical RTL simulation, profile-matched NEMU difftest and bounded counter summaries",
+      "type": "bounded_historical_coremark_lineage_summary"
+    },
+    {
+      "caveat": "Historical D12 Yosys SCC evidence has a publicly reconstructable source-set identity; SpyGlass CombLoop, Verilator UNOPTFLAT and precise retirement remain partial because their complete input or per-point identity is unavailable; no P89 performance, current-source or backend result is inherited",
+      "claims": [
+        "ooo_historical_comb_loop_zero",
+        "ooo_historical_unoptflat_zero",
+        "ooo_historical_pre_techmap_scc_zero",
+        "ooo_historical_post_techmap_scc_zero",
+        "ooo_historical_precise_retirement_preserved"
+      ],
+      "nonclaims": [
+        "ooo_loop_remediation_performance_not_inherited",
+        "ooo_loop_remediation_current_backend_not_claimed",
+        "ooo_loop_remediation_point_identity_not_claimed",
+        "ooo_loop_remediation_non_yosys_input_identity_not_claimed"
+      ],
+      "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; Yosys source-set reconstructed from 61 ordered RTL sources; SpyGlass/Verilator reports retained with partial input identity; aggregate 14/14 functional reporting",
+      "generated_time": "2026-08-10T00:00:00Z",
+      "id": "ooo_loop_remediation_public",
+      "path": "../evidence/verification/ooo_loop_remediation.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "058d1c153db08dacc35f144ae39fc00c6c84ab07a1ad2528b98c7a1c761e6825",
+      "size_bytes": 6266,
+      "snapshot_id": "main-ooo-history-v1",
+      "source_ref": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "status": "partial",
+      "tool": "Reconstructable Yosys SCC checks, bounded historical SpyGlass/Verilator reports and aggregate RTL functional reporting",
+      "type": "bounded_historical_structural_remediation_summary"
+    },
+    {
       "caveat": "Three historical uncommitted source snapshots are separate; board/workload observation is partial and later forwarding/predictor snapshots have implementation/timing only",
       "claims": [
         "single_fpga_original_routed_frequency",

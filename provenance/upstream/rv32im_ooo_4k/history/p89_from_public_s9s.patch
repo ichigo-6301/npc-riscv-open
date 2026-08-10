@@ -1,0 +1,370 @@
+diff --git a/rtl/profiles/rv32im_ooo_4k/execute/ooo_mdu_pipeline_1w.sv b/rtl/profiles/rv32im_ooo_4k/execute/ooo_mdu_pipeline_1w.sv
+index f0dde9fc62079c3aa9079d1edbff30d466b9bb97..33616690874ad9142d9681b6a52ed4a60836bc45 100644
+--- a/rtl/profiles/rv32im_ooo_4k/execute/ooo_mdu_pipeline_1w.sv
++++ b/rtl/profiles/rv32im_ooo_4k/execute/ooo_mdu_pipeline_1w.sv
+@@ -2,8 +2,7 @@
+ `include "bbus_ooo_types.svh"
+ 
+ module ooo_mdu_pipeline_1w #(
+-    parameter int unsigned MUL_LATENCY = 4,
+-    parameter bit MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0
++    parameter int unsigned MUL_LATENCY = 4
+ ) (
+     input  logic clk,
+     input  logic reset,
+@@ -71,8 +70,6 @@ module ooo_mdu_pipeline_1w #(
+     logic [31:0] div_quot_result_c;
+     logic [31:0] div_rem_result_c;
+     logic current_killed_c;
+-    logic mul_fallthrough_valid_c;
+-    bbus_ooo_writeback_t mul_fallthrough_wb_c;
+ 
+     function automatic logic [31:0] magnitude32(
+         input logic [31:0] value,
+@@ -140,24 +137,9 @@ module ooo_mdu_pipeline_1w #(
+         (state_q == MDU_IDLE);
+     assign issue_accept_o = issue_valid_i && issue_ready_o && issue_legal_c;
+     assign illegal_issue_o = issue_valid_i && !issue_legal_c;
+-    assign mul_fallthrough_valid_c = MUL_COMPLETION_FALLTHROUGH_ENABLE &&
+-        issue_accept_o && issue_is_mul_c;
+-    always_comb begin
+-        mul_fallthrough_wb_c = '0;
+-        mul_fallthrough_wb_c.valid = 1'b1;
+-        mul_fallthrough_wb_c.rob_tag = issue_uop_i.rob_tag;
+-        mul_fallthrough_wb_c.phys_rd = issue_uop_i.phys_rd_new;
+-        mul_fallthrough_wb_c.rf_wen = issue_uop_i.rf_wen;
+-        mul_fallthrough_wb_c.done = 1'b1;
+-        mul_fallthrough_wb_c.result =
+-            (issue_uop_i.mdu_op == BBUS_OOO_MDU_MUL) ?
+-            mul_result_c[31:0] : mul_result_c[63:32];
+-    end
+     assign completion_valid_o = !reset && !flush_i &&
+-        !selective_kill_valid_i &&
+-        ((state_q == MDU_DONE) || mul_fallthrough_valid_c);
+-    assign completion_wb_o = mul_fallthrough_valid_c ?
+-        mul_fallthrough_wb_c : completion_q;
++        !selective_kill_valid_i && (state_q == MDU_DONE);
++    assign completion_wb_o = completion_q;
+     assign occupied_o = state_q != MDU_IDLE;
+     assign flush_drop_o = flush_i && (state_q != MDU_IDLE);
+     assign selective_kill_drop_o = current_killed_c;
+@@ -203,15 +185,7 @@ module ooo_mdu_pipeline_1w #(
+                         completion_q.done <= 1'b1;
+                         op_q <= issue_uop_i.mdu_op;
+ 
+-                        if (issue_is_mul_c &&
+-                            MUL_COMPLETION_FALLTHROUGH_ENABLE) begin
+-                            completion_q <= mul_fallthrough_wb_c;
+-                            if (completion_ready_i) begin
+-                                state_q <= MDU_IDLE;
+-                            end else begin
+-                                state_q <= MDU_DONE;
+-                            end
+-                        end else if (issue_is_mul_c) begin
++                        if (issue_is_mul_c) begin
+                             mul_result_q <= mul_result_c;
+                             mul_count_q <= MUL_COUNT_W'(MUL_LATENCY);
+                             state_q <= MDU_MUL_WAIT;
+diff --git a/rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv b/rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv
+index ec847d70890e9d28aabe36b7e48c64c2ada72660..e7dfd071660c5ba3f2aa15fb9ca360a06058cbee 100644
+--- a/rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv
++++ b/rtl/profiles/rv32im_ooo_4k/execute/ooo_pipeline_serial_executor_1w.sv
+@@ -6,8 +6,7 @@
+ // store address generation, CSR accesses, fence/fence.i, ecall/mret, and
+ // terminal ebreak.
+ module ooo_pipeline_serial_executor_1w #(
+-    parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0
++    parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0
+ ) (
+     input  logic clk,
+     input  logic reset,
+@@ -471,10 +470,7 @@ module ooo_pipeline_serial_executor_1w #(
+           (completion_kind_o != SK_LSU)));
+ 
+ `ifdef NPC_M_EXTENSION
+-    ooo_mdu_pipeline_1w #(
+-        .MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE)
+-    ) u_mdu (
++    ooo_mdu_pipeline_1w u_mdu (
+         .clk(clk),
+         .reset(reset),
+         .flush_i(flush_i),
+diff --git a/rtl/profiles/rv32im_ooo_4k/memory/ooo_data_line_cache.sv b/rtl/profiles/rv32im_ooo_4k/memory/ooo_data_line_cache.sv
+index 677d5396df548445f8ac99a81cd2f5d8e9531483..c05ed61461b69a6c4fa9ede1dfbd194967e305e1 100644
+--- a/rtl/profiles/rv32im_ooo_4k/memory/ooo_data_line_cache.sv
++++ b/rtl/profiles/rv32im_ooo_4k/memory/ooo_data_line_cache.sv
+@@ -810,12 +810,8 @@ module ooo_data_line_cache #(
+     always_ff @(posedge clk) begin
+         if (reset) begin
+             line_valid_q <= '0;
+-            for (int unsigned way = 0; way < WAY_COUNT; way++) begin
+-                for (int unsigned index = 0; index < LINE_COUNT; index++) begin
+-                    line_invalid_store_generation_q[way][index] <= 32'b0;
+-                    line_invalid_store_response_seen_q[way][index] <= 1'b0;
+-                end
+-            end
++            line_invalid_store_generation_q <= '0;
++            line_invalid_store_response_seen_q <= '0;
+             replacement_way_q <= '0;
+             meta_valid_q <= 2'b00;
+             meta_token_q[0] <= '0;
+@@ -992,11 +988,11 @@ module ooo_data_line_cache #(
+             end
+             if (amo_invalidate_c) begin
+                 line_valid_q <= '0;
++                line_invalid_store_generation_q <= '0;
++                line_invalid_store_response_seen_q <= '0;
+                 for (int unsigned way = 0; way < WAY_COUNT; way++) begin
+                     for (int unsigned index = 0; index < LINE_COUNT;
+                          index++) begin
+-                        line_invalid_store_generation_q[way][index] <= 32'b0;
+-                        line_invalid_store_response_seen_q[way][index] <= 1'b0;
+                         if (line_valid_q[way][index])
+                             line_invalid_origin_q[way][index] <=
+                                 INVALID_ORIGIN_AMO;
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv
+index 856fdd6f272654eda62aed41684b38f6861c17a7..4b4be9d6b3079db1defcb456477850ce3602f68b 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_npc_top.sv
+@@ -6,9 +6,7 @@ module ooo_npc_top #(
+     parameter bit USE_PMEM_IFETCH = 1'b1,
+     parameter int ALU_LATENCY = 1,
+     parameter int ALU1_LATENCY = ALU_LATENCY,
+-    parameter bit RAW_COMPLETION_WAKEUP_ENABLE = 1'b1,
+     parameter bit SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE = 1'b1,
+-    parameter bit HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b1,
+     parameter bit HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b0,
+     parameter bit HEAD_BRU_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b0,
+     parameter bit LOAD_RESPONSE_COMPLETION_BYPASS_ENABLE = 1'b1,
+@@ -25,7 +23,6 @@ module ooo_npc_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -665,11 +662,8 @@ module ooo_npc_top #(
+ 
+     ooo_pipeline_npc_core_top #(
+         .RESET_VECTOR(RESET_VECTOR),
+-        .RAW_COMPLETION_WAKEUP_ENABLE(RAW_COMPLETION_WAKEUP_ENABLE),
+         .SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE(
+             SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE),
+-        .HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE(
+-            HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE),
+         .HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE(
+             HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE),
+         .HEAD_BRU_WRITEBACK_COMMIT_BYPASS_ENABLE(
+@@ -702,8 +696,6 @@ module ooo_npc_top #(
+             REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+             STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE),
+         .POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE(
+             POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE),
+         .POSTED_STORE_RESPONSE_PIPELINE_ENABLE(
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv
+index d1562e5d4b1a088d92f33eee4e72932f562d9b77..c6ccf5c87e6abe8ee6cc92803cd71a11eaa3145b 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_backend_standalone_top.sv
+@@ -23,7 +23,6 @@ module ooo_pipeline_backend_standalone_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv
+index 4eda76d4a4f2864bce493c1f0d9cfc386c3ddfea..4563e0a0a229b516cab2ba28dc94a4942d51e31c 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_branch_recovery_standalone_top.sv
+@@ -25,7 +25,6 @@ module ooo_pipeline_branch_recovery_standalone_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -755,8 +754,6 @@ module ooo_pipeline_branch_recovery_standalone_top #(
+             REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+             STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE),
+         .POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE(
+             POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE),
+         .POSTED_STORE_RESPONSE_PIPELINE_ENABLE(
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv
+index 1060015bb1ce9fe14e8f73fbc23aba53bfc14cb7..d3629e3135eb0512da3b694ce1c619c199dd5780 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_frontend_backend_standalone_top.sv
+@@ -25,7 +25,6 @@ module ooo_pipeline_frontend_backend_standalone_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -342,8 +341,6 @@ module ooo_pipeline_frontend_backend_standalone_top #(
+             REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+             STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE),
+         .POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE(
+             POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE),
+         .POSTED_STORE_RESPONSE_PIPELINE_ENABLE(
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv
+index b15fd10902105abfea8d901bf9605e49e5fa19af..3afd8b063fda515ac170b698c95b82df6f298219 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_npc_core_top.sv
+@@ -26,7 +26,6 @@ module ooo_pipeline_npc_core_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -960,9 +959,7 @@ module ooo_pipeline_npc_core_top #(
+ 
+     ooo_pipeline_serial_executor_1w #(
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+-            STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE)
++            STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE)
+     ) u_serial_executor (
+         .clk(clk), .reset(reset), .flush_i(recovery_done),
+         .selective_kill_valid_i(selective_kill_valid),
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv
+index 1f862e40c94f06bdfa6e5a2e9f9a3256998a778b..893cbf32cc519edf49c0b8848bd84cddb8e8b5a0 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_redirect_frontend_standalone_top.sv
+@@ -26,7 +26,6 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -481,8 +480,6 @@ module ooo_pipeline_redirect_frontend_standalone_top #(
+             REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+             STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE),
+         .POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE(
+             POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE),
+         .POSTED_STORE_RESPONSE_PIPELINE_ENABLE(
+diff --git a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_synth_core_top.sv b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_synth_core_top.sv
+index 3adb882feb093a743ac8a63cd56940ff8f0f4c95..90aabb0be5e6a8162c42fc212798be7118a8d463 100644
+--- a/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_synth_core_top.sv
++++ b/rtl/profiles/rv32im_ooo_4k/top/ooo_pipeline_synth_core_top.sv
+@@ -5,26 +5,9 @@
+ // The instantiated core is the same pipeline core as ooo_npc_top; memory
+ // timing and storage arrays remain outside this boundary.
+ module ooo_pipeline_synth_core_top #(
+-    parameter bit RAW_COMPLETION_WAKEUP_ENABLE = 1'b1,
+-    parameter bit SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE = 1'b1,
+-    parameter bit HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b1,
+-    parameter bit HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b0,
+-    parameter bit HEAD_BRU_WRITEBACK_COMMIT_BYPASS_ENABLE = 1'b0,
+-    parameter bit LOAD_RESPONSE_COMPLETION_BYPASS_ENABLE = 1'b1,
+-    parameter bit PAIR_RAW_TO_FINAL_BYPASS_ENABLE = 1'b0,
+     parameter bit DECODE_DISPATCH_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit FETCH_DECODE_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE = 1'b0,
+-    parameter bit IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE = 1'b0,
+-    parameter bit TARGET_LINE_HIT_ENABLE = 1'b1,
+-    parameter int unsigned TARGET_LINE_ENTRY_COUNT = 128,
+-    parameter int unsigned TARGET_LINE_WAY_COUNT = 1,
+-    parameter int unsigned CONDITIONAL_PRED_ENTRIES = 256,
+-    parameter bit CORRELATED_PREDICTOR_ENABLE = 1'b1,
+-    parameter bit SAME_CYCLE_RAS_UPDATE_FORWARDING_ENABLE = 1'b1,
+-    parameter bit SEQUENTIAL_LINE_HIT_ENABLE = 1'b1,
+-    parameter bit BRANCH_WINDOW_LINE_DELIVERY_ENABLE = 1'b1,
+-    parameter bit SPECULATIVE_STORE_DISPATCH_ENABLE = 1'b1,
+     parameter bit ORDERED_TARGET_PREFETCH_ORACLE_ENABLE = 1'b0,
+     parameter bit DEMAND_FETCH_LATENCY_ORACLE_ENABLE = 1'b0,
+     parameter bit FETCH_RESPONSE_SERVICE_ORACLE_ENABLE = 1'b0,
+@@ -36,7 +19,6 @@ module ooo_pipeline_synth_core_top #(
+     parameter bit BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE = 1'b0,
+-    parameter bit MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE = 1'b0,
+     parameter bit POSTED_STORE_RESPONSE_PIPELINE_ENABLE = 1'b0,
+     parameter bit DUAL_POSTED_STORE_RESPONSE_OWNER_ENABLE = 1'b0,
+@@ -57,7 +39,6 @@ module ooo_pipeline_synth_core_top #(
+     parameter bit DATA_LINE_SAME_WORD_MISS_COALESCING_ENABLE = 1'b0,
+     parameter bit DATA_LINE_STORE_RESPONSE_UPDATE_ENABLE = 1'b0,
+     parameter bit RAS_SELF_FORWARD_EXCLUSION_ENABLE = 1'b0,
+-    parameter bit DATA_LINE_HIT_ENABLE = 1'b1,
+     parameter int unsigned DATA_LINE_COUNT = 64,
+     parameter int unsigned DATA_LINE_WAY_COUNT = 1
+ ) (
+@@ -125,38 +106,12 @@ module ooo_pipeline_synth_core_top #(
+     ooo_pipeline_npc_core_top #(
+         .RESET_VECTOR(32'h8000_0000),
+         .EXTERNAL_MEMORY(1'b1),
+-        .RAW_COMPLETION_WAKEUP_ENABLE(RAW_COMPLETION_WAKEUP_ENABLE),
+-        .SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE(
+-            SAME_CYCLE_DEPENDENCY_FORWARDING_ENABLE),
+-        .HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE(
+-            HEAD_LOAD_WRITEBACK_COMMIT_BYPASS_ENABLE),
+-        .HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE(
+-            HEAD_ALU_WRITEBACK_COMMIT_BYPASS_ENABLE),
+-        .HEAD_BRU_WRITEBACK_COMMIT_BYPASS_ENABLE(
+-            HEAD_BRU_WRITEBACK_COMMIT_BYPASS_ENABLE),
+-        .LOAD_RESPONSE_COMPLETION_BYPASS_ENABLE(
+-            LOAD_RESPONSE_COMPLETION_BYPASS_ENABLE),
+-        .PAIR_RAW_TO_FINAL_BYPASS_ENABLE(PAIR_RAW_TO_FINAL_BYPASS_ENABLE),
+         .DECODE_DISPATCH_FALLTHROUGH_ENABLE(
+             DECODE_DISPATCH_FALLTHROUGH_ENABLE),
+         .FETCH_DECODE_FALLTHROUGH_ENABLE(
+             FETCH_DECODE_FALLTHROUGH_ENABLE),
+         .FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE(
+             FETCH_RESPONSE_CREDIT_TURNOVER_ENABLE),
+-        .IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE(
+-            IFETCH_SAME_EDGE_RESPONSE_CAPTURE_ENABLE),
+-        .TARGET_LINE_HIT_ENABLE(TARGET_LINE_HIT_ENABLE),
+-        .TARGET_LINE_ENTRY_COUNT(TARGET_LINE_ENTRY_COUNT),
+-        .TARGET_LINE_WAY_COUNT(TARGET_LINE_WAY_COUNT),
+-        .CONDITIONAL_PRED_ENTRIES(CONDITIONAL_PRED_ENTRIES),
+-        .CORRELATED_PREDICTOR_ENABLE(CORRELATED_PREDICTOR_ENABLE),
+-        .SAME_CYCLE_RAS_UPDATE_FORWARDING_ENABLE(
+-            SAME_CYCLE_RAS_UPDATE_FORWARDING_ENABLE),
+-        .SEQUENTIAL_LINE_HIT_ENABLE(SEQUENTIAL_LINE_HIT_ENABLE),
+-        .BRANCH_WINDOW_LINE_DELIVERY_ENABLE(
+-            BRANCH_WINDOW_LINE_DELIVERY_ENABLE),
+-        .SPECULATIVE_STORE_DISPATCH_ENABLE(
+-            SPECULATIVE_STORE_DISPATCH_ENABLE),
+         .ORDERED_TARGET_PREFETCH_ORACLE_ENABLE(
+             ORDERED_TARGET_PREFETCH_ORACLE_ENABLE),
+         .DEMAND_FETCH_LATENCY_ORACLE_ENABLE(
+@@ -179,8 +134,6 @@ module ooo_pipeline_synth_core_top #(
+             REGISTERED_BRANCH_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+         .STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE(
+             STORE_ISSUE_FINAL_FALLTHROUGH_ENABLE),
+-        .MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE(
+-            MDU_MUL_COMPLETION_FALLTHROUGH_ENABLE),
+         .POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE(
+             POSTED_STORE_RESPONSE_OWNERSHIP_ENABLE),
+         .POSTED_STORE_RESPONSE_PIPELINE_ENABLE(
+@@ -214,7 +167,6 @@ module ooo_pipeline_synth_core_top #(
+         .CACHED_CROSS_LINE_ROLLING_CARRY_ENABLE(
+             CACHED_CROSS_LINE_ROLLING_CARRY_ENABLE),
+         .DUAL_TRACE_SINK_ENABLE(DUAL_TRACE_SINK_ENABLE),
+-        .DATA_LINE_HIT_ENABLE(DATA_LINE_HIT_ENABLE),
+         .DATA_LINE_SAME_WORD_MISS_COALESCING_ENABLE(
+             DATA_LINE_SAME_WORD_MISS_COALESCING_ENABLE),
+         .DATA_LINE_STORE_RESPONSE_UPDATE_ENABLE(

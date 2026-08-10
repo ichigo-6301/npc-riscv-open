@@ -1,0 +1,68 @@
+{
+  "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+  "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+  "evidence_commit": "c47c7dc2e9333de9fc798e56b7ed65d70c88dbd6",
+  "status": "historical_partial",
+  "scope": "seven workloads x ideal/default",
+  "common_identity": {
+    "arch": "riscv32-M-npc",
+    "config_profile": "rv32im_4k_v1",
+    "seed": 1,
+    "deterministic_rtc": true,
+    "difftest": true,
+    "commit_trace": true,
+    "candidate_causal_ownership_level": 2,
+    "baseline_causal_ownership_level": 0,
+    "parameter_lock_sha256": "65c6c2b6d32a1ea2434ab0cba04e29d99d8270477139c16f8d1b1cd473cd0d2a",
+    "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
+    "lq_response_causal_cut": 0,
+    "stable_entry_iq": 1,
+    "iq_split_payload_read": 1,
+    "rob_indexed_service_level": 1,
+    "data_sectored_cache": 1,
+    "data_sector_line_bytes": 32,
+    "data_sector_ways": 2,
+    "data_cache_capacity_bytes": 4096
+  },
+  "preserved_aggregate_artifact_identities": {
+    "level0_manifest_sha256": "ef53d1c4213aec0d1e5bbe5b44f934eb907e772796ea388555ea513e292240eb",
+    "level0_summary_sha256": "ab4d4f111ccf224564271765a45722a097116485d77e7fe882a40954af90c452",
+    "level2_manifest_sha256": "db26e49a0bf6431b01cfce95f4023716f1335907db071531a0490cbacf212d57",
+    "level2_summary_sha256": "0dee41c83912b4c67e85304ed563c753d9323f226f0d49f43c1afa1cb1543e4d",
+    "analysis_json_sha256": "701ba843044cfb7a62ae9529838328be8592a67da6a450a6dbc01c2c4a763f14",
+    "analysis_csv_sha256": "328215280b79f7a3fc82ce51e98bf07e84d2a2a1a41184b7654513b790b49cce"
+  },
+  "points": [
+    {"workload": "coremark", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "matrix-mul", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "crc32", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "quick-sort", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "load-store", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "dhrystone", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "microbench", "profile": "ideal", "ifetch_lsu_memory_latency": [0, 0, 0], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "coremark", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "matrix-mul", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "crc32", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "quick-sort", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "load-store", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "dhrystone", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"},
+    {"workload": "microbench", "profile": "default", "ifetch_lsu_memory_latency": [2, 3, 2], "binary_sha256": null, "config_sha256": null, "baseline_normalized_trace_sha256": null, "candidate_normalized_trace_sha256": null, "identity_status": "aggregate_reported_only", "result": "reported_pass_not_independently_auditable"}
+  ],
+  "reported_aggregate_result": {
+    "identity_points_reported_passed": 14,
+    "identity_points_total": 14,
+    "retired_instruction_counts_reported_match": true,
+    "normalized_architectural_commit_traces_reported_match": true,
+    "good_trap_difftest_watchdog_reported_pass": true,
+    "protocol_lifecycle_conservation_errors_reported": 0
+  },
+  "per_point_missing_identity": {
+    "binary_sha256": "not preserved in reachable Git evidence",
+    "config_sha256": "not preserved per point; only the shared manifest contract and aggregate manifest hashes remain",
+    "baseline_normalized_trace_sha256": "not preserved in reachable Git evidence",
+    "candidate_normalized_trace_sha256": "not preserved in reachable Git evidence",
+    "cycles": "not preserved per point",
+    "instructions": "not preserved per point"
+  },
+  "maturity_boundary": "The 14 points enumerate the historical aggregate report. Missing per-point binaries, config hashes, trace digests and counters prevent independently revalidating precise-retirement identity; this evidence is partial and is not a verified performance claim."
+}

@@ -1,0 +1,128 @@
+{
+  "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+  "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+  "evidence_commit": "c47c7dc2e9333de9fc798e56b7ed65d70c88dbd6",
+  "top": "ooo_pipeline_synth_core_top",
+  "status": "historical_reconstructable_input_identity",
+  "artifacts": [
+    {
+      "role": "parameter_base",
+      "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_legacy.tcl",
+      "sha256": "34204e07c2ce9e097b96dc904dc9b8e27592e3f6534aaccf5bf693c40d49be1d",
+      "size_bytes": 2397,
+      "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_legacy.tcl"
+    },
+    {
+      "role": "parameter_cache_overlay",
+      "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d10_line32.tcl",
+      "sha256": "ca4f137857abf76fdee79d6e502733aa95ceed564e394aff809b50c2279571f1",
+      "size_bytes": 300,
+      "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d10_line32.tcl"
+    },
+    {
+      "role": "parameter_ownership_level1_overlay",
+      "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12_level1.tcl",
+      "sha256": "300d96918f2984df95b4f0885bb76b5e2cf3f3bd24142d551421c6cd407081b9",
+      "size_bytes": 352,
+      "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d12_level1.tcl"
+    },
+    {
+      "role": "parameter_ownership_level2_overlay",
+      "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12_level2.tcl",
+      "sha256": "65c6c2b6d32a1ea2434ab0cba04e29d99d8270477139c16f8d1b1cd473cd0d2a",
+      "size_bytes": 226,
+      "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d12_level2.tcl"
+    },
+    {
+      "role": "effective_parameters",
+      "schema": "npc-riscv-open/ooo-d12-effective-parameters-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/d12_effective_parameters.json",
+      "sha256": "3bb7935089d6f9353ceea5ae9ad7d61e0119cb2fc66f12ba8d45a43710a8f5db",
+      "size_bytes": 3405,
+      "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630"
+    },
+    {
+      "role": "tracked_structural_filelist",
+      "schema": "npc-riscv-open/ooo-d12-tracked-filelist-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12.f",
+      "sha256": "c571279f3af6a4670a7a55653dfde7e6684d463f08fda652fa99cac9cb21c220",
+      "size_bytes": 3388,
+      "origin_logical_path": "npc/open/flows/asic/filelists/rv32im_ooo_4k_d12.f"
+    },
+    {
+      "role": "tracked_macro_blackbox_verilog",
+      "schema": "npc-riscv-open/ooo-d12-macro-blackbox-verilog-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/d12_openram_blackboxes.sv",
+      "sha256": "66f8308687803b3806ec9ba092658131b6021abacc938b63894b1b74cb1bf045",
+      "size_bytes": 648,
+      "origin_logical_path": "npc/tests/ooo_data_sector_cache_standalone/openram_blackboxes.sv",
+      "modules": ["npc_dcache_data_1r1w_512x32_b8", "npc_ooo_data_word_1r1w_1024x32_b8"]
+    }
+  ],
+  "parameter_reconstruction": {
+    "entry": "rv32im_ooo_4k_d12_level2.tcl",
+    "algorithm": "recursively expand same-directory tracked TCL source directives, parse NAME=VALUE tokens, and let later assignments override earlier values",
+    "canonicalization": "JSON object of the final parameter map, sorted keys, compact separators",
+    "expected_parameter_count": 64,
+    "expected_effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630"
+  },
+  "source_reconstruction": {
+    "source_patch": "provenance/upstream/rv32im_ooo_4k/history/d12_from_public_s9s.patch",
+    "source_set_manifest": "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256",
+    "historical_source_prefix": "vsrc_ooo",
+    "public_source_prefix": "rtl/profiles/rv32im_ooo_4k",
+    "mapping_algorithm": "replace the leading vsrc_ooo path component in source and +incdir+ entries with rtl/profiles/rv32im_ooo_4k after applying the bounded D12 patch",
+    "unsupported_directives": "fail closed",
+    "macro_role": "blackbox interface only; no Liberty, LEF, GDS, PDK or commercial-library payload is included"
+  },
+  "structural_source_set_identity": {
+    "schema": "npc-riscv-open/ooo-d12-structural-source-set-identity-v1",
+    "canonicalization": {
+      "algorithm": "SHA256 over canonical records concatenated in tracked filelist order",
+      "incdir_record": "literal +incdir+ followed by the historical-relative path and LF",
+      "define_record": "the directive exactly as written followed by LF",
+      "source_record": "historical-relative path, one NUL byte, lowercase SHA256 of file bytes, then LF",
+      "path_mapping": {
+        "public": "rtl/profiles/rv32im_ooo_4k",
+        "historical": "vsrc_ooo"
+      }
+    },
+    "yosys": {
+      "status": "historical_verified_reconstructable",
+      "filelist_role": "tracked_structural_filelist",
+      "source_count": 61,
+      "expected_source_set_sha256": "e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
+      "public_reconstruction_complete": true
+    },
+    "spyglass": {
+      "status": "historical_partial_path_bound",
+      "reported_source_set_sha256": "8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62",
+      "public_reconstruction_complete": false,
+      "reason": "the generated compatibility-stage relative path and derived filelist were not preserved in reachable Git, while that path is part of the historical digest"
+    },
+    "verilator": {
+      "status": "historical_partial_log_only",
+      "source_set_sha256": null,
+      "log_sha256": "b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c",
+      "public_reconstruction_complete": false,
+      "reason": "the retained historical report binds a log digest but does not bind an independently reconstructable source-set identity"
+    }
+  },
+  "related_functional_identity": {
+    "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+    "path": "provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json",
+    "sha256": "1c6de6af32c3870b1be39090570e3579234e9847a87d528d965be64fc8d8897a",
+    "size_bytes": 7301,
+    "status": "historical_partial"
+  },
+  "nonclaims": [
+    "This bundle does not include raw logs, generated libraries, PDK data or host paths.",
+    "The macro artifact is the exact tracked blackbox interface used by the structural gates, not a characterized memory view.",
+    "This bundle does not establish performance, DC, frequency, area, P&R or signoff results.",
+    "Only the Yosys source-set identity is reconstructable from the published inputs; SpyGlass and Verilator input identity remains partial."
+  ]
+}
