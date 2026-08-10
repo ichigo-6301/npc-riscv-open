@@ -1,0 +1,94 @@
+{
+  "schema": "npc-riscv-open/ooo-loop-remediation-v1",
+  "generated_at": "2026-08-10T00:00:00Z",
+  "profile": "rv32im_ooo_4k",
+  "epoch": "d12_registered_causal_ownership",
+  "status": "historical_verified",
+  "claim_scope": "structural_and_functional_only",
+  "source": {
+    "base_commit": "a698a882",
+    "implementation_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+    "parameter_lock_role": "rv32im_ooo_4k_d12_level2",
+    "parameter_lock_sha256": "65c6c2b6d32a1ea2434ab0cba04e29d99d8270477139c16f8d1b1cd473cd0d2a",
+    "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
+    "filelist_sha256": "c571279f3af6a4670a7a55653dfde7e6684d463f08fda652fa99cac9cb21c220",
+    "macro_verilog_sha256": "66f8308687803b3806ec9ba092658131b6021abacc938b63894b1b74cb1bf045",
+    "relationship_to_canonical": "D12 is a bounded historical ownership-remediation snapshot reconstructed from the canonical public source content; it is not represented as an ancestor of the canonical S9S source.",
+    "reconstruction": {
+      "patch": {
+        "path": "provenance/upstream/rv32im_ooo_4k/history/d12_from_public_s9s.patch",
+        "sha256": "9433208a99d0d7f4aac920d3e7d6b8a5deeea91c658899293cfd34a77e496922"
+      },
+      "source_set_manifest": {
+        "path": "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256",
+        "sha256": "1bfc868e01f2f4f304c1794de86c9a72f102b78d05d2f2ccf284b62aa45dd21f"
+      },
+      "file_count": 71
+    }
+  },
+  "architecture": {
+    "registered_boundaries": [
+      "typed ROB outcome and retire ownership",
+      "depth-3 core-memory request and response ownership",
+      "typed completion and registered service ownership",
+      "persistent recovery token and RAS preview ownership"
+    ],
+    "precise_retirement": true,
+    "forbidden_live_feedback_restored": false
+  },
+  "structural": {
+    "status": "pass",
+    "spyglass": {
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "source_set_sha256": "8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62",
+      "design_read_errors": 0,
+      "comb_loop": 0,
+      "waived_errors": 0,
+      "forbidden_project_controls": []
+    },
+    "verilator": {
+      "unoptflat": 0
+    },
+    "yosys": {
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "source_set_sha256": "e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
+      "pre_techmap_scc": 0,
+      "post_techmap_scc": 0,
+      "pre_techmap_check_clean": true,
+      "post_techmap_check_clean": true
+    }
+  },
+  "functional": {
+    "status": "pass",
+    "identity_points_passed": 14,
+    "identity_points_total": 14,
+    "protocol_lifecycle_conservation_errors": 0,
+    "precise_retirement_preserved": true
+  },
+  "evidence_sources": [
+    {
+      "role": "bounded_d12_result",
+      "git_ref": "c47c7dc2e9333de9fc798e56b7ed65d70c88dbd6",
+      "logical_path": "npc/docs/synth/d12_ooo_causal_ownership_backbone.json",
+      "sha256": "757b70f98d0b36005fff88a4cfc714f98d5817341ce46e45968e2cb656a368e9"
+    }
+  ],
+  "inheritance": {
+    "performance": false,
+    "dc": false,
+    "ppa": false
+  },
+  "claim_ids": [
+    "ooo_historical_comb_loop_zero",
+    "ooo_historical_unoptflat_zero",
+    "ooo_historical_pre_techmap_scc_zero",
+    "ooo_historical_post_techmap_scc_zero",
+    "ooo_historical_precise_retirement_preserved"
+  ],
+  "nonclaims": [
+    "No performance metric is inherited from the pre-remediation S9S or P89 checkpoints.",
+    "No DC, mapped netlist, timing, frequency, area, P&R, power or signoff result is claimed.",
+    "The bounded structural gates do not claim zero messages across every lint policy.",
+    "The D12 snapshot is not claimed as the current canonical public RTL."
+  ]
+}

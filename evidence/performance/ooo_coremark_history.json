@@ -1,0 +1,114 @@
+{
+  "schema": "npc-riscv-open/ooo-coremark-history-v1",
+  "generated_at": "2026-08-10T00:00:00Z",
+  "profile": "rv32im_ooo_4k",
+  "epoch": "pre_combinational_loop_remediation",
+  "benchmark": "AM CoreMark, whole-program reset-to-ebreak window",
+  "comparison_status": "partial",
+  "comparability_domain": {
+    "runner": "pipeline backend under riscv32e-npc runner naming",
+    "isa": "RV32IM",
+    "benchmark_binary_isa": "rv32e_zicsr",
+    "benchmark_binary_abi": "ilp32e",
+    "hardware_m_extension": true,
+    "default_profile": {
+      "ifetch_latency": 2,
+      "lsu_latency": 3,
+      "memory_latency": 2
+    },
+    "seed": 1,
+    "difftest": true,
+    "measurement_window": "whole_program_reset_to_ebreak",
+    "metric": "cycles / retired_instructions",
+    "workload_identity": "same_benchmark_family",
+    "strict_fixed_binary_ab": false
+  },
+  "baseline": {
+    "id": "s9a_pipeline_performance_baseline",
+    "source_ref": "7154e5a3d61fab18718a33f3fe2588891c1b291b",
+    "evidence_ref": "d7376dde657a33213f966e0d69f8032b7ffcb3f9",
+    "cycles": 48395814,
+    "retired_instructions": 7824961,
+    "whole_program_cpi": 6.184799387499,
+    "binary_sha256": null,
+    "config_sha256": null,
+    "status": "partial",
+    "status_reason": "The tracked historical baseline preserves source, profile, counters and the seven-workload result, but its binary and configuration hashes are unavailable."
+  },
+  "optimized": {
+    "id": "s9r_p89_load_transaction_depth3",
+    "source_ref": "0e1730b71b7c4ad699e919fc9404189a5e8729d6",
+    "evidence_ref": "3a947f180f3bf01dcac8cd88044cc2ae64cbd630",
+    "cycles": 8590215,
+    "retired_instructions": 7824973,
+    "whole_program_cpi": 1.097794842231,
+    "binary_sha256": "dc9a01a68109b14edf4f975ab2bb960d132b8b6d432e42ce43031fea72b17317",
+    "config_sha256": "582d996093bbc50b2fb8d2c6332b0246336fc66d6804c38fa151729764764ae0",
+    "feature": "load_transaction_depth3 explicitly enabled within the retained performance stack",
+    "production_default_at_checkpoint": false,
+    "status": "historical_verified"
+  },
+  "derived": {
+    "metric": "same_benchmark_family_speedup",
+    "formula": "baseline.whole_program_cpi / optimized.whole_program_cpi",
+    "value": 5.633838992108,
+    "display_value": "approximately 5.63x",
+    "retired_instruction_delta": 12,
+    "status": "partial",
+    "status_reason": "The baseline binary hash is unavailable and the two historical runs differ by 12 retired instructions; this is not a strict fixed-binary A/B."
+  },
+  "lineage": {
+    "canonical_public_source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",
+    "canonical_workbench_source_ref": "8c004f4ac7d8c99fa71b8adde35a319f7472c93a",
+    "relationship": "The P89 source is an ancestor of the canonical public S9S source; the published numbers remain bound to the P89 historical checkpoint.",
+    "reconstruction": {
+      "patch": {
+        "path": "provenance/upstream/rv32im_ooo_4k/history/p89_from_public_s9s.patch",
+        "sha256": "66e2c4970ea2ab2272a70a9b9c0d4bf4d894487e5fd7ddee5b0777f51f6231de"
+      },
+      "source_set_manifest": {
+        "path": "provenance/upstream/rv32im_ooo_4k/history/p89_source_set.sha256",
+        "sha256": "14d271ea3c06a1c1ea68607cf9f2eeb45f9140066e80d40a38b14bcb5b101e84"
+      },
+      "file_count": 63
+    },
+    "inheritance": {
+      "current": false,
+      "loop_free": false,
+      "dc": false,
+      "ppa": false
+    }
+  },
+  "evidence_sources": [
+    {
+      "role": "baseline_bounded_analysis",
+      "git_ref": "d7376dde657a33213f966e0d69f8032b7ffcb3f9",
+      "logical_path": "npc/docs/perf/s9a_pipeline_performance_baseline.md",
+      "sha256": "70bbe524b936868a08fc2dc2bf8d67981e84ba2db63b0ee9fbd14fd696b4cfc9"
+    },
+    {
+      "role": "optimized_decision",
+      "git_ref": "3a947f180f3bf01dcac8cd88044cc2ae64cbd630",
+      "logical_path": "npc/docs/perf/s9r_p89_load_transaction_depth3_status.md",
+      "sha256": "6315bce70ce55bd0325a7337b49ab8a867bfc13ec2db173690e51d3db5260db5"
+    },
+    {
+      "role": "optimized_run_manifest",
+      "git_ref": "3a947f180f3bf01dcac8cd88044cc2ae64cbd630",
+      "logical_path": "npc/docs/perf/s9r_p89_load_transaction_depth3_seven_on_manifest.txt",
+      "sha256": "9f8c6daa23934bf9edd9b41c39d2bb2284e1167040117a4db2b86fed89ff7e9e"
+    },
+    {
+      "role": "optimized_bounded_summary",
+      "git_ref": "3a947f180f3bf01dcac8cd88044cc2ae64cbd630",
+      "logical_path": "npc/docs/perf/s9r_p89_load_transaction_depth3_seven_on_summary.csv",
+      "sha256": "dd98af1f37189d8e61c892a7d17eaa91ce81aaa21488135938635989550db830"
+    }
+  ],
+  "claim_ids": [
+    "ooo_historical_s9a_coremark_whole_cpi",
+    "ooo_historical_p89_coremark_whole_cpi",
+    "ooo_historical_coremark_approx_speedup"
+  ],
+  "caveat": "This is a historical same-benchmark-family comparison from the pre-loop-remediation performance epoch, not a current loop-free RTL, DC, FPGA, backend or silicon result."
+}

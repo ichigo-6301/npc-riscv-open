@@ -268,6 +268,42 @@
       "status": "not_claimed"
     },
     {
+      "conditions": "The S9A baseline binary hash is unavailable and the S9A/P89 endpoints differ by 12 retired instructions even though their workload family, latency profile and seed agree",
+      "evidence_id": "ooo_coremark_history_public",
+      "evidence_status": "historical_partial_comparison",
+      "id": "ooo_historical_coremark_strict_ab_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "Source and counter provenance support an approximate architecture-lineage comparison, not a binary-identical or fixed-source experiment",
+      "source_commit": "multiple_historical_refs",
+      "statement": "The historical CoreMark 6.184799-to-1.097795 evolution is not claimed as a strict fixed-binary or fixed-source A/B",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "The P89 CoreMark counters predate D12 causal-ownership remediation; D12 structural qualification intentionally carries no matching CoreMark counter claim",
+      "evidence_id": "ooo_loop_remediation_public",
+      "evidence_status": "historical_structural_only",
+      "id": "ooo_loop_remediation_performance_not_inherited",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "Performance-first and loop-remediated source epochs must remain separate until an exact matching benchmark is published",
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "statement": "The P89 CoreMark CPI and approximate speedup are not claimed for the D12 loop-remediated source",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "D12 verifies registered ownership and structural loop gates only; the canonical public Profile remains source lock 99fcc2be and no source-matched DC or physical implementation is published",
+      "evidence_id": "ooo_loop_remediation_public",
+      "evidence_status": "historical_structural_only",
+      "id": "ooo_loop_remediation_current_backend_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "A reconstructable historical source delta is not a current Profile promotion or implementation result",
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "statement": "Current-source performance, Design Compiler frequency or area, P&R, STA, Fmax and signoff are not claimed from the D12 structural evidence",
+      "status": "not_claimed"
+    },
+    {
       "conditions": "The frontend and branch ratios belong to historical simulation checkpoints before the combinational-loop remediation and causal-ownership refactor",
       "evidence_id": "ooo_historical_optimization_public",
       "evidence_status": "historical_verified_epoch_limited",

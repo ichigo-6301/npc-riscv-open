@@ -354,6 +354,50 @@
       "type": "bounded_historical_microarchitecture_summary"
     },
     {
+      "caveat": "Historical pre-loop-remediation CoreMark lineage only; the baseline binary hash is unavailable and the endpoints differ by 12 retired instructions, so the approximately 5.63x comparison remains partial and is not inherited by current, loop-free, DC, FPGA or ASIC results",
+      "claims": [
+        "ooo_historical_s9a_coremark_whole_cpi",
+        "ooo_historical_p89_coremark_whole_cpi",
+        "ooo_historical_coremark_approx_speedup"
+      ],
+      "configuration": "Historical S9A and P89 CoreMark whole-program endpoints; rv32e_zicsr/ilp32e benchmark binary on RV32IM hardware with M extension; IF/LSU/memory 2/3/2; seed 1; difftest",
+      "generated_time": "2026-08-10T00:00:00Z",
+      "id": "ooo_coremark_history_public",
+      "path": "../evidence/performance/ooo_coremark_history.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "6718c6e8ec5a1b9a8e621b73557e1bb0f083cf942b168212af765a39cc202896",
+      "size_bytes": 4919,
+      "snapshot_id": "main-ooo-history-v1",
+      "source_ref": "multiple_historical_refs",
+      "status": "partial",
+      "tool": "Historical RTL simulation, profile-matched NEMU difftest and bounded counter summaries",
+      "type": "bounded_historical_coremark_lineage_summary"
+    },
+    {
+      "caveat": "Historical D12 structural and functional evidence only; it does not inherit P89 performance and establishes no current-source, DC, timing, frequency, area, P&R, power or signoff result",
+      "claims": [
+        "ooo_historical_comb_loop_zero",
+        "ooo_historical_unoptflat_zero",
+        "ooo_historical_pre_techmap_scc_zero",
+        "ooo_historical_post_techmap_scc_zero",
+        "ooo_historical_precise_retirement_preserved"
+      ],
+      "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU with identity-matched whole-core structural gates and 14/14 functional identity points",
+      "generated_time": "2026-08-10T00:00:00Z",
+      "id": "ooo_loop_remediation_public",
+      "path": "../evidence/verification/ooo_loop_remediation.json",
+      "project_id": "npc-riscv-open",
+      "public": true,
+      "sha256": "d3f06ca1d8fdd595104754a41bafd91cd650b007d89371e6a5d210aa99b961c4",
+      "size_bytes": 3777,
+      "snapshot_id": "main-ooo-history-v1",
+      "source_ref": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "status": "verified",
+      "tool": "Identity-matched RTL simulation, SpyGlass structural lint, Verilator structural lint and Yosys SCC checks",
+      "type": "bounded_historical_structural_remediation_summary"
+    },
+    {
       "caveat": "Three historical uncommitted source snapshots are separate; board/workload observation is partial and later forwarding/predictor snapshots have implementation/timing only",
       "claims": [
         "single_fpga_original_routed_frequency",

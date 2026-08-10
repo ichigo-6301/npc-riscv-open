@@ -29,6 +29,10 @@ CORE_PAIRS = (
         "docs/evidence/performance_history.en.md",
     ),
     (
+        "docs/evidence/ooo_architecture_performance_history.md",
+        "docs/evidence/ooo_architecture_performance_history.en.md",
+    ),
+    (
         "docs/evidence/system_fpga_history.md",
         "docs/evidence/system_fpga_history.en.md",
     ),
