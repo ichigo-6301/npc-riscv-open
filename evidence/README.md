@@ -41,11 +41,15 @@ Historical, snapshot-scoped evidence is intentionally separate:
 - `performance/ooo_frontend_branch_ab.json` records pre-loop-remediation OoO
   frontend and branch-prediction experiments with explicit denominators;
 - `verification/ooo_loop_remediation.json` records the separate D12 typed
-  registered-ownership epoch and zero CombLoop, UNOPTFLAT, and pre/post-techmap
-  SCC results. Precise retirement is retained only as partial aggregate
-  reporting: the workload/profile enumeration and 14/14 count are preserved,
-  but per-point binary/config/trace/counter identity is not. It does not inherit
-  P89 performance;
+  registered-ownership epoch. Yosys pre/post-techmap SCC `0/0` is historical
+  verified because source-set `e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12`
+  is exactly recomputed from the public filelist and reconstruction. SpyGlass
+  CombLoop `0` is report-only historical partial because its staged relative
+  path context is unavailable; Verilator UNOPTFLAT `0` is log-only historical
+  partial because no source-set binding was retained. Precise retirement is
+  also partial aggregate reporting: the workload/profile enumeration and 14/14
+  count are preserved, but per-point binary/config/trace/counter identity is
+  not. It does not inherit P89 performance;
 - `system/linux_boot.json` records bounded Linux 6.6.141 boot markers and
   source lineage without publishing the raw log;
 - `fpga/single_xc7z100_history.json` records three Vivado snapshots across all

@@ -123,8 +123,8 @@
       "config_bundle": {
         "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
         "path": "provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json",
-        "sha256": "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7",
-        "size_bytes": 5088,
+        "sha256": "4735bea060c0cd397fadfee54094a1323f5f17ec610ac49d04f4e2996c46eb4b",
+        "size_bytes": 6939,
         "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
         "tracked_filelist_sha256": "c571279f3af6a4670a7a55653dfde7e6684d463f08fda652fa99cac9cb21c220",
         "macro_verilog_sha256": "66f8308687803b3806ec9ba092658131b6021abacc938b63894b1b74cb1bf045"

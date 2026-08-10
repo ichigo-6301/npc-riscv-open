@@ -316,6 +316,18 @@
       "status": "not_claimed"
     },
     {
+      "conditions": "The historical SpyGlass digest includes a generated compatibility-stage relative path and derived filelist that were not preserved in reachable Git; the Verilator report retains a log digest but no source-set identity",
+      "evidence_id": "ooo_loop_remediation_public",
+      "evidence_status": "historical_partial_input_identity",
+      "id": "ooo_loop_remediation_non_yosys_input_identity_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "The published inputs can reconstruct the Yosys source-set exactly, but cannot reproduce the historical SpyGlass path-bound digest or bind the Verilator log to an exact source set",
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "statement": "Exact reconstructable input identity is not claimed for the historical SpyGlass CombLoop or Verilator UNOPTFLAT reports",
+      "status": "not_claimed"
+    },
+    {
       "conditions": "The frontend and branch ratios belong to historical simulation checkpoints before the combinational-loop remediation and causal-ownership refactor",
       "evidence_id": "ooo_historical_optimization_public",
       "evidence_status": "historical_verified_epoch_limited",

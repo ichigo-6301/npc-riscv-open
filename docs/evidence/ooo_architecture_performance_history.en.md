@@ -115,8 +115,8 @@ backpressure.
 ## D12 Registered-Ownership Remediation
 
 <!-- evidence:ooo_loop_remediation_public -->
-<!-- claim:ooo_historical_comb_loop_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
-<!-- claim:ooo_historical_unoptflat_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_comb_loop_zero maturity:partial value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_unoptflat_zero maturity:partial value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_precise_retirement_preserved maturity:partial value:true epoch:d12_registered_causal_ownership -->
@@ -136,15 +136,25 @@ refactors the Issue/WB/Commit and LSU boundaries:
 - a persistent recovery token separates recovery, RAS preview, and irreversible
   side effects from live backpressure.
 
-Identity-matched structural gates report SpyGlass CombLoop `0`, Verilator
-UNOPTFLAT `0`, and Yosys pre/post-techmap SCC `0/0`; these four structural
-results are `historical_verified`. The historical report also records 14/14
-ideal/default points across seven workloads and zero protocol, lifecycle, and
-conservation errors. Reachable Git evidence does not retain per-point
-binary/config hashes, normalized trace digests, cycles, or retired
-instructions, so precise-retirement preservation is only an aggregate-reported
-`partial` result. D12 does not inherit P89's `1.097795` CPI and is not a rerun
-of the public canonical source.
+The three historical structural result families have different levels of
+publicly reproducible maturity:
+
+- the SpyGlass report records CombLoop `0`, but its staged source-set digest
+  depends on relative-path context that was not retained, so it is report-only
+  `historical_partial`;
+- the Verilator log records UNOPTFLAT `0`, but it does not bind a reproducible
+  source-set identity, so it is log-only `historical_partial`;
+- Yosys pre/post-techmap SCC is `0/0`. Its source-set
+  `e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12`
+  was recomputed exactly from the public tracked filelist, D12 reconstruction,
+  and role-by-role manifest, so both SCC results are `historical_verified`.
+
+The historical report also records 14/14 ideal/default points across seven
+workloads and zero protocol, lifecycle, and conservation errors. Reachable Git
+evidence does not retain per-point binary/config hashes, normalized trace
+digests, cycles, or retired instructions, so precise-retirement preservation is
+only an aggregate-reported `partial` result. D12 does not inherit P89's
+`1.097795` CPI and is not a rerun of the public canonical source.
 
 ## Claim Boundary And Nonclaims
 
@@ -153,9 +163,14 @@ of the public canonical source.
   of approximately `5.63x`; the comparison remains
   `partial` and the P89 endpoint marked `historical_verified`.
 - Supported: a separate D12 source epoch completed registered Issue/WB/Commit
-  and LSU ownership; all four loop/SCC counts across the three structural tools
-  are zero. Precise retirement is an aggregate-reported 14/14 `partial` result,
-  not a claim of independently replayable per-point identity.
+  and LSU ownership. Yosys pre/post SCC `0/0` is `historical_verified`; the
+  SpyGlass CombLoop `0` and Verilator UNOPTFLAT `0` records are respectively
+  report-only and log-only `historical_partial`. Precise retirement is an
+  aggregate-reported 14/14 `partial` result, not a claim of independently
+  replayable per-point identity.
+- Not permitted: describing all three tools' zero counts as uniformly
+  source-bound verified closure. Only the Yosys source set is exactly
+  reconstructed by public evidence.
 - Not permitted: presenting P89 CPI as performance of the current acyclic RTL,
   public canonical source, FPGA, or ASIC implementation.
 - Not permitted: claiming a D12 or current-OoO DC closure point, area, P&R, STA,

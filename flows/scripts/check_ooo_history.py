@@ -43,8 +43,8 @@ P89_PATCH_SHA256 = "66e2c4970ea2ab2272a70a9b9c0d4bf4d894487e5fd7ddee5b0777f51f62
 P89_MANIFEST_SHA256 = "14d271ea3c06a1c1ea68607cf9f2eeb45f9140066e80d40a38b14bcb5b101e84"
 D12_PATCH_SHA256 = "9433208a99d0d7f4aac920d3e7d6b8a5deeea91c658899293cfd34a77e496922"
 D12_MANIFEST_SHA256 = "1bfc868e01f2f4f304c1794de86c9a72f102b78d05d2f2ccf284b62aa45dd21f"
-D12_INPUT_BUNDLE_SHA256 = "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7"
-D12_INPUT_BUNDLE_SIZE = 5088
+D12_INPUT_BUNDLE_SHA256 = "4735bea060c0cd397fadfee54094a1323f5f17ec610ac49d04f4e2996c46eb4b"
+D12_INPUT_BUNDLE_SIZE = 6939
 D12_FUNCTIONAL_POINTS_SHA256 = "1c6de6af32c3870b1be39090570e3579234e9847a87d528d965be64fc8d8897a"
 D12_FUNCTIONAL_POINTS_SIZE = 7301
 D12_EFFECTIVE_PARAMETERS_FILE_SHA256 = "3bb7935089d6f9353ceea5ae9ad7d61e0119cb2fc66f12ba8d45a43710a8f5db"
@@ -109,6 +109,40 @@ EXPECTED_D12_ARTIFACTS = [
         "modules": ["npc_dcache_data_1r1w_512x32_b8", "npc_ooo_data_word_1r1w_1024x32_b8"],
     },
 ]
+
+EXPECTED_D12_STRUCTURAL_SOURCE_SET_IDENTITY = {
+    "schema": "npc-riscv-open/ooo-d12-structural-source-set-identity-v1",
+    "canonicalization": {
+        "algorithm": "SHA256 over canonical records concatenated in tracked filelist order",
+        "incdir_record": "literal +incdir+ followed by the historical-relative path and LF",
+        "define_record": "the directive exactly as written followed by LF",
+        "source_record": "historical-relative path, one NUL byte, lowercase SHA256 of file bytes, then LF",
+        "path_mapping": {
+            "public": "rtl/profiles/rv32im_ooo_4k",
+            "historical": "vsrc_ooo",
+        },
+    },
+    "yosys": {
+        "status": "historical_verified_reconstructable",
+        "filelist_role": "tracked_structural_filelist",
+        "source_count": 61,
+        "expected_source_set_sha256": D12_YOSYS_SOURCE_SET_SHA256,
+        "public_reconstruction_complete": True,
+    },
+    "spyglass": {
+        "status": "historical_partial_path_bound",
+        "reported_source_set_sha256": D12_SPYGLASS_SOURCE_SET_SHA256,
+        "public_reconstruction_complete": False,
+        "reason": "the generated compatibility-stage relative path and derived filelist were not preserved in reachable Git, while that path is part of the historical digest",
+    },
+    "verilator": {
+        "status": "historical_partial_log_only",
+        "source_set_sha256": None,
+        "log_sha256": "b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c",
+        "public_reconstruction_complete": False,
+        "reason": "the retained historical report binds a log digest but does not bind an independently reconstructable source-set identity",
+    },
+}
 
 COREMARK_CLAIMS = [
     "ooo_historical_s9a_coremark_whole_cpi",
@@ -177,8 +211,8 @@ EXPECTED_CLAIMS = {
     },
     "ooo_historical_comb_loop_zero": {
         "benchmark": "D12 whole-core causal-ownership structural qualification",
-        "caveat": "Historical D12 source only; this structural result does not inherit P89 performance and is not current public RTL, DC, P&R, STA or silicon evidence",
-        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; effective parameters a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630; no waivers or false-path controls",
+        "caveat": "Historical D12 report only; the path-bound compatibility-stage source identity cannot be reconstructed from reachable Git, so this zero count remains partial and inherits no P89 performance or backend result",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; reported source-set 8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62; exact generated stage path and derived filelist unavailable",
         "evidence": ["ooo_loop_remediation_public"],
         "id": "ooo_historical_comb_loop_zero",
         "metric": "whole_core_spyglass_comb_loop_count",
@@ -186,15 +220,15 @@ EXPECTED_CLAIMS = {
         "public": True,
         "source_ref": D12_SOURCE,
         "statement": "The historical D12 typed registered-ownership source reports zero whole-core SpyGlass CombLoop findings",
-        "status": "verified",
+        "status": "partial",
         "tool": "SpyGlass L2016.06 lint/lint_rtl",
         "unit": "count",
         "value": 0,
     },
     "ooo_historical_unoptflat_zero": {
         "benchmark": "D12 whole-core causal-ownership structural qualification",
-        "caveat": "Historical D12 source only; zero UNOPTFLAT does not claim complete lint cleanliness or physical timing closure",
-        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; effective parameters a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
+        "caveat": "Historical D12 log only; no independently reconstructable source-set identity is bound to this zero count, so it remains partial and does not claim complete lint or physical timing closure",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; retained log SHA256 b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c; source-set identity unavailable",
         "evidence": ["ooo_loop_remediation_public"],
         "id": "ooo_historical_unoptflat_zero",
         "metric": "whole_core_verilator_unoptflat_count",
@@ -202,14 +236,14 @@ EXPECTED_CLAIMS = {
         "public": True,
         "source_ref": D12_SOURCE,
         "statement": "The historical D12 typed registered-ownership source reports zero Verilator UNOPTFLAT findings",
-        "status": "verified",
+        "status": "partial",
         "tool": "Verilator 5.008 structural lint",
         "unit": "count",
         "value": 0,
     },
     "ooo_historical_pre_techmap_scc_zero": {
         "benchmark": "D12 whole-core causal-ownership structural qualification",
-        "caveat": "Historical D12 source only; the RTLIL graph result is not a mapped timing or area claim",
+        "caveat": "Historical D12 source only; the source-set digest is publicly reconstructed from 61 ordered RTL sources, while the RTLIL graph result is not a mapped timing or area claim",
         "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; source-set e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
         "evidence": ["ooo_loop_remediation_public"],
         "id": "ooo_historical_pre_techmap_scc_zero",
@@ -225,7 +259,7 @@ EXPECTED_CLAIMS = {
     },
     "ooo_historical_post_techmap_scc_zero": {
         "benchmark": "D12 whole-core causal-ownership structural qualification",
-        "caveat": "Historical D12 source only; the techmapped graph result is not a Design Compiler, frequency, area or physical-implementation claim",
+        "caveat": "Historical D12 source only; the source-set digest is publicly reconstructed from 61 ordered RTL sources, while the techmapped graph result is not a Design Compiler, frequency, area or physical-implementation claim",
         "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; source-set e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
         "evidence": ["ooo_loop_remediation_public"],
         "id": "ooo_historical_post_techmap_scc_zero",
@@ -305,6 +339,18 @@ EXPECTED_NONCLAIMS = {
         "statement": "Per-point D12 binary/config/trace/counter identity and strict replayability are not claimed",
         "status": "not_claimed",
     },
+    "ooo_loop_remediation_non_yosys_input_identity_not_claimed": {
+        "conditions": "The historical SpyGlass digest includes a generated compatibility-stage relative path and derived filelist that were not preserved in reachable Git; the Verilator report retains a log digest but no source-set identity",
+        "evidence_id": "ooo_loop_remediation_public",
+        "evidence_status": "historical_partial_input_identity",
+        "id": "ooo_loop_remediation_non_yosys_input_identity_not_claimed",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
+        "reason": "The published inputs can reconstruct the Yosys source-set exactly, but cannot reproduce the historical SpyGlass path-bound digest or bind the Verilator log to an exact source set",
+        "source_commit": D12_SOURCE,
+        "statement": "Exact reconstructable input identity is not claimed for the historical SpyGlass CombLoop or Verilator UNOPTFLAT reports",
+        "status": "not_claimed",
+    },
 }
 
 EXPECTED_COUNTERS = {
@@ -329,6 +375,7 @@ EXPECTED_LOOP_NONCLAIMS = [
     "The bounded structural gates do not claim zero messages across every lint policy.",
     "The D12 snapshot is not claimed as the current canonical public RTL.",
     "The historical report records 14/14 aggregate identity points, but per-point binary/config hashes and normalized trace digests were not preserved in reachable Git evidence; precise retirement therefore remains a partial aggregate report.",
+    "The exact SpyGlass compatibility-stage path and derived filelist and any Verilator source-set binding were not preserved; their reported zero findings therefore remain partial.",
 ]
 EXPECTED_COREMARK_SOURCES = [
     {
@@ -583,10 +630,11 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
         "inheritance", "claim_ids", "nonclaims",
     }, "OoO loop remediation", errors)
     require_exact(data, {
+        "generated_at": "2026-08-10T00:00:00Z",
         "profile": "rv32im_ooo_4k",
         "epoch": "d12_registered_causal_ownership",
         "status": "historical_partial",
-        "claim_scope": "structural_verified_and_functional_aggregate_partial_only",
+        "claim_scope": "structural_mixed_maturity_and_functional_aggregate_partial_only",
     }, "OoO loop remediation", errors)
     if data.get("claim_ids") != LOOP_CLAIMS:
         errors.append("OoO loop-remediation claim set/order drift")
@@ -659,7 +707,7 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
         errors.append("OoO forbidden live feedback boundary was weakened")
 
     structural = data.get("structural", {})
-    if not isinstance(structural, dict) or structural.get("status") != "pass":
+    if not isinstance(structural, dict) or structural.get("status") != "historical_mixed_maturity":
         errors.append("OoO structural closure status drift")
         structural = structural if isinstance(structural, dict) else {}
     require_keys(structural, {"status", "spyglass", "verilator", "yosys"},
@@ -674,24 +722,42 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
     if not isinstance(yosys, dict):
         yosys = {}
     require_keys(spyglass, {
-        "source_commit", "source_set_sha256", "design_read_errors", "comb_loop",
+        "evidence_maturity", "identity_status", "source_commit",
+        "reported_source_set_sha256", "input_manifest_sha256", "log_sha256",
+        "report_sha256", "summary_sha256", "design_read_errors", "comb_loop",
         "waived_errors", "forbidden_project_controls",
     }, "OoO SpyGlass loop gate", errors)
-    require_keys(verilator, {"unoptflat"}, "OoO Verilator loop gate", errors)
+    require_keys(verilator, {
+        "evidence_maturity", "identity_status", "log_sha256", "unoptflat",
+    }, "OoO Verilator loop gate", errors)
     require_keys(yosys, {
-        "source_commit", "source_set_sha256", "pre_techmap_scc", "post_techmap_scc",
-        "pre_techmap_check_clean", "post_techmap_check_clean",
+        "evidence_maturity", "identity_status", "source_commit", "source_set_sha256",
+        "pre_techmap_scc", "post_techmap_scc", "pre_techmap_check_clean",
+        "post_techmap_check_clean",
     }, "OoO Yosys SCC gate", errors)
     require_exact(spyglass, {
+        "evidence_maturity": "partial",
+        "identity_status": "historical_report_path_bound_not_reconstructable",
         "source_commit": D12_SOURCE,
-        "source_set_sha256": D12_SPYGLASS_SOURCE_SET_SHA256,
+        "reported_source_set_sha256": D12_SPYGLASS_SOURCE_SET_SHA256,
+        "input_manifest_sha256": "6baa3e23b23324a7c12d58b30714b858b166672f69cce7bc4ac4398569856df0",
+        "log_sha256": "3883bc81b2fea58d8012d3ebf7bf29f83e875385e1c2134f5beb6b47aea95c6b",
+        "report_sha256": "83600454c7192d37b90301be3b87f5cfc2d45325f4cae65791bea93bea652b6f",
+        "summary_sha256": "3e45a307a3b762503806a98779f5f334e1b2844e4bfc9a1180b278a2f254999f",
         "design_read_errors": 0,
         "comb_loop": 0,
         "waived_errors": 0,
         "forbidden_project_controls": [],
     }, "OoO SpyGlass loop gate", errors)
-    require_exact(verilator, {"unoptflat": 0}, "OoO Verilator loop gate", errors)
+    require_exact(verilator, {
+        "evidence_maturity": "partial",
+        "identity_status": "historical_log_only_no_source_set_binding",
+        "log_sha256": "b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c",
+        "unoptflat": 0,
+    }, "OoO Verilator loop gate", errors)
     require_exact(yosys, {
+        "evidence_maturity": "verified",
+        "identity_status": "publicly_reconstructable",
         "source_commit": D12_SOURCE,
         "source_set_sha256": D12_YOSYS_SOURCE_SET_SHA256,
         "pre_techmap_scc": 0,
@@ -960,8 +1026,44 @@ def check_d12_effective_parameters(root: Path, bundle: dict,
         errors.append("D12 effective parameter canonical SHA256 drift")
 
 
+def recompute_d12_yosys_source_set(filelist_path: Path, source_manifest_path: Path,
+                                   errors: MutableSequence[str]) -> tuple:
+    manifest_entries = parse_source_manifest(source_manifest_path, errors)
+    digest = hashlib.sha256()
+    source_count = 0
+    try:
+        lines = filelist_path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as error:
+        errors.append("cannot read D12 structural filelist: {}".format(error))
+        return "", 0
+    for number, raw in enumerate(lines, 1):
+        line = raw.strip()
+        if not line or line.startswith("//"):
+            continue
+        if line.startswith("+incdir+") or line.startswith("+define+"):
+            digest.update((line + "\n").encode("utf-8"))
+            continue
+        if not line.startswith("vsrc_ooo/") or ".." in PurePosixPath(line).parts:
+            errors.append("D12 filelist contains unsupported entry at line {}".format(number))
+            continue
+        mapped = "rtl/profiles/rv32im_ooo_4k/" + line[len("vsrc_ooo/"):]
+        role_sha256 = manifest_entries.get(mapped)
+        if role_sha256 is None:
+            errors.append("D12 filelist source is absent from reconstructed role set: {}".format(
+                mapped))
+            continue
+        digest.update(line.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(role_sha256.encode("ascii"))
+        digest.update(b"\n")
+        source_count += 1
+    if source_count != 61:
+        errors.append("D12 Yosys source-set source count drift: {} != 61".format(source_count))
+    return digest.hexdigest(), source_count
+
+
 def check_d12_filelist_and_macro(root: Path, bundle: dict,
-                                 errors: MutableSequence[str]) -> None:
+                                 errors: MutableSequence[str]) -> str:
     records = {
         item.get("role"): item for item in bundle.get("artifacts", [])
         if isinstance(item, dict) and isinstance(item.get("role"), str)
@@ -969,25 +1071,12 @@ def check_d12_filelist_and_macro(root: Path, bundle: dict,
     filelist_record = records.get("tracked_structural_filelist", {})
     filelist_path = root / str(filelist_record.get("path", ""))
     source_manifest_path = root / "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256"
-    manifest_entries = parse_source_manifest(source_manifest_path, errors)
-    mapped_sources = []  # type: List[str]
-    if filelist_path.is_file():
-        for number, raw in enumerate(filelist_path.read_text(encoding="utf-8").splitlines(), 1):
-            line = raw.strip()
-            if not line or line.startswith("//") or line.startswith("+define+"):
-                continue
-            if line == "+incdir+vsrc_ooo/include":
-                continue
-            if not line.startswith("vsrc_ooo/") or ".." in PurePosixPath(line).parts:
-                errors.append("D12 filelist contains unsupported entry at line {}".format(number))
-                continue
-            mapped = "rtl/profiles/rv32im_ooo_4k/" + line[len("vsrc_ooo/"):]
-            mapped_sources.append(mapped)
-            if mapped not in manifest_entries:
-                errors.append("D12 filelist source is absent from reconstructed role set: {}".format(
-                    mapped))
-    if not mapped_sources or len(mapped_sources) != len(set(mapped_sources)):
-        errors.append("D12 filelist mapped-source set is empty or duplicated")
+    yosys_source_set_sha256 = ""
+    if filelist_path.is_file() and source_manifest_path.is_file():
+        yosys_source_set_sha256, _ = recompute_d12_yosys_source_set(
+            filelist_path, source_manifest_path, errors)
+        if yosys_source_set_sha256 != D12_YOSYS_SOURCE_SET_SHA256:
+            errors.append("D12 Yosys source-set SHA256 reconstruction drift")
 
     macro_record = records.get("tracked_macro_blackbox_verilog", {})
     macro_path = root / str(macro_record.get("path", ""))
@@ -996,6 +1085,7 @@ def check_d12_filelist_and_macro(root: Path, bundle: dict,
                              macro_path.read_text(encoding="utf-8"))
         if modules != macro_record.get("modules"):
             errors.append("D12 macro-blackbox module identity drift")
+    return yosys_source_set_sha256
 
 
 def check_d12_functional_points(data: dict, errors: MutableSequence[str]) -> None:
@@ -1118,7 +1208,7 @@ def check_d12_provenance(root: Path, loop: dict, lineage: dict,
         require_keys(bundle, {
             "schema", "source_commit", "evidence_commit", "top", "status", "artifacts",
             "parameter_reconstruction", "source_reconstruction",
-            "related_functional_identity", "nonclaims",
+            "structural_source_set_identity", "related_functional_identity", "nonclaims",
         }, "D12 input bundle", errors)
         require_exact(bundle, {
             "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
@@ -1143,11 +1233,13 @@ def check_d12_provenance(root: Path, loop: dict, lineage: dict,
                 "unsupported_directives": "fail closed",
                 "macro_role": "blackbox interface only; no Liberty, LEF, GDS, PDK or commercial-library payload is included",
             },
+            "structural_source_set_identity": EXPECTED_D12_STRUCTURAL_SOURCE_SET_IDENTITY,
             "related_functional_identity": dict(expected_point_binding, status="historical_partial"),
             "nonclaims": [
                 "This bundle does not include raw logs, generated libraries, PDK data or host paths.",
                 "The macro artifact is the exact tracked blackbox interface used by the structural gates, not a characterized memory view.",
                 "This bundle does not establish performance, DC, frequency, area, P&R or signoff results.",
+                "Only the Yosys source-set identity is reconstructable from the published inputs; SpyGlass and Verilator input identity remains partial.",
             ],
         }, "D12 input bundle", errors)
         for artifact in EXPECTED_D12_ARTIFACTS:
@@ -1158,7 +1250,23 @@ def check_d12_provenance(root: Path, loop: dict, lineage: dict,
             errors.append("D12 input provenance contains forbidden performance keys: {}".format(
                 ", ".join(forbidden_bundle)))
         check_d12_effective_parameters(root, bundle, errors)
-        check_d12_filelist_and_macro(root, bundle, errors)
+        recomputed_yosys = check_d12_filelist_and_macro(root, bundle, errors)
+        observed_yosys = loop.get("structural", {}).get("yosys", {}).get("source_set_sha256")
+        if recomputed_yosys != observed_yosys:
+            errors.append("D12 recomputed/loop-evidence Yosys source-set identity drift")
+        source_identity = bundle.get("structural_source_set_identity", {})
+        if source_identity != EXPECTED_D12_STRUCTURAL_SOURCE_SET_IDENTITY:
+            errors.append("D12 structural source-set identity schema drift")
+        if recomputed_yosys != source_identity.get("yosys", {}).get(
+                "expected_source_set_sha256"):
+            errors.append("D12 recomputed/bundle Yosys source-set identity drift")
+        if loop.get("structural", {}).get("spyglass", {}).get(
+                "reported_source_set_sha256") != source_identity.get("spyglass", {}).get(
+                    "reported_source_set_sha256"):
+            errors.append("D12 bundle/loop SpyGlass reported identity drift")
+        if loop.get("structural", {}).get("verilator", {}).get(
+                "log_sha256") != source_identity.get("verilator", {}).get("log_sha256"):
+            errors.append("D12 bundle/loop Verilator log identity drift")
     if points_path is not None:
         check_d12_functional_points(load_object(points_path), errors)
 
@@ -1262,7 +1370,11 @@ def check_source_lineage(root: Path, data: dict, errors: MutableSequence[str]) -
         "schema", "generated_at", "profile", "canonical", "snapshots",
         "evidence_bindings", "caveat",
     }, "OoO source lineage", errors)
-    require_exact(data, {"profile": "rv32im_ooo_4k"}, "OoO source lineage", errors)
+    require_exact(data, {
+        "generated_at": "2026-08-10T00:00:00Z",
+        "profile": "rv32im_ooo_4k",
+        "caveat": "The patches reconstruct bounded historical source snapshots from the canonical public role set; they do not change the canonical production RTL.",
+    }, "OoO source lineage", errors)
     canonical = data.get("canonical")
     if not isinstance(canonical, dict):
         errors.append("OoO canonical source identity is missing")
@@ -1464,15 +1576,16 @@ def check_delivery_links(root: Path, coremark: dict, loop: dict,
                 "ooo_loop_remediation_performance_not_inherited",
                 "ooo_loop_remediation_current_backend_not_claimed",
                 "ooo_loop_remediation_point_identity_not_claimed",
+                "ooo_loop_remediation_non_yosys_input_identity_not_claimed",
             ],
             "path": LOOP_PATH,
             "source_ref": D12_SOURCE,
             "status": "partial",
-            "caveat": "Historical D12 structural evidence is verified, while precise retirement is retained only as a partial aggregate 14/14 report because per-point binary/config/trace/counter identity is unavailable; no P89 performance, current-source or backend result is inherited",
-            "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; identity-matched structural gates; seven-workload ideal/default enumeration with aggregate 14/14 functional reporting",
+            "caveat": "Historical D12 Yosys SCC evidence has a publicly reconstructable source-set identity; SpyGlass CombLoop, Verilator UNOPTFLAT and precise retirement remain partial because their complete input or per-point identity is unavailable; no P89 performance, current-source or backend result is inherited",
+            "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; Yosys source-set reconstructed from 61 ordered RTL sources; SpyGlass/Verilator reports retained with partial input identity; aggregate 14/14 functional reporting",
             "generated_time": "2026-08-10T00:00:00Z",
             "snapshot_id": "main-ooo-history-v1",
-            "tool": "Identity-matched structural lint and SCC checks plus aggregate historical RTL functional reporting",
+            "tool": "Reconstructable Yosys SCC checks, bounded historical SpyGlass/Verilator reports and aggregate RTL functional reporting",
             "type": "bounded_historical_structural_remediation_summary",
         },
     }

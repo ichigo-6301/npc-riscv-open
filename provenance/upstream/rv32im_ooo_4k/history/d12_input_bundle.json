@@ -79,6 +79,39 @@
     "unsupported_directives": "fail closed",
     "macro_role": "blackbox interface only; no Liberty, LEF, GDS, PDK or commercial-library payload is included"
   },
+  "structural_source_set_identity": {
+    "schema": "npc-riscv-open/ooo-d12-structural-source-set-identity-v1",
+    "canonicalization": {
+      "algorithm": "SHA256 over canonical records concatenated in tracked filelist order",
+      "incdir_record": "literal +incdir+ followed by the historical-relative path and LF",
+      "define_record": "the directive exactly as written followed by LF",
+      "source_record": "historical-relative path, one NUL byte, lowercase SHA256 of file bytes, then LF",
+      "path_mapping": {
+        "public": "rtl/profiles/rv32im_ooo_4k",
+        "historical": "vsrc_ooo"
+      }
+    },
+    "yosys": {
+      "status": "historical_verified_reconstructable",
+      "filelist_role": "tracked_structural_filelist",
+      "source_count": 61,
+      "expected_source_set_sha256": "e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
+      "public_reconstruction_complete": true
+    },
+    "spyglass": {
+      "status": "historical_partial_path_bound",
+      "reported_source_set_sha256": "8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62",
+      "public_reconstruction_complete": false,
+      "reason": "the generated compatibility-stage relative path and derived filelist were not preserved in reachable Git, while that path is part of the historical digest"
+    },
+    "verilator": {
+      "status": "historical_partial_log_only",
+      "source_set_sha256": null,
+      "log_sha256": "b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c",
+      "public_reconstruction_complete": false,
+      "reason": "the retained historical report binds a log digest but does not bind an independently reconstructable source-set identity"
+    }
+  },
   "related_functional_identity": {
     "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
     "path": "provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json",
@@ -89,6 +122,7 @@
   "nonclaims": [
     "This bundle does not include raw logs, generated libraries, PDK data or host paths.",
     "The macro artifact is the exact tracked blackbox interface used by the structural gates, not a characterized memory view.",
-    "This bundle does not establish performance, DC, frequency, area, P&R or signoff results."
+    "This bundle does not establish performance, DC, frequency, area, P&R or signoff results.",
+    "Only the Yosys source-set identity is reconstructable from the published inputs; SpyGlass and Verilator input identity remains partial."
   ]
 }

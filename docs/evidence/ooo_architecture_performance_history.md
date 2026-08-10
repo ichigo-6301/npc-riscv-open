@@ -91,8 +91,8 @@ AMO exclusion、tag/generation/recovery-epoch 匹配和响应反压契约。
 ## D12 的寄存化 ownership 整改
 
 <!-- evidence:ooo_loop_remediation_public -->
-<!-- claim:ooo_historical_comb_loop_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
-<!-- claim:ooo_historical_unoptflat_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_comb_loop_zero maturity:partial value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_unoptflat_zero maturity:partial value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
 <!-- claim:ooo_historical_precise_retirement_preserved maturity:partial value:true epoch:d12_registered_causal_ownership -->
@@ -106,12 +106,21 @@ performance-first RTL 的仿真 PASS 只证明时序仿真下的架构行为，�
 - typed completion owner 与寄存化双宽 service arbiter 隔离 FU 许可和下游 ready；
 - persistent recovery token 将恢复、RAS preview 和不可逆副作用从实时反压中分离。
 
-该快照在身份匹配的结构门禁中得到 SpyGlass CombLoop `0`、Verilator UNOPTFLAT
-`0`、Yosys pre/post-techmap SCC `0/0`，这四项结构结果为
-`historical_verified`。历史报告还记录七负载 ideal/default 共 14/14 点通过、协议/生命周期/
-守恒错误为 `0`；但 reachable Git evidence 未保留逐点 binary/config hash、normalized trace
-digest、cycles 与 retired instructions，因此“保持精确退休”只能作为 aggregate-reported
-`partial` 结果。D12 不继承 P89 的 `1.097795` CPI，也不代表公开 canonical source 的当前复跑。
+三类历史结构结果具有不同的公开可复核成熟度：
+
+- SpyGlass 报告记录 CombLoop `0`，但其 staged source-set digest 依赖未保留的相对路径
+  上下文，无法从公开包重新计算，因此仅为 report-only `historical_partial`；
+- Verilator 日志记录 UNOPTFLAT `0`，但日志没有绑定可复核的 source-set identity，因此
+  仅为 log-only `historical_partial`；
+- Yosys pre/post-techmap SCC 为 `0/0`，其 source-set
+  `e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12`
+  已由公开 tracked filelist、D12 reconstruction 和逐角色 manifest 精确重算，因此这两项
+  为 `historical_verified`。
+
+历史报告还记录七负载 ideal/default 共 14/14 点通过、协议/生命周期/守恒错误为 `0`；
+但 reachable Git evidence 未保留逐点 binary/config hash、normalized trace digest、cycles
+与 retired instructions，因此“保持精确退休”只能作为 aggregate-reported `partial`
+结果。D12 不继承 P89 的 `1.097795` CPI，也不代表公开 canonical source 的当前复跑。
 
 ## Claim 边界与非声明项
 
@@ -119,8 +128,12 @@ digest、cycles 与 retired instructions，因此“保持精确退休”只能�
   `6.18 -> 1.10`，按同频全程序 cycle 比值约 `5.63x`；comparison 为 `partial`，P89 端点为
   `historical_verified`。
 - 本证据支持：另一个 D12 source epoch 完成 Issue/WB/Commit/LSU 寄存化
-  ownership 重构，三个结构工具门禁的四项 loop/SCC 计数均为零；精确退休仅为
-  14/14 aggregate-reported `partial`，不声明逐点可重放身份。
+  ownership 重构；Yosys pre/post SCC `0/0` 为 `historical_verified`，SpyGlass
+  CombLoop `0` 与 Verilator UNOPTFLAT `0` 分别为 report-only/log-only
+  `historical_partial`。精确退休仅为 14/14 aggregate-reported `partial`，不声明逐点
+  可重放身份。
+- 不可写：把三个工具的零计数统一描述为 source-bound verified closure；公开证据只对
+  Yosys source-set 完成精确重算。
 - 不可写：把 P89 CPI 称为当前无环 RTL、公开 canonical source、FPGA 或 ASIC 性能。
 - 不可写：D12 或当前 OoO 的 DC 固定频点、面积、P&R、STA、Fmax、功耗或 signoff；
   本证据未给出这些结论。

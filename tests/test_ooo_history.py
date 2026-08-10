@@ -68,12 +68,19 @@ class OooHistoryTests(unittest.TestCase):
     def test_loop_gate_identity_and_nonclaim_mutations_fail(self):
         source = load(CHECKER.LOOP_PATH)
         mutations = (
+            lambda item: item.__setitem__("generated_at", "2026-08-11T00:00:00Z"),
             lambda item: item["source"].__setitem__("implementation_commit", "0" * 40),
             lambda item: item["source"].__setitem__("relationship_to_canonical", "ancestor"),
             lambda item: item["source"].__setitem__("filelist_sha256", "0" * 64),
             lambda item: item["source"]["input_bundle"].__setitem__("sha256", "0" * 64),
             lambda item: item["structural"]["spyglass"].__setitem__("comb_loop", 1),
+            lambda item: item["structural"]["spyglass"].__setitem__(
+                "evidence_maturity", "verified"),
             lambda item: item["structural"]["verilator"].__setitem__("unoptflat", 1),
+            lambda item: item["structural"]["verilator"].__setitem__(
+                "identity_status", "publicly_reconstructable"),
+            lambda item: item["structural"]["yosys"].__setitem__(
+                "source_set_sha256", "0" * 64),
             lambda item: item["structural"]["yosys"].__setitem__("pre_techmap_scc", 1),
             lambda item: item["structural"]["yosys"].__setitem__("post_techmap_scc", 1),
             lambda item: item["functional"].__setitem__("identity_points_reported_passed", 13),
@@ -112,6 +119,9 @@ class OooHistoryTests(unittest.TestCase):
         source = load(CHECKER.LINEAGE_PATH)
         records = CHECKER.snapshot_records(source, [])
         mutations = (
+            lambda item: item.__setitem__("generated_at", "2026-08-11T00:00:00Z"),
+            lambda item: item.__setitem__("profile", "rv32im_ooo_current"),
+            lambda item: item.__setitem__("caveat", "current production RTL"),
             lambda item: next(entry for entry in item["snapshots"] if entry["id"] == "p89").__setitem__(
                 "source_ref", "0" * 40),
             lambda item: next(entry for entry in item["snapshots"] if entry["id"] == "p89").__setitem__(
@@ -459,6 +469,82 @@ class OooHistoryTests(unittest.TestCase):
                 errors = []
                 CHECKER.check_d12_provenance(temporary_root, loop, lineage, errors)
                 self.assertTrue(any("drift" in error for error in errors), errors)
+
+    def test_d12_yosys_source_set_is_recomputed_from_ordered_filelist(self):
+        filelist = ROOT / "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12.f"
+        manifest = ROOT / "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256"
+        errors = []
+        observed, source_count = CHECKER.recompute_d12_yosys_source_set(
+            filelist, manifest, errors)
+        self.assertEqual(errors, [])
+        self.assertEqual(source_count, 61)
+        self.assertEqual(observed, CHECKER.D12_YOSYS_SOURCE_SET_SHA256)
+
+    def test_d12_yosys_source_set_order_directive_role_hash_and_count_mutations_fail(self):
+        source_filelist = ROOT / "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12.f"
+        source_manifest = ROOT / "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256"
+        for mode in ("order", "directive", "role_hash", "source_count"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as temporary:
+                temporary_root = Path(temporary)
+                filelist = temporary_root / "d12.f"
+                manifest = temporary_root / "d12.sha256"
+                shutil.copy2(str(source_filelist), str(filelist))
+                shutil.copy2(str(source_manifest), str(manifest))
+                if mode in ("order", "directive", "source_count"):
+                    lines = filelist.read_text(encoding="utf-8").splitlines()
+                    if mode == "order":
+                        lines[-1], lines[-2] = lines[-2], lines[-1]
+                    elif mode == "directive":
+                        index = lines.index("+define+NPC_ASIC")
+                        lines[index] = "+define+NPC_ASIC_DRIFT"
+                    else:
+                        lines.pop()
+                    filelist.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                else:
+                    lines = manifest.read_text(encoding="utf-8").splitlines()
+                    digest_value, relative = lines[0].split("  ", 1)
+                    lines[0] = "{}  {}".format("0" * 64, relative)
+                    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                errors = []
+                observed, source_count = CHECKER.recompute_d12_yosys_source_set(
+                    filelist, manifest, errors)
+                self.assertTrue(
+                    errors or source_count != 61 or observed != CHECKER.D12_YOSYS_SOURCE_SET_SHA256)
+
+    def test_coordinated_d12_structural_source_identity_promotion_fails(self):
+        loop = load(CHECKER.LOOP_PATH)
+        lineage = load(CHECKER.LINEAGE_PATH)
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = Path(temporary)
+            shutil.copytree(str(ROOT / "provenance"), str(temporary_root / "provenance"))
+            bundle_path = temporary_root / CHECKER.D12_INPUT_BUNDLE_PATH
+            bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+            bundle["structural_source_set_identity"]["spyglass"].update({
+                "status": "historical_verified_reconstructable",
+                "public_reconstruction_complete": True,
+            })
+            bundle["structural_source_set_identity"]["verilator"].update({
+                "status": "historical_verified_reconstructable",
+                "source_set_sha256": CHECKER.D12_YOSYS_SOURCE_SET_SHA256,
+                "public_reconstruction_complete": True,
+            })
+            bundle_path.write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
+            promoted_sha = digest(bundle_path)
+            promoted_size = bundle_path.stat().st_size
+            candidate_loop = copy.deepcopy(loop)
+            candidate_loop["source"]["input_bundle"].update({
+                "sha256": promoted_sha, "size_bytes": promoted_size,
+            })
+            candidate_lineage = copy.deepcopy(lineage)
+            d12 = next(item for item in candidate_lineage["snapshots"] if item["id"] == "d12")
+            d12["config_bundle"].update({
+                "sha256": promoted_sha, "size_bytes": promoted_size,
+            })
+            errors = []
+            CHECKER.check_d12_provenance(
+                temporary_root, candidate_loop, candidate_lineage, errors)
+            self.assertTrue(any("structural source-set identity" in error
+                                or "input bundle" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

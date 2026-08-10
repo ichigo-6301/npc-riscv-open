@@ -4,7 +4,7 @@
   "profile": "rv32im_ooo_4k",
   "epoch": "d12_registered_causal_ownership",
   "status": "historical_partial",
-  "claim_scope": "structural_verified_and_functional_aggregate_partial_only",
+  "claim_scope": "structural_mixed_maturity_and_functional_aggregate_partial_only",
   "source": {
     "base_commit": "a698a882",
     "implementation_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
@@ -16,8 +16,8 @@
     "input_bundle": {
       "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
       "path": "provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json",
-      "sha256": "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7",
-      "size_bytes": 5088,
+      "sha256": "4735bea060c0cd397fadfee54094a1323f5f17ec610ac49d04f4e2996c46eb4b",
+      "size_bytes": 6939,
       "parameter_reconstruction_algorithm": "recursively expand the four same-directory tracked TCL locks, apply later-value override, then hash the sorted compact JSON parameter map",
       "filelist_source_prefix_map": {
         "historical": "vsrc_ooo",
@@ -51,19 +51,30 @@
     "forbidden_live_feedback_restored": false
   },
   "structural": {
-    "status": "pass",
+    "status": "historical_mixed_maturity",
     "spyglass": {
+      "evidence_maturity": "partial",
+      "identity_status": "historical_report_path_bound_not_reconstructable",
       "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
-      "source_set_sha256": "8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62",
+      "reported_source_set_sha256": "8fa1ba69869e2a19b3bb5fb9ebc6393ce87f416af8f830eb4e4d578c5523ec62",
+      "input_manifest_sha256": "6baa3e23b23324a7c12d58b30714b858b166672f69cce7bc4ac4398569856df0",
+      "log_sha256": "3883bc81b2fea58d8012d3ebf7bf29f83e875385e1c2134f5beb6b47aea95c6b",
+      "report_sha256": "83600454c7192d37b90301be3b87f5cfc2d45325f4cae65791bea93bea652b6f",
+      "summary_sha256": "3e45a307a3b762503806a98779f5f334e1b2844e4bfc9a1180b278a2f254999f",
       "design_read_errors": 0,
       "comb_loop": 0,
       "waived_errors": 0,
       "forbidden_project_controls": []
     },
     "verilator": {
+      "evidence_maturity": "partial",
+      "identity_status": "historical_log_only_no_source_set_binding",
+      "log_sha256": "b76c0fb87c920af89c3c911686cbc6fc72e71dc0ef8ab920fccef1a5dbae1c8c",
       "unoptflat": 0
     },
     "yosys": {
+      "evidence_maturity": "verified",
+      "identity_status": "publicly_reconstructable",
       "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
       "source_set_sha256": "e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
       "pre_techmap_scc": 0,
@@ -113,6 +124,7 @@
     "No DC, mapped netlist, timing, frequency, area, P&R, power or signoff result is claimed.",
     "The bounded structural gates do not claim zero messages across every lint policy.",
     "The D12 snapshot is not claimed as the current canonical public RTL.",
-    "The historical report records 14/14 aggregate identity points, but per-point binary/config hashes and normalized trace digests were not preserved in reachable Git evidence; precise retirement therefore remains a partial aggregate report."
+    "The historical report records 14/14 aggregate identity points, but per-point binary/config hashes and normalized trace digests were not preserved in reachable Git evidence; precise retirement therefore remains a partial aggregate report.",
+    "The exact SpyGlass compatibility-stage path and derived filelist and any Verilator source-set binding were not preserved; their reported zero findings therefore remain partial."
   ]
 }

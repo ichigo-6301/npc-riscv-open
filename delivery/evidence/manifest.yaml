@@ -378,7 +378,7 @@
       "type": "bounded_historical_coremark_lineage_summary"
     },
     {
-      "caveat": "Historical D12 structural evidence is verified, while precise retirement is retained only as a partial aggregate 14/14 report because per-point binary/config/trace/counter identity is unavailable; no P89 performance, current-source or backend result is inherited",
+      "caveat": "Historical D12 Yosys SCC evidence has a publicly reconstructable source-set identity; SpyGlass CombLoop, Verilator UNOPTFLAT and precise retirement remain partial because their complete input or per-point identity is unavailable; no P89 performance, current-source or backend result is inherited",
       "claims": [
         "ooo_historical_comb_loop_zero",
         "ooo_historical_unoptflat_zero",
@@ -389,20 +389,21 @@
       "nonclaims": [
         "ooo_loop_remediation_performance_not_inherited",
         "ooo_loop_remediation_current_backend_not_claimed",
-        "ooo_loop_remediation_point_identity_not_claimed"
+        "ooo_loop_remediation_point_identity_not_claimed",
+        "ooo_loop_remediation_non_yosys_input_identity_not_claimed"
       ],
-      "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; identity-matched structural gates; seven-workload ideal/default enumeration with aggregate 14/14 functional reporting",
+      "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; Yosys source-set reconstructed from 61 ordered RTL sources; SpyGlass/Verilator reports retained with partial input identity; aggregate 14/14 functional reporting",
       "generated_time": "2026-08-10T00:00:00Z",
       "id": "ooo_loop_remediation_public",
       "path": "../evidence/verification/ooo_loop_remediation.json",
       "project_id": "npc-riscv-open",
       "public": true,
-      "sha256": "c07120af07e06aa2c6a01329069c7b348e720469fe8d6230892d59bece3dcba4",
-      "size_bytes": 5273,
+      "sha256": "058d1c153db08dacc35f144ae39fc00c6c84ab07a1ad2528b98c7a1c761e6825",
+      "size_bytes": 6266,
       "snapshot_id": "main-ooo-history-v1",
       "source_ref": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
       "status": "partial",
-      "tool": "Identity-matched structural lint and SCC checks plus aggregate historical RTL functional reporting",
+      "tool": "Reconstructable Yosys SCC checks, bounded historical SpyGlass/Verilator reports and aggregate RTL functional reporting",
       "type": "bounded_historical_structural_remediation_summary"
     },
     {
