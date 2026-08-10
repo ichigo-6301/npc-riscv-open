@@ -37,12 +37,15 @@ Historical, snapshot-scoped evidence is intentionally separate:
 - `performance/ooo_coremark_history.json` records the historical S9A-to-P89
   CoreMark whole-program endpoints. The P89 endpoint is historical verified;
   the derived same-workload-family comparison remains partial because the S9A
-  binary hash is unavailable and the retired counts differ by 12;
+  binary/config hashes are unavailable and the retired counts differ by 12;
 - `performance/ooo_frontend_branch_ab.json` records pre-loop-remediation OoO
   frontend and branch-prediction experiments with explicit denominators;
 - `verification/ooo_loop_remediation.json` records the separate D12 typed
-  registered-ownership epoch, precise-retirement checks, and zero CombLoop,
-  UNOPTFLAT, and pre/post-techmap SCC results without inheriting P89 performance;
+  registered-ownership epoch and zero CombLoop, UNOPTFLAT, and pre/post-techmap
+  SCC results. Precise retirement is retained only as partial aggregate
+  reporting: the workload/profile enumeration and 14/14 count are preserved,
+  but per-point binary/config/trace/counter identity is not. It does not inherit
+  P89 performance;
 - `system/linux_boot.json` records bounded Linux 6.6.141 boot markers and
   source lineage without publishing the raw log;
 - `fpga/single_xc7z100_history.json` records three Vivado snapshots across all

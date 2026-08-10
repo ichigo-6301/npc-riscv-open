@@ -32,8 +32,10 @@
     "whole_program_cpi": 6.184799387499,
     "binary_sha256": null,
     "config_sha256": null,
+    "binary_identity_status": "unavailable",
+    "configuration_identity_status": "documented_not_hash_locked",
     "status": "partial",
-    "status_reason": "The tracked historical baseline preserves source, profile, counters and the seven-workload result, but its binary and configuration hashes are unavailable."
+    "status_reason": "The tracked historical baseline preserves source, documented profile settings and counters, but its binary and configuration hashes are unavailable."
   },
   "optimized": {
     "id": "s9r_p89_load_transaction_depth3",
@@ -44,18 +46,20 @@
     "whole_program_cpi": 1.097794842231,
     "binary_sha256": "dc9a01a68109b14edf4f975ab2bb960d132b8b6d432e42ce43031fea72b17317",
     "config_sha256": "582d996093bbc50b2fb8d2c6332b0246336fc66d6804c38fa151729764764ae0",
+    "binary_identity_status": "sha256_locked",
+    "configuration_identity_status": "sha256_locked",
     "feature": "load_transaction_depth3 explicitly enabled within the retained performance stack",
     "production_default_at_checkpoint": false,
     "status": "historical_verified"
   },
   "derived": {
-    "metric": "same_benchmark_family_speedup",
-    "formula": "baseline.whole_program_cpi / optimized.whole_program_cpi",
-    "value": 5.633838992108,
+    "metric": "same_frequency_whole_program_execution_speedup",
+    "formula": "baseline.cycles / optimized.cycles",
+    "value": 5.633830352325,
     "display_value": "approximately 5.63x",
     "retired_instruction_delta": 12,
     "status": "partial",
-    "status_reason": "The baseline binary hash is unavailable and the two historical runs differ by 12 retired instructions; this is not a strict fixed-binary A/B."
+    "status_reason": "The baseline binary and configuration hashes are unavailable and the two historical runs differ by 12 retired instructions; this is not a strict fixed-binary or fixed-config A/B."
   },
   "lineage": {
     "canonical_public_source_ref": "99fcc2be539eabb078c0d73b26a7ef2c00071391",

@@ -268,15 +268,15 @@
       "status": "not_claimed"
     },
     {
-      "conditions": "The S9A baseline binary hash is unavailable and the S9A/P89 endpoints differ by 12 retired instructions even though their workload family, latency profile and seed agree",
+      "conditions": "The S9A baseline binary and configuration hashes are unavailable and the S9A/P89 endpoints differ by 12 retired instructions; shared workload-family, latency, seed and difftest settings come from tracked documentation rather than an S9A hash lock",
       "evidence_id": "ooo_coremark_history_public",
       "evidence_status": "historical_partial_comparison",
       "id": "ooo_historical_coremark_strict_ab_not_claimed",
       "profile": "rv32im_ooo_4k",
       "public": true,
-      "reason": "Source and counter provenance support an approximate architecture-lineage comparison, not a binary-identical or fixed-source experiment",
+      "reason": "Source and counter provenance support an approximate architecture-lineage comparison, not a binary-identical, fixed-config or fixed-source experiment",
       "source_commit": "multiple_historical_refs",
-      "statement": "The historical CoreMark 6.184799-to-1.097795 evolution is not claimed as a strict fixed-binary or fixed-source A/B",
+      "statement": "The historical CoreMark 6.184799-to-1.097795 evolution is not claimed as a strict fixed-binary, fixed-config or fixed-source A/B",
       "status": "not_claimed"
     },
     {
@@ -301,6 +301,18 @@
       "reason": "A reconstructable historical source delta is not a current Profile promotion or implementation result",
       "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
       "statement": "Current-source performance, Design Compiler frequency or area, P&R, STA, Fmax and signoff are not claimed from the D12 structural evidence",
+      "status": "not_claimed"
+    },
+    {
+      "conditions": "Reachable Git evidence preserves the seven-workload ideal/default enumeration and aggregate 14/14 pass counts, but not per-point binary/config hashes, normalized trace digests, cycles or retired instructions",
+      "evidence_id": "ooo_loop_remediation_public",
+      "evidence_status": "historical_partial_aggregate_only",
+      "id": "ooo_loop_remediation_point_identity_not_claimed",
+      "profile": "rv32im_ooo_4k",
+      "public": true,
+      "reason": "Aggregate historical pass reporting cannot establish independently replayable identity for every workload/profile point",
+      "source_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
+      "statement": "Per-point D12 binary/config/trace/counter identity and strict replayability are not claimed",
       "status": "not_claimed"
     },
     {

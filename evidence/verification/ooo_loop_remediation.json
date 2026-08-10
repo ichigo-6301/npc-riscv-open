@@ -3,8 +3,8 @@
   "generated_at": "2026-08-10T00:00:00Z",
   "profile": "rv32im_ooo_4k",
   "epoch": "d12_registered_causal_ownership",
-  "status": "historical_verified",
-  "claim_scope": "structural_and_functional_only",
+  "status": "historical_partial",
+  "claim_scope": "structural_verified_and_functional_aggregate_partial_only",
   "source": {
     "base_commit": "a698a882",
     "implementation_commit": "a8f689cc00213859fb6893b31b65ef5cb3cbd7eb",
@@ -13,6 +13,17 @@
     "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
     "filelist_sha256": "c571279f3af6a4670a7a55653dfde7e6684d463f08fda652fa99cac9cb21c220",
     "macro_verilog_sha256": "66f8308687803b3806ec9ba092658131b6021abacc938b63894b1b74cb1bf045",
+    "input_bundle": {
+      "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json",
+      "sha256": "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7",
+      "size_bytes": 5088,
+      "parameter_reconstruction_algorithm": "recursively expand the four same-directory tracked TCL locks, apply later-value override, then hash the sorted compact JSON parameter map",
+      "filelist_source_prefix_map": {
+        "historical": "vsrc_ooo",
+        "public": "rtl/profiles/rv32im_ooo_4k"
+      }
+    },
     "relationship_to_canonical": "D12 is a bounded historical ownership-remediation snapshot reconstructed from the canonical public source content; it is not represented as an ancestor of the canonical S9S source.",
     "reconstruction": {
       "patch": {
@@ -33,7 +44,10 @@
       "typed completion and registered service ownership",
       "persistent recovery token and RAS preview ownership"
     ],
-    "precise_retirement": true,
+    "precise_retirement_semantics": {
+      "design_contract": "ordered_architectural_retirement",
+      "evidence_maturity": "aggregate_reported_partial"
+    },
     "forbidden_live_feedback_restored": false
   },
   "structural": {
@@ -59,11 +73,20 @@
     }
   },
   "functional": {
-    "status": "pass",
-    "identity_points_passed": 14,
+    "status": "historical_partial",
+    "identity_status": "aggregate_reported_only",
+    "identity_points_reported_passed": 14,
     "identity_points_total": 14,
     "protocol_lifecycle_conservation_errors": 0,
-    "precise_retirement_preserved": true
+    "precise_retirement_preserved": "reported_aggregate_only",
+    "claim_maturity": "partial",
+    "per_point_binary_config_trace_identity_complete": false,
+    "point_identity_artifact": {
+      "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+      "path": "provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json",
+      "sha256": "1c6de6af32c3870b1be39090570e3579234e9847a87d528d965be64fc8d8897a",
+      "size_bytes": 7301
+    }
   },
   "evidence_sources": [
     {
@@ -89,6 +112,7 @@
     "No performance metric is inherited from the pre-remediation S9S or P89 checkpoints.",
     "No DC, mapped netlist, timing, frequency, area, P&R, power or signoff result is claimed.",
     "The bounded structural gates do not claim zero messages across every lint policy.",
-    "The D12 snapshot is not claimed as the current canonical public RTL."
+    "The D12 snapshot is not claimed as the current canonical public RTL.",
+    "The historical report records 14/14 aggregate identity points, but per-point binary/config hashes and normalized trace digests were not preserved in reachable Git evidence; precise retirement therefore remains a partial aggregate report."
   ]
 }

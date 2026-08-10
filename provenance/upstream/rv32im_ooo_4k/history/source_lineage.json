@@ -120,6 +120,23 @@
         "path": "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256",
         "sha256": "1bfc868e01f2f4f304c1794de86c9a72f102b78d05d2f2ccf284b62aa45dd21f"
       },
+      "config_bundle": {
+        "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json",
+        "sha256": "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7",
+        "size_bytes": 5088,
+        "effective_parameters_sha256": "a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
+        "tracked_filelist_sha256": "c571279f3af6a4670a7a55653dfde7e6684d463f08fda652fa99cac9cb21c220",
+        "macro_verilog_sha256": "66f8308687803b3806ec9ba092658131b6021abacc938b63894b1b74cb1bf045"
+      },
+      "functional_identity": {
+        "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json",
+        "sha256": "1c6de6af32c3870b1be39090570e3579234e9847a87d528d965be64fc8d8897a",
+        "size_bytes": 7301,
+        "status": "historical_partial",
+        "identity_status": "aggregate_reported_only"
+      },
       "file_count": 71,
       "roles": [
         "rtl/profiles/rv32im_ooo_4k/common/bbus_ooo_freelist.sv",

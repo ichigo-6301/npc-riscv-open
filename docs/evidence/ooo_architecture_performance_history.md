@@ -42,14 +42,18 @@ OoO 核先以模块和 FSM 原型确定精确状态与年龄语义，再推进�
 - [P89 10-file 可逆差分](../../provenance/upstream/rv32im_ooo_4k/history/p89_from_public_s9s.patch)
   与 [P89 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/p89_source_set.sha256)；
 - [D12 27-file 可逆差分](../../provenance/upstream/rv32im_ooo_4k/history/d12_from_public_s9s.patch)
-  与 [D12 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256)。
+  与 [D12 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256)；
+- [D12 输入身份 bundle](../../provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json)
+  绑定四层参数锁、64 项 effective parameter、原始 filelist 和 macro blackbox 接口；
+- [D12 功能点清单](../../provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json)
+  枚举七负载的 ideal/default 14 个点，并明确逐点身份缺失边界。
 
 ## S9A 到 P89 的 CoreMark 性能端点
 
 <!-- evidence:ooo_coremark_history_public -->
-<!-- claim:ooo_historical_s9a_coremark_whole_cpi maturity:partial -->
-<!-- claim:ooo_historical_p89_coremark_whole_cpi maturity:verified -->
-<!-- claim:ooo_historical_coremark_approx_speedup maturity:partial -->
+<!-- claim:ooo_historical_s9a_coremark_whole_cpi maturity:partial value:6.184799387499 epoch:pre_combinational_loop_remediation -->
+<!-- claim:ooo_historical_p89_coremark_whole_cpi maturity:verified value:1.097794842231 epoch:pre_combinational_loop_remediation -->
+<!-- claim:ooo_historical_coremark_approx_speedup maturity:partial value:5.633830352325 epoch:pre_combinational_loop_remediation -->
 
 两次运行均属于历史 performance-first、组合环整改前的 epoch，使用同一
 `riscv32e-npc` CoreMark workload family、RV32E/Zicsr ILP32E binary、硬件
@@ -62,10 +66,14 @@ OoO 核先以模块和 FSM 原型确定精确状态与年龄语义，再推进�
 | S9A 性能基线 | `7154e5a3d61fab18718a33f3fe2588891c1b291b` | `d7376dde` | 48,395,814 / 7,824,961 | 6.184799 | `partial` |
 | P89 优化端点 | `0e1730b71b7c4ad699e919fc9404189a5e8729d6` | `3a947f18` | 8,590,215 / 7,824,973 | 1.097795 | `historical_verified` |
 
-同 workload family 的 CPI 比值对应同频执行效率约 `5.6338x`，简写为
-`6.18 -> 1.10（约 5.63x）`。
-它保持 `partial`，原因有两个：S9A 原始 binary hash 未保留；两端退休指令相差 12
-条。因此这不是 hash-identical binary A/B，不能升级为当前 source 的严格性能 claim。
+同 workload family 在同频下的全程序 cycle 比值为
+`48,395,814 / 8,590,215 = 5.633830x`，简写为
+`6.18 -> 1.10（约 5.63x）`。由于两端退休指令相差 12 条，CPI 比值会有约
+`0.000009x` 的细微差异，因此 `5.63x` 明确按总周期而非 CPI 比值计算。
+比较保持 `partial`，原因有三项：S9A 原始 binary hash 与 config hash 均未保留；
+两端退休指令相差 12 条。IF/LSU/memory 延迟、seed 与 difftest 设置来自 tracked
+历史文档，不是 S9A 的 hash-locked 配置。因此这不是 hash-identical binary/config
+A/B，不能升级为当前 source 的严格性能 claim。
 P89 端点本身保留了 binary/config hash、计数和 source identity，故端点可标为
 `historical_verified`。配置中启用的 measurement Oracle 只生成观测量，不驱动生产
 ready/valid、仲裁或状态更新。
@@ -83,11 +91,11 @@ AMO exclusion、tag/generation/recovery-epoch 匹配和响应反压契约。
 ## D12 的寄存化 ownership 整改
 
 <!-- evidence:ooo_loop_remediation_public -->
-<!-- claim:ooo_historical_comb_loop_zero maturity:verified -->
-<!-- claim:ooo_historical_unoptflat_zero maturity:verified -->
-<!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified -->
-<!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified -->
-<!-- claim:ooo_historical_precise_retirement_preserved maturity:verified -->
+<!-- claim:ooo_historical_comb_loop_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_unoptflat_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_precise_retirement_preserved maturity:partial value:true epoch:d12_registered_causal_ownership -->
 
 performance-first RTL 的仿真 PASS 只证明时序仿真下的架构行为，不证明组合依赖图
 无环。D12 在另一个 source epoch `a8f689cc00213859fb6893b31b65ef5cb3cbd7eb`
@@ -99,17 +107,20 @@ performance-first RTL 的仿真 PASS 只证明时序仿真下的架构行为，�
 - persistent recovery token 将恢复、RAS preview 和不可逆副作用从实时反压中分离。
 
 该快照在身份匹配的结构门禁中得到 SpyGlass CombLoop `0`、Verilator UNOPTFLAT
-`0`、Yosys pre/post-techmap SCC `0/0`；定向与集成检查保持精确退休，协议、生命周期
-和守恒错误为 `0`。这些结果是 `historical_verified` 的结构证据，不继承 P89 的
-`1.097795` CPI，也不代表公开 canonical source 的当前复跑。
+`0`、Yosys pre/post-techmap SCC `0/0`，这四项结构结果为
+`historical_verified`。历史报告还记录七负载 ideal/default 共 14/14 点通过、协议/生命周期/
+守恒错误为 `0`；但 reachable Git evidence 未保留逐点 binary/config hash、normalized trace
+digest、cycles 与 retired instructions，因此“保持精确退休”只能作为 aggregate-reported
+`partial` 结果。D12 不继承 P89 的 `1.097795` CPI，也不代表公开 canonical source 的当前复跑。
 
 ## Claim 边界与非声明项
 
 - 本证据支持：历史同族 CoreMark whole-program CPI 约
-  `6.18 -> 1.10（约 5.63x）`，comparison 为 `partial`，P89 端点为
+  `6.18 -> 1.10`，按同频全程序 cycle 比值约 `5.63x`；comparison 为 `partial`，P89 端点为
   `historical_verified`。
 - 本证据支持：另一个 D12 source epoch 完成 Issue/WB/Commit/LSU 寄存化
-  ownership 重构，三个结构门禁均为零并保持精确退休。
+  ownership 重构，三个结构工具门禁的四项 loop/SCC 计数均为零；精确退休仅为
+  14/14 aggregate-reported `partial`，不声明逐点可重放身份。
 - 不可写：把 P89 CPI 称为当前无环 RTL、公开 canonical source、FPGA 或 ASIC 性能。
 - 不可写：D12 或当前 OoO 的 DC 固定频点、面积、P&R、STA、Fmax、功耗或 signoff；
   本证据未给出这些结论。

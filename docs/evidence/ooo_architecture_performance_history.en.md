@@ -54,14 +54,20 @@ claimed:
 - [P89 10-file reversible patch](../../provenance/upstream/rv32im_ooo_4k/history/p89_from_public_s9s.patch)
   and [P89 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/p89_source_set.sha256);
 - [D12 27-file reversible patch](../../provenance/upstream/rv32im_ooo_4k/history/d12_from_public_s9s.patch)
-  and [D12 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256).
+  and [D12 source-set SHA256](../../provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256);
+- [D12 input-identity bundle](../../provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json)
+  binds the four parameter locks, 64 effective parameters, original filelist,
+  and macro blackbox interface;
+- [D12 functional-point inventory](../../provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json)
+  enumerates the 14 ideal/default points across seven workloads and states the
+  missing per-point identity boundary.
 
 ## S9A-To-P89 CoreMark Endpoints
 
 <!-- evidence:ooo_coremark_history_public -->
-<!-- claim:ooo_historical_s9a_coremark_whole_cpi maturity:partial -->
-<!-- claim:ooo_historical_p89_coremark_whole_cpi maturity:verified -->
-<!-- claim:ooo_historical_coremark_approx_speedup maturity:partial -->
+<!-- claim:ooo_historical_s9a_coremark_whole_cpi maturity:partial value:6.184799387499 epoch:pre_combinational_loop_remediation -->
+<!-- claim:ooo_historical_p89_coremark_whole_cpi maturity:verified value:1.097794842231 epoch:pre_combinational_loop_remediation -->
+<!-- claim:ooo_historical_coremark_approx_speedup maturity:partial value:5.633830352325 epoch:pre_combinational_loop_remediation -->
 
 Both runs belong to the historical performance-first epoch before
 combinational-loop remediation. They use the same `riscv32e-npc` CoreMark
@@ -75,11 +81,16 @@ ASIC implementation performance.
 | S9A performance baseline | `7154e5a3d61fab18718a33f3fe2588891c1b291b` | `d7376dde` | 48,395,814 / 7,824,961 | 6.184799 | `partial` |
 | P89 optimized endpoint | `0e1730b71b7c4ad699e919fc9404189a5e8729d6` | `3a947f18` | 8,590,215 / 7,824,973 | 1.097795 | `historical_verified` |
 
-The same-workload-family CPI ratio represents approximately `5.6338x`
-same-frequency execution efficiency, summarized as `6.18 -> 1.10`
-(`approximately 5.63x`). It remains `partial` for two reasons: the
-original S9A binary hash was not retained, and the endpoints differ by 12
-retired instructions. This is therefore not a hash-identical binary A/B and
+At equal clock, the same-workload-family whole-program cycle ratio is
+`48,395,814 / 8,590,215 = 5.633830x`, summarized as `6.18 -> 1.10`
+(`approximately 5.63x`). Because the endpoints differ by 12 retired
+instructions, the CPI ratio differs by approximately `0.000009x`; the `5.63x`
+figure is therefore explicitly derived from total cycles, not from the CPI
+ratio. The comparison remains `partial` for three reasons: neither the original
+S9A binary hash nor its configuration hash was retained, and the endpoints
+differ by 12 retired instructions. The IF/LSU/memory latency, seed, and difftest
+settings come from tracked historical documentation rather than a hash-locked
+S9A configuration. This is therefore not a hash-identical binary/config A/B and
 cannot be promoted to a strict current-source performance claim. The P89
 endpoint itself retains its binary/config hashes, counters, and source identity,
 so that endpoint is `historical_verified`. Enabled measurement Oracles only
@@ -104,11 +115,11 @@ backpressure.
 ## D12 Registered-Ownership Remediation
 
 <!-- evidence:ooo_loop_remediation_public -->
-<!-- claim:ooo_historical_comb_loop_zero maturity:verified -->
-<!-- claim:ooo_historical_unoptflat_zero maturity:verified -->
-<!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified -->
-<!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified -->
-<!-- claim:ooo_historical_precise_retirement_preserved maturity:verified -->
+<!-- claim:ooo_historical_comb_loop_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_unoptflat_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_pre_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_post_techmap_scc_zero maturity:verified value:0 epoch:d12_registered_causal_ownership -->
+<!-- claim:ooo_historical_precise_retirement_preserved maturity:partial value:true epoch:d12_registered_causal_ownership -->
 
 A passing performance-first simulation proves architectural behavior for that
 simulation schedule; it does not prove that the combinational dependency graph
@@ -126,20 +137,25 @@ refactors the Issue/WB/Commit and LSU boundaries:
   side effects from live backpressure.
 
 Identity-matched structural gates report SpyGlass CombLoop `0`, Verilator
-UNOPTFLAT `0`, and Yosys pre/post-techmap SCC `0/0`. Directed and integration
-checks preserve precise retirement with zero protocol, lifecycle, and
-conservation errors. These are `historical_verified` structural results. They
-do not inherit P89's `1.097795` CPI and are not a rerun of the public canonical
-source.
+UNOPTFLAT `0`, and Yosys pre/post-techmap SCC `0/0`; these four structural
+results are `historical_verified`. The historical report also records 14/14
+ideal/default points across seven workloads and zero protocol, lifecycle, and
+conservation errors. Reachable Git evidence does not retain per-point
+binary/config hashes, normalized trace digests, cycles, or retired
+instructions, so precise-retirement preservation is only an aggregate-reported
+`partial` result. D12 does not inherit P89's `1.097795` CPI and is not a rerun
+of the public canonical source.
 
 ## Claim Boundary And Nonclaims
 
 - Supported: historical same-workload-family CoreMark whole-program CPI of
-  approximately `6.18 -> 1.10 (approximately 5.63x)`, with the comparison kept
+  approximately `6.18 -> 1.10`, with an equal-clock whole-program cycle ratio
+  of approximately `5.63x`; the comparison remains
   `partial` and the P89 endpoint marked `historical_verified`.
 - Supported: a separate D12 source epoch completed registered Issue/WB/Commit
-  and LSU ownership, cleared all three structural loop gates, and preserved
-  precise retirement.
+  and LSU ownership; all four loop/SCC counts across the three structural tools
+  are zero. Precise retirement is an aggregate-reported 14/14 `partial` result,
+  not a claim of independently replayable per-point identity.
 - Not permitted: presenting P89 CPI as performance of the current acyclic RTL,
   public canonical source, FPGA, or ASIC implementation.
 - Not permitted: claiming a D12 or current-OoO DC closure point, area, P&R, STA,

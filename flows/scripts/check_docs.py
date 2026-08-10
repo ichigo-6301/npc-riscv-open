@@ -58,6 +58,13 @@ METRIC_VALUE_RE = re.compile(
 )
 METRIC_MARKER_RE = re.compile(r"\b(nonclaim|evidence):([A-Za-z0-9_.-]+)\b")
 CODE_TOKEN_RE = re.compile(r"`([A-Za-z0-9_.-]+)`")
+CLAIM_ANNOTATION_RE = re.compile(
+    r"<!--\s*claim:([A-Za-z0-9_.-]+)\s+maturity:([A-Za-z0-9_.-]+)"
+    r"\s+value:([A-Za-z0-9_.+-]+)\s+epoch:([A-Za-z0-9_.-]+)\s*-->"
+)
+EVIDENCE_ANNOTATION_RE = re.compile(
+    r"<!--\s*evidence:([A-Za-z0-9_.-]+)\s*-->"
+)
 SHOWCASE_START = "<!-- showcase:key-results:start -->"
 SHOWCASE_END = "<!-- showcase:key-results:end -->"
 README_RESULT_ROWS = {
@@ -148,6 +155,70 @@ README_CHECK_TOKENS = (
     "dc-matrix-dry-run",
     "pnr-dry-run",
     "sta-dry-run",
+)
+
+OOO_HISTORY_CLAIM_ANNOTATIONS = (
+    ("ooo_historical_s9a_coremark_whole_cpi", "partial", "6.184799387499",
+     "pre_combinational_loop_remediation"),
+    ("ooo_historical_p89_coremark_whole_cpi", "verified", "1.097794842231",
+     "pre_combinational_loop_remediation"),
+    ("ooo_historical_coremark_approx_speedup", "partial", "5.633830352325",
+     "pre_combinational_loop_remediation"),
+    ("ooo_historical_comb_loop_zero", "verified", "0",
+     "d12_registered_causal_ownership"),
+    ("ooo_historical_unoptflat_zero", "verified", "0",
+     "d12_registered_causal_ownership"),
+    ("ooo_historical_pre_techmap_scc_zero", "verified", "0",
+     "d12_registered_causal_ownership"),
+    ("ooo_historical_post_techmap_scc_zero", "verified", "0",
+     "d12_registered_causal_ownership"),
+    ("ooo_historical_precise_retirement_preserved", "partial", "true",
+     "d12_registered_causal_ownership"),
+)
+OOO_HISTORY_EVIDENCE_ANNOTATIONS = (
+    "ooo_coremark_history_public",
+    "ooo_loop_remediation_public",
+)
+OOO_HISTORY_NUMBER_COUNTS = {
+    "48,395,814": 2,
+    "7,824,961": 1,
+    "8,590,215": 2,
+    "7,824,973": 1,
+    "6.184799": 1,
+    "1.097795": 2,
+    "5.633830x": 1,
+    "6.18": 2,
+    "1.10": 2,
+    "5.63x": 3,
+    "0.000009x": 1,
+}
+OOO_HISTORY_REQUIRED_TEXT = {
+    "docs/evidence/ooo_architecture_performance_history.md": (
+        "两次运行均属于历史 performance-first、组合环整改前的 epoch",
+        "whole-program CPI，不是 timed-region CPI，也不是 ASIC 实现性能。",
+        "`48,395,814 / 8,590,215 = 5.633830x`，简写为 `6.18 -> 1.10（约 5.63x）`。",
+        "比较保持 `partial`，原因有三项：S9A 原始 binary hash 与 config hash 均未保留；",
+        "两端退休指令相差 12 条。",
+        "这四项结构结果为 `historical_verified`。",
+        "因此“保持精确退休”只能作为 aggregate-reported `partial` 结果。",
+        "D12 不继承 P89 的 `1.097795` CPI，也不代表公开 canonical source 的当前复跑。",
+        "不可写：D12 或当前 OoO 的 DC 固定频点、面积、P&R、STA、Fmax、功耗或 signoff；",
+    ),
+    "docs/evidence/ooo_architecture_performance_history.en.md": (
+        "Both runs belong to the historical performance-first epoch before combinational-loop remediation.",
+        "It is whole-program CPI, not timed-region CPI or ASIC implementation performance.",
+        "`48,395,814 / 8,590,215 = 5.633830x`, summarized as `6.18 -> 1.10` (`approximately 5.63x`).",
+        "The comparison remains `partial` for three reasons: neither the original S9A binary hash nor its configuration hash was retained, and the endpoints differ by 12 retired instructions.",
+        "these four structural results are `historical_verified`.",
+        "precise-retirement preservation is only an aggregate-reported `partial` result.",
+        "D12 does not inherit P89's `1.097795` CPI and is not a rerun of the public canonical source.",
+        "Not permitted: claiming a D12 or current-OoO DC closure point, area, P&R, STA, Fmax, power, or signoff result. This evidence establishes none of them.",
+    ),
+}
+OOO_HISTORY_FORBIDDEN_TEXT = (
+    "weighted CPI",
+    "加权 CPI",
+    "无环资格版",
 )
 
 
@@ -344,6 +415,52 @@ def check_performance_records(root: Path, errors: list[str]) -> None:
                     errors.append(f"{language}:{number}: nonclaim {identifier} lacks {','.join(missing)}")
 
 
+def normalized_prose(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def check_ooo_history_pages(root: Path, errors: list[str]) -> None:
+    """Keep resume-facing OoO history numbers and epoch boundaries fail-closed."""
+    for relative, required_text in OOO_HISTORY_REQUIRED_TEXT.items():
+        path = root / relative
+        if not path.is_file():
+            errors.append(f"missing OoO history page: {relative}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        normalized = normalized_prose(text)
+
+        claims = tuple(CLAIM_ANNOTATION_RE.findall(text))
+        if text.count("<!-- claim:") != len(claims):
+            errors.append(f"{relative}: malformed OoO claim annotation")
+        if claims != OOO_HISTORY_CLAIM_ANNOTATIONS:
+            errors.append(f"{relative}: OoO claim annotation/maturity drift")
+
+        evidence = tuple(EVIDENCE_ANNOTATION_RE.findall(text))
+        if text.count("<!-- evidence:") != len(evidence):
+            errors.append(f"{relative}: malformed OoO evidence annotation")
+        if evidence != OOO_HISTORY_EVIDENCE_ANNOTATIONS:
+            errors.append(f"{relative}: OoO evidence annotation/order drift")
+
+        for token, expected_count in OOO_HISTORY_NUMBER_COUNTS.items():
+            pattern = re.escape(token)
+            if token[:1].isdigit():
+                pattern = r"(?<![0-9.])" + pattern
+            if token[-1:].isdigit():
+                pattern += r"(?![0-9])"
+            observed_count = len(re.findall(pattern, text))
+            if observed_count != expected_count:
+                errors.append(
+                    f"{relative}: OoO history number {token} count drift "
+                    f"({observed_count} != {expected_count})")
+        for phrase in required_text:
+            if phrase not in normalized:
+                errors.append(f"{relative}: OoO epoch/noninheritance contract drift: {phrase}")
+        folded = text.casefold()
+        for forbidden in OOO_HISTORY_FORBIDDEN_TEXT:
+            if forbidden.casefold() in folded:
+                errors.append(f"{relative}: forbidden OoO history wording {forbidden}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -355,6 +472,7 @@ def main() -> int:
     check_links(root, errors)
     check_readme_showcase(root, errors)
     check_performance_records(root, errors)
+    check_ooo_history_pages(root, errors)
     if errors:
         raise SystemExit("DOCS_CHECK_FAILED\n  - " + "\n  - ".join(sorted(set(errors))))
     print("DOCS_CHECK_PASS pairs={} visitor_files={}".format(len(CORE_PAIRS), len(visitor_paths(root))))

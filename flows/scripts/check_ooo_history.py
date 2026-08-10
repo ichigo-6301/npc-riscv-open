@@ -18,6 +18,9 @@ from typing import Dict, Iterable, List, Mapping, MutableSequence, Optional, Set
 COREMARK_PATH = "evidence/performance/ooo_coremark_history.json"
 LOOP_PATH = "evidence/verification/ooo_loop_remediation.json"
 LINEAGE_PATH = "provenance/upstream/rv32im_ooo_4k/history/source_lineage.json"
+D12_INPUT_BUNDLE_PATH = "provenance/upstream/rv32im_ooo_4k/history/d12_input_bundle.json"
+D12_FUNCTIONAL_POINTS_PATH = "provenance/upstream/rv32im_ooo_4k/history/d12_functional_identity_points.json"
+D12_EFFECTIVE_PARAMETERS_PATH = "provenance/upstream/rv32im_ooo_4k/history/d12_effective_parameters.json"
 CLAIMS_PATH = "delivery/claims/claims.yaml"
 NONCLAIMS_PATH = "delivery/claims/nonclaims.yaml"
 EVIDENCE_MANIFEST_PATH = "delivery/evidence/manifest.yaml"
@@ -40,6 +43,72 @@ P89_PATCH_SHA256 = "66e2c4970ea2ab2272a70a9b9c0d4bf4d894487e5fd7ddee5b0777f51f62
 P89_MANIFEST_SHA256 = "14d271ea3c06a1c1ea68607cf9f2eeb45f9140066e80d40a38b14bcb5b101e84"
 D12_PATCH_SHA256 = "9433208a99d0d7f4aac920d3e7d6b8a5deeea91c658899293cfd34a77e496922"
 D12_MANIFEST_SHA256 = "1bfc868e01f2f4f304c1794de86c9a72f102b78d05d2f2ccf284b62aa45dd21f"
+D12_INPUT_BUNDLE_SHA256 = "5a0575d6ffa9226294d3245a2417291d593a176d809a46d7eaf470ef05e2f0c7"
+D12_INPUT_BUNDLE_SIZE = 5088
+D12_FUNCTIONAL_POINTS_SHA256 = "1c6de6af32c3870b1be39090570e3579234e9847a87d528d965be64fc8d8897a"
+D12_FUNCTIONAL_POINTS_SIZE = 7301
+D12_EFFECTIVE_PARAMETERS_FILE_SHA256 = "3bb7935089d6f9353ceea5ae9ad7d61e0119cb2fc66f12ba8d45a43710a8f5db"
+D12_EFFECTIVE_PARAMETERS_FILE_SIZE = 3405
+
+EXPECTED_D12_ARTIFACTS = [
+    {
+        "role": "parameter_base",
+        "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_legacy.tcl",
+        "sha256": "34204e07c2ce9e097b96dc904dc9b8e27592e3f6534aaccf5bf693c40d49be1d",
+        "size_bytes": 2397,
+        "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_legacy.tcl",
+    },
+    {
+        "role": "parameter_cache_overlay",
+        "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d10_line32.tcl",
+        "sha256": "ca4f137857abf76fdee79d6e502733aa95ceed564e394aff809b50c2279571f1",
+        "size_bytes": 300,
+        "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d10_line32.tcl",
+    },
+    {
+        "role": "parameter_ownership_level1_overlay",
+        "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12_level1.tcl",
+        "sha256": "300d96918f2984df95b4f0885bb76b5e2cf3f3bd24142d551421c6cd407081b9",
+        "size_bytes": 352,
+        "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d12_level1.tcl",
+    },
+    {
+        "role": "parameter_ownership_level2_overlay",
+        "schema": "npc-riscv-open/ooo-d12-tracked-parameter-lock-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12_level2.tcl",
+        "sha256": D12_PARAMETER_LOCK_SHA256,
+        "size_bytes": 226,
+        "origin_logical_path": "npc/open/flows/asic/parameters/rv32im_ooo_4k_d12_level2.tcl",
+    },
+    {
+        "role": "effective_parameters",
+        "schema": "npc-riscv-open/ooo-d12-effective-parameters-v1",
+        "path": D12_EFFECTIVE_PARAMETERS_PATH,
+        "sha256": D12_EFFECTIVE_PARAMETERS_FILE_SHA256,
+        "size_bytes": D12_EFFECTIVE_PARAMETERS_FILE_SIZE,
+        "effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
+    },
+    {
+        "role": "tracked_structural_filelist",
+        "schema": "npc-riscv-open/ooo-d12-tracked-filelist-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/rv32im_ooo_4k_d12.f",
+        "sha256": D12_FILELIST_SHA256,
+        "size_bytes": 3388,
+        "origin_logical_path": "npc/open/flows/asic/filelists/rv32im_ooo_4k_d12.f",
+    },
+    {
+        "role": "tracked_macro_blackbox_verilog",
+        "schema": "npc-riscv-open/ooo-d12-macro-blackbox-verilog-v1",
+        "path": "provenance/upstream/rv32im_ooo_4k/history/d12_openram_blackboxes.sv",
+        "sha256": D12_MACRO_VERILOG_SHA256,
+        "size_bytes": 648,
+        "origin_logical_path": "npc/tests/ooo_data_sector_cache_standalone/openram_blackboxes.sv",
+        "modules": ["npc_dcache_data_1r1w_512x32_b8", "npc_ooo_data_word_1r1w_1024x32_b8"],
+    },
+]
 
 COREMARK_CLAIMS = [
     "ooo_historical_s9a_coremark_whole_cpi",
@@ -59,69 +128,182 @@ EVIDENCE_IDS = {
 }
 EXPECTED_CLAIMS = {
     "ooo_historical_s9a_coremark_whole_cpi": {
-        "evidence": "ooo_coremark_history_public",
+        "benchmark": "Historical CoreMark complete-image run from reset to terminal ebreak",
+        "caveat": "Historical pre-loop-remediation endpoint; the baseline binary and configuration hashes are unavailable, so the documented settings are not hash-locked and this endpoint remains partial",
+        "configuration": "source 7154e5a3d61fab18718a33f3fe2588891c1b291b; riscv32e-npc software family; rv32e_zicsr/ilp32e binary; hardware M_EXT=1; IF/LSU/memory=2/3/2; seed=1; difftest; 48,395,814 cycles / 7,824,961 retired instructions",
+        "evidence": ["ooo_coremark_history_public"],
+        "id": "ooo_historical_s9a_coremark_whole_cpi",
+        "metric": "whole_program_CPI",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": S9A_SOURCE,
+        "statement": "The historical S9A CoreMark complete-image run recorded whole-program CPI 6.184799387499",
         "status": "partial",
+        "tool": "Historical RTL simulation with NEMU difftest and schema-v2 performance counters",
+        "unit": "cycles_per_retired_instruction",
         "value": 6.184799387499,
     },
     "ooo_historical_p89_coremark_whole_cpi": {
-        "evidence": "ooo_coremark_history_public",
+        "benchmark": "Historical CoreMark complete-image run from reset to terminal ebreak",
+        "caveat": "Verified only for historical P89 source 0e1730b7 in the pre-loop-remediation epoch; it is not current public RTL or loop-remediated performance",
+        "configuration": "source 0e1730b71b7c4ad699e919fc9404189a5e8729d6; binary dc9a01a68109b14edf4f975ab2bb960d132b8b6d432e42ce43031fea72b17317; config 582d996093bbc50b2fb8d2c6332b0246336fc66d6804c38fa151729764764ae0; riscv32e-npc; IF/LSU/memory=2/3/2; seed=1; difftest; 8,590,215 cycles / 7,824,973 retired instructions",
+        "evidence": ["ooo_coremark_history_public"],
+        "id": "ooo_historical_p89_coremark_whole_cpi",
+        "metric": "whole_program_CPI",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": P89_SOURCE,
+        "statement": "The hash-locked historical P89 CoreMark complete-image run recorded whole-program CPI 1.097794842231",
         "status": "verified",
+        "tool": "Historical RTL simulation with NEMU difftest, lifecycle and accounting checks",
+        "unit": "cycles_per_retired_instruction",
         "value": 1.097794842231,
     },
     "ooo_historical_coremark_approx_speedup": {
-        "evidence": "ooo_coremark_history_public",
+        "benchmark": "Historical same-workload-family CoreMark complete-image comparison",
+        "caveat": "Approximate only: the S9A binary and configuration hashes are unavailable and the endpoints differ by 12 retired instructions; this is a multi-stage architecture evolution, not a strict fixed-binary, fixed-config or fixed-source A/B",
+        "configuration": "48,395,814 / 8,590,215 total cycles at equal clock; tracked documentation records IF/LSU/memory=2/3/2, seed=1 and the riscv32e-npc workload family for both endpoints, but the S9A config is not hash-locked",
+        "evidence": ["ooo_coremark_history_public"],
+        "id": "ooo_historical_coremark_approx_speedup",
+        "metric": "same_frequency_whole_program_execution_speedup",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": "multiple_historical_refs",
+        "statement": "The historical OoO architecture evolution reduces equal-clock CoreMark whole-program execution cycles by approximately 5.6338x",
         "status": "partial",
-        "value": 5.633838992108,
+        "tool": "Derived from bounded historical CoreMark counters",
+        "unit": "x",
+        "value": 5.633830352325,
     },
     "ooo_historical_comb_loop_zero": {
-        "evidence": "ooo_loop_remediation_public",
+        "benchmark": "D12 whole-core causal-ownership structural qualification",
+        "caveat": "Historical D12 source only; this structural result does not inherit P89 performance and is not current public RTL, DC, P&R, STA or silicon evidence",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; effective parameters a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630; no waivers or false-path controls",
+        "evidence": ["ooo_loop_remediation_public"],
+        "id": "ooo_historical_comb_loop_zero",
+        "metric": "whole_core_spyglass_comb_loop_count",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": D12_SOURCE,
+        "statement": "The historical D12 typed registered-ownership source reports zero whole-core SpyGlass CombLoop findings",
         "status": "verified",
+        "tool": "SpyGlass L2016.06 lint/lint_rtl",
+        "unit": "count",
         "value": 0,
     },
     "ooo_historical_unoptflat_zero": {
-        "evidence": "ooo_loop_remediation_public",
+        "benchmark": "D12 whole-core causal-ownership structural qualification",
+        "caveat": "Historical D12 source only; zero UNOPTFLAT does not claim complete lint cleanliness or physical timing closure",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; effective parameters a02ab21846471df9b10fe230d2a79c75ffd8698c15bd7fd8eab6913040d2e630",
+        "evidence": ["ooo_loop_remediation_public"],
+        "id": "ooo_historical_unoptflat_zero",
+        "metric": "whole_core_verilator_unoptflat_count",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": D12_SOURCE,
+        "statement": "The historical D12 typed registered-ownership source reports zero Verilator UNOPTFLAT findings",
         "status": "verified",
+        "tool": "Verilator 5.008 structural lint",
+        "unit": "count",
         "value": 0,
     },
     "ooo_historical_pre_techmap_scc_zero": {
-        "evidence": "ooo_loop_remediation_public",
+        "benchmark": "D12 whole-core causal-ownership structural qualification",
+        "caveat": "Historical D12 source only; the RTLIL graph result is not a mapped timing or area claim",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; source-set e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
+        "evidence": ["ooo_loop_remediation_public"],
+        "id": "ooo_historical_pre_techmap_scc_zero",
+        "metric": "whole_core_yosys_pre_techmap_scc_count",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": D12_SOURCE,
+        "statement": "The historical D12 source reports zero Yosys pre-techmap strongly connected components",
         "status": "verified",
+        "tool": "Yosys 0.52+139 RTLIL graph check",
+        "unit": "count",
         "value": 0,
     },
     "ooo_historical_post_techmap_scc_zero": {
-        "evidence": "ooo_loop_remediation_public",
+        "benchmark": "D12 whole-core causal-ownership structural qualification",
+        "caveat": "Historical D12 source only; the techmapped graph result is not a Design Compiler, frequency, area or physical-implementation claim",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; source-set e5782d80dde8aceef10516f5cdaeab3fda8f21b5e4df051de39939da5002da12",
+        "evidence": ["ooo_loop_remediation_public"],
+        "id": "ooo_historical_post_techmap_scc_zero",
+        "metric": "whole_core_yosys_post_techmap_scc_count",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": D12_SOURCE,
+        "statement": "The historical D12 source reports zero Yosys post-techmap strongly connected components",
         "status": "verified",
+        "tool": "Yosys 0.52+139 techmapped graph check",
+        "unit": "count",
         "value": 0,
     },
     "ooo_historical_precise_retirement_preserved": {
-        "evidence": "ooo_loop_remediation_public",
+        "benchmark": "D12 seven-workload aggregate functional qualification across ideal and default profiles",
+        "caveat": "Historical D12 source only; tracked evidence reports 14/14 aggregate passes, but per-point binary/config hashes, normalized trace digests and counters are unavailable, so precise retirement remains partial and transfers no performance or backend claim",
+        "configuration": "source a8f689cc00213859fb6893b31b65ef5cb3cbd7eb; seven workloads x ideal/default = 14 reported aggregate points; common RV32IM/ilp32, seed=1 and difftest; per-point binary/config/trace/counter identity unavailable",
+        "evidence": ["ooo_loop_remediation_public"],
+        "id": "ooo_historical_precise_retirement_preserved",
+        "metric": "aggregate_reported_precise_retirement",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
         "source_ref": D12_SOURCE,
-        "status": "verified",
+        "statement": "The historical D12 report records ordered architectural retirement across 14/14 aggregate workload/profile points; per-point identity is not independently reconstructable",
+        "status": "partial",
+        "tool": "Aggregate historical RTL simulation report with NEMU difftest, protocol, lifecycle and conservation checks",
+        "unit": "boolean",
         "value": True,
     },
 }
 EXPECTED_NONCLAIMS = {
     "ooo_historical_coremark_strict_ab_not_claimed": {
+        "conditions": "The S9A baseline binary and configuration hashes are unavailable and the S9A/P89 endpoints differ by 12 retired instructions; shared workload-family, latency, seed and difftest settings come from tracked documentation rather than an S9A hash lock",
         "evidence_id": "ooo_coremark_history_public",
         "evidence_status": "historical_partial_comparison",
+        "id": "ooo_historical_coremark_strict_ab_not_claimed",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
+        "reason": "Source and counter provenance support an approximate architecture-lineage comparison, not a binary-identical, fixed-config or fixed-source experiment",
         "source_commit": "multiple_historical_refs",
+        "statement": "The historical CoreMark 6.184799-to-1.097795 evolution is not claimed as a strict fixed-binary, fixed-config or fixed-source A/B",
+        "status": "not_claimed",
     },
     "ooo_loop_remediation_performance_not_inherited": {
+        "conditions": "The P89 CoreMark counters predate D12 causal-ownership remediation; D12 structural qualification intentionally carries no matching CoreMark counter claim",
         "evidence_id": "ooo_loop_remediation_public",
         "evidence_status": "historical_structural_only",
+        "id": "ooo_loop_remediation_performance_not_inherited",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
+        "reason": "Performance-first and loop-remediated source epochs must remain separate until an exact matching benchmark is published",
         "source_commit": D12_SOURCE,
+        "statement": "The P89 CoreMark CPI and approximate speedup are not claimed for the D12 loop-remediated source",
+        "status": "not_claimed",
     },
     "ooo_loop_remediation_current_backend_not_claimed": {
+        "conditions": "D12 verifies registered ownership and structural loop gates only; the canonical public Profile remains source lock 99fcc2be and no source-matched DC or physical implementation is published",
         "evidence_id": "ooo_loop_remediation_public",
         "evidence_status": "historical_structural_only",
+        "id": "ooo_loop_remediation_current_backend_not_claimed",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
+        "reason": "A reconstructable historical source delta is not a current Profile promotion or implementation result",
         "source_commit": D12_SOURCE,
+        "statement": "Current-source performance, Design Compiler frequency or area, P&R, STA, Fmax and signoff are not claimed from the D12 structural evidence",
+        "status": "not_claimed",
+    },
+    "ooo_loop_remediation_point_identity_not_claimed": {
+        "conditions": "Reachable Git evidence preserves the seven-workload ideal/default enumeration and aggregate 14/14 pass counts, but not per-point binary/config hashes, normalized trace digests, cycles or retired instructions",
+        "evidence_id": "ooo_loop_remediation_public",
+        "evidence_status": "historical_partial_aggregate_only",
+        "id": "ooo_loop_remediation_point_identity_not_claimed",
+        "profile": "rv32im_ooo_4k",
+        "public": True,
+        "reason": "Aggregate historical pass reporting cannot establish independently replayable identity for every workload/profile point",
+        "source_commit": D12_SOURCE,
+        "statement": "Per-point D12 binary/config/trace/counter identity and strict replayability are not claimed",
+        "status": "not_claimed",
     },
 }
 
@@ -129,7 +311,7 @@ EXPECTED_COUNTERS = {
     "baseline": (48395814, 7824961, 6.184799387498544),
     "optimized": (8590215, 7824973, 1.0977948422314046),
 }
-EXPECTED_SPEEDUP = EXPECTED_COUNTERS["baseline"][2] / EXPECTED_COUNTERS["optimized"][2]
+EXPECTED_SPEEDUP = EXPECTED_COUNTERS["baseline"][0] / EXPECTED_COUNTERS["optimized"][0]
 EXPECTED_RETIRED_DELTA = 12
 
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -146,6 +328,7 @@ EXPECTED_LOOP_NONCLAIMS = [
     "No DC, mapped netlist, timing, frequency, area, P&R, power or signoff result is claimed.",
     "The bounded structural gates do not claim zero messages across every lint policy.",
     "The D12 snapshot is not claimed as the current canonical public RTL.",
+    "The historical report records 14/14 aggregate identity points, but per-point binary/config hashes and normalized trace digests were not preserved in reachable Git evidence; precise retirement therefore remains a partial aggregate report.",
 ]
 EXPECTED_COREMARK_SOURCES = [
     {
@@ -235,10 +418,12 @@ def check_coremark(data: dict, errors: MutableSequence[str]) -> None:
         "derived", "lineage", "evidence_sources", "claim_ids", "caveat",
     }, "OoO CoreMark", errors)
     require_exact(data, {
+        "generated_at": "2026-08-10T00:00:00Z",
         "profile": "rv32im_ooo_4k",
         "epoch": "pre_combinational_loop_remediation",
         "benchmark": "AM CoreMark, whole-program reset-to-ebreak window",
         "comparison_status": "partial",
+        "caveat": "This is a historical same-benchmark-family comparison from the pre-loop-remediation performance epoch, not a current loop-free RTL, DC, FPGA, backend or silicon result.",
     }, "OoO CoreMark", errors)
     if data.get("claim_ids") != COREMARK_CLAIMS:
         errors.append("OoO CoreMark claim set/order drift")
@@ -288,7 +473,8 @@ def check_coremark(data: dict, errors: MutableSequence[str]) -> None:
             continue
         expected_fields = {
             "id", "source_ref", "evidence_ref", "cycles", "retired_instructions",
-            "whole_program_cpi", "binary_sha256", "config_sha256", "status",
+            "whole_program_cpi", "binary_sha256", "config_sha256",
+            "binary_identity_status", "configuration_identity_status", "status",
         }
         if role == "baseline":
             expected_fields.add("status_reason")
@@ -313,12 +499,19 @@ def check_coremark(data: dict, errors: MutableSequence[str]) -> None:
     if isinstance(baseline, dict):
         if baseline.get("binary_sha256") is not None or baseline.get("config_sha256") is not None:
             errors.append("OoO CoreMark missing-baseline-artifact boundary was weakened")
+        require_exact(baseline, {
+            "binary_identity_status": "unavailable",
+            "configuration_identity_status": "documented_not_hash_locked",
+            "status_reason": "The tracked historical baseline preserves source, documented profile settings and counters, but its binary and configuration hashes are unavailable.",
+        }, "OoO CoreMark baseline identity boundary", errors)
         if baseline.get("status") != "partial":
             errors.append("OoO CoreMark baseline must remain partial")
     if isinstance(optimized, dict):
         require_exact(optimized, {
             "binary_sha256": P89_BINARY_SHA256,
             "config_sha256": P89_CONFIG_SHA256,
+            "binary_identity_status": "sha256_locked",
+            "configuration_identity_status": "sha256_locked",
             "feature": "load_transaction_depth3 explicitly enabled within the retained performance stack",
             "production_default_at_checkpoint": False,
         }, "OoO P89 artifact", errors)
@@ -332,9 +525,11 @@ def check_coremark(data: dict, errors: MutableSequence[str]) -> None:
         "status", "status_reason",
     }, "OoO CoreMark derived comparison", errors)
     require_exact(derived, {
-        "metric": "same_benchmark_family_speedup",
-        "formula": "baseline.whole_program_cpi / optimized.whole_program_cpi",
+        "metric": "same_frequency_whole_program_execution_speedup",
+        "formula": "baseline.cycles / optimized.cycles",
+        "display_value": "approximately 5.63x",
         "status": "partial",
+        "status_reason": "The baseline binary and configuration hashes are unavailable and the two historical runs differ by 12 retired instructions; this is not a strict fixed-binary or fixed-config A/B.",
         "retired_instruction_delta": EXPECTED_RETIRED_DELTA,
     }, "OoO CoreMark derived comparison", errors)
     if not close(derived.get("value"), EXPECTED_SPEEDUP):
@@ -351,6 +546,7 @@ def check_coremark(data: dict, errors: MutableSequence[str]) -> None:
     require_exact(lineage, {
         "canonical_public_source_ref": CANONICAL_SOURCE,
         "canonical_workbench_source_ref": "8c004f4ac7d8c99fa71b8adde35a319f7472c93a",
+        "relationship": "The P89 source is an ancestor of the canonical public S9S source; the published numbers remain bound to the P89 historical checkpoint.",
     }, "OoO CoreMark lineage", errors)
     core_reconstruction = lineage.get("reconstruction", {})
     if not isinstance(core_reconstruction, dict):
@@ -389,8 +585,8 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
     require_exact(data, {
         "profile": "rv32im_ooo_4k",
         "epoch": "d12_registered_causal_ownership",
-        "status": "historical_verified",
-        "claim_scope": "structural_and_functional_only",
+        "status": "historical_partial",
+        "claim_scope": "structural_verified_and_functional_aggregate_partial_only",
     }, "OoO loop remediation", errors)
     if data.get("claim_ids") != LOOP_CLAIMS:
         errors.append("OoO loop-remediation claim set/order drift")
@@ -402,7 +598,8 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
     require_keys(source, {
         "base_commit", "implementation_commit", "parameter_lock_role",
         "parameter_lock_sha256", "effective_parameters_sha256", "filelist_sha256",
-        "macro_verilog_sha256", "relationship_to_canonical", "reconstruction",
+        "macro_verilog_sha256", "input_bundle", "relationship_to_canonical",
+        "reconstruction",
     }, "OoO loop-remediation source", errors)
     require_exact(source, {
         "base_commit": "a698a882",
@@ -412,6 +609,18 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
         "effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
         "filelist_sha256": D12_FILELIST_SHA256,
         "macro_verilog_sha256": D12_MACRO_VERILOG_SHA256,
+        "input_bundle": {
+            "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+            "path": D12_INPUT_BUNDLE_PATH,
+            "sha256": D12_INPUT_BUNDLE_SHA256,
+            "size_bytes": D12_INPUT_BUNDLE_SIZE,
+            "parameter_reconstruction_algorithm": "recursively expand the four same-directory tracked TCL locks, apply later-value override, then hash the sorted compact JSON parameter map",
+            "filelist_source_prefix_map": {
+                "historical": "vsrc_ooo",
+                "public": "rtl/profiles/rv32im_ooo_4k",
+            },
+        },
+        "relationship_to_canonical": "D12 is a bounded historical ownership-remediation snapshot reconstructed from the canonical public source content; it is not represented as an ancestor of the canonical S9S source.",
     }, "OoO loop-remediation source", errors)
     for field in (
         "parameter_lock_sha256", "effective_parameters_sha256",
@@ -429,7 +638,8 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
         errors.append("OoO loop-remediation architecture record is missing")
         architecture = {}
     require_keys(architecture, {
-        "registered_boundaries", "precise_retirement", "forbidden_live_feedback_restored",
+        "registered_boundaries", "precise_retirement_semantics",
+        "forbidden_live_feedback_restored",
     }, "OoO loop-remediation architecture", errors)
     boundaries = architecture.get("registered_boundaries")
     expected_boundaries = [
@@ -440,8 +650,11 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
     ]
     if boundaries != expected_boundaries:
         errors.append("OoO registered ownership-boundary set drift")
-    if architecture.get("precise_retirement") is not True:
-        errors.append("OoO precise-retirement preservation is missing")
+    if architecture.get("precise_retirement_semantics") != {
+            "design_contract": "ordered_architectural_retirement",
+            "evidence_maturity": "aggregate_reported_partial",
+    }:
+        errors.append("OoO precise-retirement design/evidence boundary drift")
     if architecture.get("forbidden_live_feedback_restored") is not False:
         errors.append("OoO forbidden live feedback boundary was weakened")
 
@@ -492,15 +705,26 @@ def check_loop_remediation(data: dict, errors: MutableSequence[str]) -> None:
         errors.append("OoO loop-remediation functional record is missing")
         functional = {}
     require_keys(functional, {
-        "status", "identity_points_passed", "identity_points_total",
-        "protocol_lifecycle_conservation_errors", "precise_retirement_preserved",
+        "status", "identity_status", "identity_points_reported_passed",
+        "identity_points_total", "protocol_lifecycle_conservation_errors",
+        "precise_retirement_preserved", "claim_maturity",
+        "per_point_binary_config_trace_identity_complete", "point_identity_artifact",
     }, "OoO loop-remediation functional gate", errors)
     require_exact(functional, {
-        "status": "pass",
-        "identity_points_passed": 14,
+        "status": "historical_partial",
+        "identity_status": "aggregate_reported_only",
+        "identity_points_reported_passed": 14,
         "identity_points_total": 14,
         "protocol_lifecycle_conservation_errors": 0,
-        "precise_retirement_preserved": True,
+        "precise_retirement_preserved": "reported_aggregate_only",
+        "claim_maturity": "partial",
+        "per_point_binary_config_trace_identity_complete": False,
+        "point_identity_artifact": {
+            "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+            "path": D12_FUNCTIONAL_POINTS_PATH,
+            "sha256": D12_FUNCTIONAL_POINTS_SHA256,
+            "size_bytes": D12_FUNCTIONAL_POINTS_SIZE,
+        },
     }, "OoO loop-remediation functional gate", errors)
 
     if data.get("inheritance") != {"performance": False, "dc": False, "ppa": False}:
@@ -624,6 +848,319 @@ def resolve_bound_file(root: Path, record: Mapping[str, object], field: str,
     if sha256(path) != binding.get("sha256"):
         errors.append("{} {} SHA256 drift".format(label, field))
     return path
+
+
+def check_bound_payload(root: Path, observed: object, expected: Mapping[str, object],
+                        label: str, errors: MutableSequence[str]) -> Optional[Path]:
+    if not isinstance(observed, dict):
+        errors.append("{} binding is missing".format(label))
+        return None
+    require_keys(observed, expected, label, errors)
+    require_exact(observed, expected, label, errors)
+    relative = safe_repo_path(observed.get("path"), "{} path".format(label), errors)
+    if relative is None:
+        return None
+    path = root / relative.as_posix()
+    if not path.is_file():
+        errors.append("{} payload is missing: {}".format(label, relative))
+        return None
+    if sha256(path) != observed.get("sha256"):
+        errors.append("{} payload SHA256 drift".format(label))
+    if path.stat().st_size != observed.get("size_bytes"):
+        errors.append("{} payload size drift".format(label))
+    return path
+
+
+TCL_SOURCE_RE = re.compile(
+    r"^\s*source\s+\[file join \[file dirname \[info script\]\] ([A-Za-z0-9_.-]+)\]\s*$"
+)
+TCL_PARAMETER_RE = re.compile(r"\b([A-Z][A-Z0-9_]*)=([^\s\\\]]+)")
+
+
+def expand_d12_parameters(entry: Path, allowed: Set[Path], errors: MutableSequence[str],
+                          stack: Optional[List[Path]] = None) -> Dict[str, str]:
+    stack = [] if stack is None else stack
+    resolved = entry.resolve()
+    if resolved not in allowed:
+        errors.append("D12 parameter source escapes the tracked input bundle: {}".format(entry.name))
+        return {}
+    if resolved in stack:
+        errors.append("D12 parameter source recursion detected: {}".format(entry.name))
+        return {}
+    try:
+        lines = entry.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as error:
+        errors.append("cannot read D12 parameter source {}: {}".format(entry, error))
+        return {}
+    parameters = {}  # type: Dict[str, str]
+    next_stack = stack + [resolved]
+    for line in lines:
+        source = TCL_SOURCE_RE.match(line)
+        if source:
+            nested = (entry.parent / source.group(1)).resolve()
+            parameters.update(expand_d12_parameters(nested, allowed, errors, next_stack))
+            continue
+        for name, value in TCL_PARAMETER_RE.findall(line):
+            parameters[name] = value
+    return parameters
+
+
+def check_d12_effective_parameters(root: Path, bundle: dict,
+                                   errors: MutableSequence[str]) -> None:
+    artifacts = bundle.get("artifacts", [])
+    if not isinstance(artifacts, list):
+        return
+    records = {
+        item.get("role"): item for item in artifacts
+        if isinstance(item, dict) and isinstance(item.get("role"), str)
+    }
+    effective_record = records.get("effective_parameters", {})
+    effective_path = root / D12_EFFECTIVE_PARAMETERS_PATH
+    if not effective_path.is_file():
+        return
+    effective = load_object(effective_path)
+    require_keys(effective, {
+        "schema", "source_commit", "algorithm", "parameter_count", "parameters",
+        "effective_parameters_sha256",
+    }, "D12 effective parameter map", errors)
+    require_exact(effective, {
+        "schema": "npc-riscv-open/ooo-d12-effective-parameters-v1",
+        "source_commit": D12_SOURCE,
+        "algorithm": "recursive tracked TCL source expansion; later assignments override earlier values; SHA256 of canonical JSON parameters map with sorted keys and compact separators",
+        "parameter_count": 64,
+        "effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
+    }, "D12 effective parameter map", errors)
+    if effective_record.get("effective_parameters_sha256") != D12_EFFECTIVE_PARAMETERS_SHA256:
+        errors.append("D12 input-bundle effective-parameter identity drift")
+
+    tcl_roles = (
+        "parameter_base", "parameter_cache_overlay",
+        "parameter_ownership_level1_overlay", "parameter_ownership_level2_overlay",
+    )
+    allowed = {
+        (root / records[role]["path"]).resolve()
+        for role in tcl_roles if role in records and isinstance(records[role].get("path"), str)
+    }
+    entry = records.get("parameter_ownership_level2_overlay", {}).get("path")
+    if not isinstance(entry, str):
+        errors.append("D12 Level-2 parameter entry is missing")
+        return
+    reconstructed = expand_d12_parameters(root / entry, allowed, errors)
+    if set(allowed) != {
+        (root / records[role]["path"]).resolve() for role in tcl_roles
+        if role in records and isinstance(records[role].get("path"), str)
+    } or len(allowed) != 4:
+        errors.append("D12 tracked parameter source set drift")
+    if effective.get("parameters") != reconstructed:
+        errors.append("D12 effective parameter reconstruction mismatch")
+    if effective.get("parameter_count") != len(reconstructed):
+        errors.append("D12 effective parameter count drift")
+    canonical = json.dumps(reconstructed, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if hashlib.sha256(canonical).hexdigest() != D12_EFFECTIVE_PARAMETERS_SHA256:
+        errors.append("D12 effective parameter canonical SHA256 drift")
+
+
+def check_d12_filelist_and_macro(root: Path, bundle: dict,
+                                 errors: MutableSequence[str]) -> None:
+    records = {
+        item.get("role"): item for item in bundle.get("artifacts", [])
+        if isinstance(item, dict) and isinstance(item.get("role"), str)
+    }
+    filelist_record = records.get("tracked_structural_filelist", {})
+    filelist_path = root / str(filelist_record.get("path", ""))
+    source_manifest_path = root / "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256"
+    manifest_entries = parse_source_manifest(source_manifest_path, errors)
+    mapped_sources = []  # type: List[str]
+    if filelist_path.is_file():
+        for number, raw in enumerate(filelist_path.read_text(encoding="utf-8").splitlines(), 1):
+            line = raw.strip()
+            if not line or line.startswith("//") or line.startswith("+define+"):
+                continue
+            if line == "+incdir+vsrc_ooo/include":
+                continue
+            if not line.startswith("vsrc_ooo/") or ".." in PurePosixPath(line).parts:
+                errors.append("D12 filelist contains unsupported entry at line {}".format(number))
+                continue
+            mapped = "rtl/profiles/rv32im_ooo_4k/" + line[len("vsrc_ooo/"):]
+            mapped_sources.append(mapped)
+            if mapped not in manifest_entries:
+                errors.append("D12 filelist source is absent from reconstructed role set: {}".format(
+                    mapped))
+    if not mapped_sources or len(mapped_sources) != len(set(mapped_sources)):
+        errors.append("D12 filelist mapped-source set is empty or duplicated")
+
+    macro_record = records.get("tracked_macro_blackbox_verilog", {})
+    macro_path = root / str(macro_record.get("path", ""))
+    if macro_path.is_file():
+        modules = re.findall(r"(?m)^module\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(",
+                             macro_path.read_text(encoding="utf-8"))
+        if modules != macro_record.get("modules"):
+            errors.append("D12 macro-blackbox module identity drift")
+
+
+def check_d12_functional_points(data: dict, errors: MutableSequence[str]) -> None:
+    require_keys(data, {
+        "schema", "source_commit", "evidence_commit", "status", "scope",
+        "common_identity", "preserved_aggregate_artifact_identities", "points",
+        "reported_aggregate_result", "per_point_missing_identity", "maturity_boundary",
+    }, "D12 functional identity points", errors)
+    require_exact(data, {
+        "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+        "source_commit": D12_SOURCE,
+        "evidence_commit": "c47c7dc2e9333de9fc798e56b7ed65d70c88dbd6",
+        "status": "historical_partial",
+        "scope": "seven workloads x ideal/default",
+        "common_identity": {
+            "arch": "riscv32-M-npc", "config_profile": "rv32im_4k_v1", "seed": 1,
+            "deterministic_rtc": True, "difftest": True, "commit_trace": True,
+            "candidate_causal_ownership_level": 2, "baseline_causal_ownership_level": 0,
+            "parameter_lock_sha256": D12_PARAMETER_LOCK_SHA256,
+            "effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
+            "lq_response_causal_cut": 0, "stable_entry_iq": 1,
+            "iq_split_payload_read": 1, "rob_indexed_service_level": 1,
+            "data_sectored_cache": 1, "data_sector_line_bytes": 32,
+            "data_sector_ways": 2, "data_cache_capacity_bytes": 4096,
+        },
+        "preserved_aggregate_artifact_identities": {
+            "level0_manifest_sha256": "ef53d1c4213aec0d1e5bbe5b44f934eb907e772796ea388555ea513e292240eb",
+            "level0_summary_sha256": "ab4d4f111ccf224564271765a45722a097116485d77e7fe882a40954af90c452",
+            "level2_manifest_sha256": "db26e49a0bf6431b01cfce95f4023716f1335907db071531a0490cbacf212d57",
+            "level2_summary_sha256": "0dee41c83912b4c67e85304ed563c753d9323f226f0d49f43c1afa1cb1543e4d",
+            "analysis_json_sha256": "701ba843044cfb7a62ae9529838328be8592a67da6a450a6dbc01c2c4a763f14",
+            "analysis_csv_sha256": "328215280b79f7a3fc82ce51e98bf07e84d2a2a1a41184b7654513b790b49cce",
+        },
+        "reported_aggregate_result": {
+            "identity_points_reported_passed": 14, "identity_points_total": 14,
+            "retired_instruction_counts_reported_match": True,
+            "normalized_architectural_commit_traces_reported_match": True,
+            "good_trap_difftest_watchdog_reported_pass": True,
+            "protocol_lifecycle_conservation_errors_reported": 0,
+        },
+        "per_point_missing_identity": {
+            "binary_sha256": "not preserved in reachable Git evidence",
+            "config_sha256": "not preserved per point; only the shared manifest contract and aggregate manifest hashes remain",
+            "baseline_normalized_trace_sha256": "not preserved in reachable Git evidence",
+            "candidate_normalized_trace_sha256": "not preserved in reachable Git evidence",
+            "cycles": "not preserved per point",
+            "instructions": "not preserved per point",
+        },
+        "maturity_boundary": "The 14 points enumerate the historical aggregate report. Missing per-point binaries, config hashes, trace digests and counters prevent independently revalidating precise-retirement identity; this evidence is partial and is not a verified performance claim.",
+    }, "D12 functional identity points", errors)
+    points = data.get("points")
+    workloads = ["coremark", "matrix-mul", "crc32", "quick-sort", "load-store",
+                 "dhrystone", "microbench"]
+    expected_points = []
+    for profile, latency in (("ideal", [0, 0, 0]), ("default", [2, 3, 2])):
+        for workload in workloads:
+            expected_points.append({
+                "workload": workload, "profile": profile,
+                "ifetch_lsu_memory_latency": latency,
+                "binary_sha256": None, "config_sha256": None,
+                "baseline_normalized_trace_sha256": None,
+                "candidate_normalized_trace_sha256": None,
+                "identity_status": "aggregate_reported_only",
+                "result": "reported_pass_not_independently_auditable",
+            })
+    if points != expected_points:
+        errors.append("D12 per-point functional identity/missing-hash contract drift")
+    performance_keys = FORBIDDEN_LOOP_METRIC_KEYS.union({"instructions", "weighted_cpi"})
+    auditable = {key: value for key, value in data.items() if key != "per_point_missing_identity"}
+    forbidden = sorted(performance_keys.intersection(nested_keys(auditable)))
+    if forbidden:
+        errors.append("D12 functional provenance contains forbidden performance keys: {}".format(
+            ", ".join(forbidden)))
+
+
+def check_d12_provenance(root: Path, loop: dict, lineage: dict,
+                         errors: MutableSequence[str]) -> None:
+    bundle_binding = loop.get("source", {}).get("input_bundle", {})
+    expected_bundle_binding = {
+        "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+        "path": D12_INPUT_BUNDLE_PATH,
+        "sha256": D12_INPUT_BUNDLE_SHA256,
+        "size_bytes": D12_INPUT_BUNDLE_SIZE,
+        "parameter_reconstruction_algorithm": "recursively expand the four same-directory tracked TCL locks, apply later-value override, then hash the sorted compact JSON parameter map",
+        "filelist_source_prefix_map": {
+            "historical": "vsrc_ooo", "public": "rtl/profiles/rv32im_ooo_4k",
+        },
+    }
+    bundle_path = check_bound_payload(root, bundle_binding, expected_bundle_binding,
+                                      "D12 input bundle", errors)
+    point_binding = loop.get("functional", {}).get("point_identity_artifact", {})
+    expected_point_binding = {
+        "schema": "npc-riscv-open/ooo-d12-functional-identity-points-v1",
+        "path": D12_FUNCTIONAL_POINTS_PATH,
+        "sha256": D12_FUNCTIONAL_POINTS_SHA256,
+        "size_bytes": D12_FUNCTIONAL_POINTS_SIZE,
+    }
+    points_path = check_bound_payload(root, point_binding, expected_point_binding,
+                                      "D12 functional identity points", errors)
+    records = snapshot_records(lineage, errors)
+    d12 = records.get("d12", {})
+    expected_lineage_bundle = {
+        "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+        "path": D12_INPUT_BUNDLE_PATH, "sha256": D12_INPUT_BUNDLE_SHA256,
+        "size_bytes": D12_INPUT_BUNDLE_SIZE,
+        "effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
+        "tracked_filelist_sha256": D12_FILELIST_SHA256,
+        "macro_verilog_sha256": D12_MACRO_VERILOG_SHA256,
+    }
+    expected_lineage_points = dict(expected_point_binding)
+    expected_lineage_points.update({
+        "status": "historical_partial", "identity_status": "aggregate_reported_only",
+    })
+    require_exact(d12, {
+        "config_bundle": expected_lineage_bundle,
+        "functional_identity": expected_lineage_points,
+    }, "D12 source-lineage provenance", errors)
+    if bundle_path is not None:
+        bundle = load_object(bundle_path)
+        require_keys(bundle, {
+            "schema", "source_commit", "evidence_commit", "top", "status", "artifacts",
+            "parameter_reconstruction", "source_reconstruction",
+            "related_functional_identity", "nonclaims",
+        }, "D12 input bundle", errors)
+        require_exact(bundle, {
+            "schema": "npc-riscv-open/ooo-d12-input-bundle-v1",
+            "source_commit": D12_SOURCE,
+            "evidence_commit": "c47c7dc2e9333de9fc798e56b7ed65d70c88dbd6",
+            "top": "ooo_pipeline_synth_core_top",
+            "status": "historical_reconstructable_input_identity",
+            "artifacts": EXPECTED_D12_ARTIFACTS,
+            "parameter_reconstruction": {
+                "entry": "rv32im_ooo_4k_d12_level2.tcl",
+                "algorithm": "recursively expand same-directory tracked TCL source directives, parse NAME=VALUE tokens, and let later assignments override earlier values",
+                "canonicalization": "JSON object of the final parameter map, sorted keys, compact separators",
+                "expected_parameter_count": 64,
+                "expected_effective_parameters_sha256": D12_EFFECTIVE_PARAMETERS_SHA256,
+            },
+            "source_reconstruction": {
+                "source_patch": "provenance/upstream/rv32im_ooo_4k/history/d12_from_public_s9s.patch",
+                "source_set_manifest": "provenance/upstream/rv32im_ooo_4k/history/d12_source_set.sha256",
+                "historical_source_prefix": "vsrc_ooo",
+                "public_source_prefix": "rtl/profiles/rv32im_ooo_4k",
+                "mapping_algorithm": "replace the leading vsrc_ooo path component in source and +incdir+ entries with rtl/profiles/rv32im_ooo_4k after applying the bounded D12 patch",
+                "unsupported_directives": "fail closed",
+                "macro_role": "blackbox interface only; no Liberty, LEF, GDS, PDK or commercial-library payload is included",
+            },
+            "related_functional_identity": dict(expected_point_binding, status="historical_partial"),
+            "nonclaims": [
+                "This bundle does not include raw logs, generated libraries, PDK data or host paths.",
+                "The macro artifact is the exact tracked blackbox interface used by the structural gates, not a characterized memory view.",
+                "This bundle does not establish performance, DC, frequency, area, P&R or signoff results.",
+            ],
+        }, "D12 input bundle", errors)
+        for artifact in EXPECTED_D12_ARTIFACTS:
+            check_bound_payload(root, artifact, artifact,
+                                "D12 artifact {}".format(artifact["role"]), errors)
+        forbidden_bundle = sorted(FORBIDDEN_LOOP_METRIC_KEYS.intersection(nested_keys(bundle)))
+        if forbidden_bundle:
+            errors.append("D12 input provenance contains forbidden performance keys: {}".format(
+                ", ".join(forbidden_bundle)))
+        check_d12_effective_parameters(root, bundle, errors)
+        check_d12_filelist_and_macro(root, bundle, errors)
+    if points_path is not None:
+        check_d12_functional_points(load_object(points_path), errors)
 
 
 def reconstruct_snapshot(root: Path, snapshot: Mapping[str, object],
@@ -760,6 +1297,10 @@ def check_source_lineage(root: Path, data: dict, errors: MutableSequence[str]) -
     if set(records) != {"p89", "d12"}:
         errors.append("OoO source-lineage snapshot set drift")
     expected_sources = {"p89": P89_SOURCE, "d12": D12_SOURCE}
+    expected_relationships = {
+        "p89": "historical ancestor reconstructed by reversing later canonical changes",
+        "d12": "divergent historical ownership-remediation snapshot reconstructed from canonical public content",
+    }
     expected_artifacts = {
         "p89": {
             "patch": {
@@ -788,13 +1329,18 @@ def check_source_lineage(root: Path, data: dict, errors: MutableSequence[str]) -
         record = records.get(snapshot_id)
         if record is None:
             continue
-        require_keys(record, {
+        expected_fields = {
             "id", "source_ref", "base_source_ref", "relationship", "patch",
             "source_set_manifest", "file_count", "roles", "changed", "added", "removed",
-        }, "OoO {} source snapshot".format(snapshot_id.upper()), errors)
+        }
+        if snapshot_id == "d12":
+            expected_fields.update({"config_bundle", "functional_identity"})
+        require_keys(record, expected_fields,
+                     "OoO {} source snapshot".format(snapshot_id.upper()), errors)
         require_exact(record, {
             "source_ref": expected_sources[snapshot_id],
             "base_source_ref": CANONICAL_SOURCE,
+            "relationship": expected_relationships[snapshot_id],
             "patch": expected_artifacts[snapshot_id]["patch"],
             "source_set_manifest": expected_artifacts[snapshot_id]["source_set_manifest"],
             "file_count": expected_artifacts[snapshot_id]["file_count"],
@@ -858,6 +1404,13 @@ def same_claim_value(observed: object, expected: object) -> bool:
     return observed == expected and type(observed) is type(expected)
 
 
+def record_links_evidence(record: Mapping[str, object], evidence_id: str) -> bool:
+    value = record.get("evidence")
+    if isinstance(value, list):
+        return evidence_id in value
+    return value == evidence_id
+
+
 def check_delivery_links(root: Path, coremark: dict, loop: dict,
                          errors: MutableSequence[str]) -> None:
     try:
@@ -876,12 +1429,9 @@ def check_delivery_links(root: Path, coremark: dict, loop: dict,
         if claim is None:
             errors.append("missing OoO history claim {}".format(claim_id))
             continue
+        require_keys(claim, expected, "OoO history claim {}".format(claim_id), errors)
         require_exact(claim, {
-            "profile": "rv32im_ooo_4k",
-            "public": True,
-            "source_ref": expected["source_ref"],
-            "status": expected["status"],
-            "evidence": [expected["evidence"]],
+            field: value for field, value in expected.items() if field != "value"
         }, "OoO history claim {}".format(claim_id), errors)
         if not same_claim_value(claim.get("value"), expected["value"]):
             errors.append("OoO history claim value drift: {}".format(claim_id))
@@ -891,27 +1441,39 @@ def check_delivery_links(root: Path, coremark: dict, loop: dict,
         if nonclaim is None:
             errors.append("missing OoO history nonclaim {}".format(nonclaim_id))
             continue
-        require_exact(nonclaim, {
-            "profile": "rv32im_ooo_4k",
-            "public": True,
-            "status": "not_claimed",
-            "evidence_id": expected["evidence_id"],
-            "evidence_status": expected["evidence_status"],
-            "source_commit": expected["source_commit"],
-        }, "OoO history nonclaim {}".format(nonclaim_id), errors)
+        require_keys(nonclaim, expected, "OoO history nonclaim {}".format(nonclaim_id), errors)
+        require_exact(nonclaim, expected, "OoO history nonclaim {}".format(nonclaim_id), errors)
 
     expected_evidence = {
         "ooo_coremark_history_public": {
             "claims": COREMARK_CLAIMS,
+            "nonclaims": ["ooo_historical_coremark_strict_ab_not_claimed"],
             "path": COREMARK_PATH,
             "source_ref": "multiple_historical_refs",
             "status": "partial",
+            "caveat": "Historical pre-loop-remediation CoreMark lineage only; the baseline binary and configuration hashes are unavailable and the endpoints differ by 12 retired instructions, so the approximately 5.63x equal-clock cycle comparison remains partial and is not inherited by current, loop-free, DC, FPGA or ASIC results",
+            "configuration": "Historical S9A and P89 CoreMark whole-program endpoints; rv32e_zicsr/ilp32e benchmark family on RV32IM hardware with M extension; tracked documentation records IF/LSU/memory 2/3/2, seed 1 and difftest, while only P89 retains binary/config SHA256",
+            "generated_time": "2026-08-10T00:00:00Z",
+            "snapshot_id": "main-ooo-history-v1",
+            "tool": "Historical RTL simulation, profile-matched NEMU difftest and bounded counter summaries",
+            "type": "bounded_historical_coremark_lineage_summary",
         },
         "ooo_loop_remediation_public": {
             "claims": LOOP_CLAIMS,
+            "nonclaims": [
+                "ooo_loop_remediation_performance_not_inherited",
+                "ooo_loop_remediation_current_backend_not_claimed",
+                "ooo_loop_remediation_point_identity_not_claimed",
+            ],
             "path": LOOP_PATH,
             "source_ref": D12_SOURCE,
-            "status": "verified",
+            "status": "partial",
+            "caveat": "Historical D12 structural evidence is verified, while precise retirement is retained only as a partial aggregate 14/14 report because per-point binary/config/trace/counter identity is unavailable; no P89 performance, current-source or backend result is inherited",
+            "configuration": "D12 typed registered ownership across Issue/WB/Commit/LSU; published parameter locks, effective parameters, filelist and macro blackbox identity; identity-matched structural gates; seven-workload ideal/default enumeration with aggregate 14/14 functional reporting",
+            "generated_time": "2026-08-10T00:00:00Z",
+            "snapshot_id": "main-ooo-history-v1",
+            "tool": "Identity-matched structural lint and SCC checks plus aggregate historical RTL functional reporting",
+            "type": "bounded_historical_structural_remediation_summary",
         },
     }
     records_by_id = {
@@ -924,14 +1486,26 @@ def check_delivery_links(root: Path, coremark: dict, loop: dict,
             errors.append("missing OoO history evidence manifest entry {}".format(evidence_id))
             continue
         manifest_path = "../" + expected["path"]
-        require_exact(item, {
+        semantic = {
+            "caveat": expected["caveat"],
+            "claims": expected["claims"],
+            "nonclaims": expected["nonclaims"],
+            "configuration": expected["configuration"],
+            "generated_time": expected["generated_time"],
+            "id": evidence_id,
+            "snapshot_id": expected["snapshot_id"],
+            "tool": expected["tool"],
+            "type": expected["type"],
             "project_id": "npc-riscv-open",
             "public": True,
             "path": manifest_path,
-            "claims": expected["claims"],
             "source_ref": expected["source_ref"],
             "status": expected["status"],
-        }, "OoO history evidence manifest {}".format(evidence_id), errors)
+        }
+        require_keys(item, set(semantic).union({"sha256", "size_bytes"}),
+                     "OoO history evidence manifest {}".format(evidence_id), errors)
+        require_exact(item, semantic,
+                      "OoO history evidence manifest {}".format(evidence_id), errors)
         evidence_path = root / expected["path"]
         if not evidence_path.is_file():
             errors.append("OoO history evidence payload is missing: {}".format(expected["path"]))
@@ -943,19 +1517,37 @@ def check_delivery_links(root: Path, coremark: dict, loop: dict,
         record = records_by_id[evidence_id]
         if record.get("claim_ids") != expected["claims"]:
             errors.append("OoO history evidence claim list drift: {}".format(evidence_id))
-        for claim_id in expected["claims"]:
-            if claims.get(claim_id, {}).get("evidence") != [evidence_id]:
-                errors.append("OoO history claim/evidence reverse-link drift: {}".format(claim_id))
+        incoming_claims = {
+            claim_id for claim_id, claim in claims.items()
+            if record_links_evidence(claim, evidence_id)
+        }
+        if incoming_claims != set(expected["claims"]):
+            errors.append("OoO history incoming claim/evidence set drift: {}".format(evidence_id))
         linked_nonclaims = {
             item_id for item_id, nonclaim in nonclaims.items()
-            if nonclaim.get("evidence_id") == evidence_id and item_id in EXPECTED_NONCLAIMS
+            if nonclaim.get("evidence_id") == evidence_id
         }
-        expected_linked_nonclaims = {
-            item_id for item_id, nonclaim in EXPECTED_NONCLAIMS.items()
-            if nonclaim["evidence_id"] == evidence_id
-        }
-        if linked_nonclaims != expected_linked_nonclaims:
-            errors.append("OoO history evidence/nonclaim reverse-link drift: {}".format(evidence_id))
+        if linked_nonclaims != set(expected["nonclaims"]):
+            errors.append("OoO history incoming nonclaim/evidence set drift: {}".format(evidence_id))
+
+        for claim_id in expected["claims"]:
+            incoming_manifests = {
+                item_id for item_id, manifest in evidence.items()
+                if isinstance(manifest.get("claims"), list)
+                and claim_id in manifest.get("claims", [])
+            }
+            if incoming_manifests != {evidence_id}:
+                errors.append("OoO history claim/manifest reverse-link set drift: {}".format(
+                    claim_id))
+        for nonclaim_id in expected["nonclaims"]:
+            incoming_manifests = {
+                item_id for item_id, manifest in evidence.items()
+                if isinstance(manifest.get("nonclaims"), list)
+                and nonclaim_id in manifest.get("nonclaims", [])
+            }
+            if incoming_manifests != {evidence_id}:
+                errors.append("OoO history nonclaim/manifest reverse-link set drift: {}".format(
+                    nonclaim_id))
 
 
 def run_checks(root: Path) -> List[str]:
@@ -969,6 +1561,7 @@ def run_checks(root: Path) -> List[str]:
     check_coremark(coremark, errors)
     check_loop_remediation(loop, errors)
     check_source_lineage(root, lineage, errors)
+    check_d12_provenance(root, loop, lineage, errors)
     check_evidence_reconstruction_bindings(coremark, loop, lineage, errors)
     check_delivery_links(root, coremark, loop, errors)
     return sorted(set(errors))
@@ -981,7 +1574,7 @@ def main() -> int:
     errors = run_checks(args.root.resolve())
     if errors:
         raise SystemExit("OOO_HISTORY_CHECK_FAILED\n  - " + "\n  - ".join(errors))
-    print("OOO_HISTORY_CHECK_PASS coremark_snapshots=2 source_reconstructions=2 loop_gates=4 identity=14/14")
+    print("OOO_HISTORY_CHECK_PASS coremark_snapshots=2 source_reconstructions=2 loop_gates=4 aggregate_report=14/14 maturity=partial")
     return 0
 
 
